@@ -1,0 +1,56 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.focusit</groupId>
+  <artifactId>jsflight</artifactId>
+  <version>1.0</version>
+  <name>JSFlight</name>
+  <description>Javascript Flight Recorder, Player</description>
+  <packaging>pom</packaging>
+  <modules>
+  	<module>player</module>
+  	<module>example</module>
+  	<module>recorder</module>
+  </modules>
+
+<build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>2.5.1</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <version>2.12.4</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-war-plugin</artifactId>
+          <version>2.3</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+    <plugins>
+      <plugin>
+        <groupId>org.jszip.maven</groupId>
+        <artifactId>jszip-maven-plugin</artifactId>
+        <version>0.1-alpha-6</version>
+        <extensions>true</extensions>
+      </plugin>
+    </plugins>
+  </build>
+  
+  	<repositories>
+		<repository>
+			<id>spring-snapshots</id>
+			<name>Spring Snapshots</name>
+			<url>http://repo.spring.io/snapshot</url>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>jitpack.io</id>
+			<url>https://jitpack.io</url>
+		</repository>
+	</repositories>
+</project>
