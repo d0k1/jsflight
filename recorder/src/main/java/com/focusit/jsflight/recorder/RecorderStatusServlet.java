@@ -12,17 +12,16 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.IOUtils;
 
-@WebServlet(urlPatterns = { "/jsflight/recorder" })
-public class RecorderServlet extends HttpServlet {
-
+@WebServlet(urlPatterns = { "/jsflight/recorder/status"})
+public class RecorderStatusServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		ClassLoader classloader = Thread.currentThread().getContextClassLoader();
-		try(InputStream is = classloader.getResourceAsStream("recorder.js"))
+		try(InputStream is = classloader.getResourceAsStream("status.html"))
 		{
-			resp.setContentType("application/javascript");
+			resp.setContentType("text/html;charset=UTF-8");
 			try(OutputStream out = resp.getOutputStream()){
 				IOUtils.copy(is, out);
 				out.flush();
