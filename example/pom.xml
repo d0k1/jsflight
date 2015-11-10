@@ -20,7 +20,7 @@
 			<artifactId>recorder</artifactId>
 			<version>1.0</version>
 		</dependency>
-	
+
 		<dependency>
 			<groupId>javax.inject</groupId>
 			<artifactId>javax.inject</artifactId>
