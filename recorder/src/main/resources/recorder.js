@@ -318,6 +318,7 @@ function getEventInfo(mouseEvent) {
 	}
 	var result = new Object;
 
+	result['url'] = window.location.href;
 	result['charCode'] = mouseEvent.charCode;
 	result['button'] = mouseEvent.button;
 
