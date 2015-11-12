@@ -314,19 +314,64 @@ function lookupElementByXPath(path) {
     return  result.singleNodeValue; 
 } 
 
+function getElementXPath(element)
+{
+	if (element && element.id)
+		return '// *[@id="' + element.id + '"]';
+	else
+		return getElementTreeXPath(element);
+}
+
+function getElementTreeXPath(element)
+{
+	var paths = [];
+
+	// Use nodeName (instead of localName) so namespace prefix is included (if
+	// any).
+	for (; element && element.nodeType == 1; element = element.parentNode)
+	{
+		var index = 0;
+		for (var sibling = element.previousSibling; sibling; sibling = sibling.previousSibling)
+		{
+			// Ignore document type declaration.
+			if (sibling.nodeType == Node.DOCUMENT_TYPE_NODE)
+				continue;
+			
+			if (sibling.nodeName == element.nodeName)
+				++index;
+		}
+
+		var tagName = element.nodeName.toLowerCase();
+		var pathIndex = (index ? "[" + (index+1) + "]" : "");
+		paths.splice(0, 0, tagName + pathIndex);
+	}
+
+	return paths.length ? "/" + paths.join("/") : null;
+}
+
 function getEventInfo(mouseEvent) {
+    if (mouseEvent===undefined)
+    	mouseEvent= window.event;                    
+    
+    var target= 'target' in mouseEvent? mouseEvent.target : mouseEvent.srcElement;
+
+    mouseEvent.target = target;
+    
 	var path = mouseEvent.path;
 	var xpaths = [];
 	for(var i=0;i<path.length;i++){
-		xpaths+=createXPathFromElement(path[i])
+		if(path[i] && path[i]!=document && path[i]!=window){
+			xpaths.push(getElementXPath(path[i]))
+		}
 	}
+	
 	var result = new Object;
 
 	result['url'] = window.location.href;
 	result['charCode'] = mouseEvent.charCode;
 	result['button'] = mouseEvent.button;
 
-	result['target'] = createXPathFromElement(mouseEvent.target);
+	result['target'] = getElementXPath(mouseEvent.target);
 	result['path'] = xpaths;
 	result['timestamp'] = mouseEvent.timeStamp;
 	
@@ -354,22 +399,12 @@ function saveToStorage(eventid, eventdata){
 	    return;
 	}
 	
-	var storage = window.sessionStorage;
-	
-	if(eventdata=='start'){
-		storage.setItem("recorder.min", eventid);
-		return;
-	}
-
-	if(eventdata=='stop'){
-		storage.setItem("recorder.max", eventid);
-		return;
-	}
-
-	storage.setItem('recorder.eventId.'+eventid, eventdata);
+	window.sessionStorage.setItem("recorder.max", eventid);
+	window.sessionStorage.setItem('recorder.eventId.'+eventid, eventdata);
 }
 
 function clearStorage(){
+	eventId = 0;
 	sessionStorage.clear();
 }
 
@@ -377,6 +412,12 @@ var eventId = 0;
 
 /* ============================================ */
 var TrackMouse = function (mouseEvent) {
+	if(mouseEvent.target && mouseEvent.target.id){
+		// ignoring self buttons
+		if(mouseEvent.target.id.indexOf("no-track-flight-cp")===0){
+			return;
+		}
+	}
 	var data = JSON.stringify(getEventInfo(mouseEvent));
 	saveToStorage(eventId, data);
     console.log("Event: " + data + "\n");
@@ -384,6 +425,13 @@ var TrackMouse = function (mouseEvent) {
 };
 
 var TrackKeyboard = function (keyboardEvent) {
+	if(keyboardEvent.target && keyboardEvent.target.id){
+		// ignoring self buttons
+		if(keyboardEvent.target.id.indexOf("no-track-flight-cp")===0){
+			return;
+		}
+	}
+
 	var data = JSON.stringify(getEventInfo(keyboardEvent));
 	saveToStorage(eventId, data);
     console.log("Event: " + data + "\n");
@@ -395,9 +443,13 @@ function saveToFile(){
 	window.alert('Woo-Hoo');
 }
 
-function startRecorder(){
-	saveToStorage(eventId, 'start');
+function addJSFlightHooksOnDocumentLoad(){
+    window.onload = function() {
+        addControlHook();
+    }
+}
 
+function startRecorder(){
 	if(document.addEventListener){
 		document.addEventListener('click', TrackMouse);
 		document.addEventListener('keypress', TrackKeyboard);
@@ -405,11 +457,19 @@ function startRecorder(){
 		document.attachEvent('click', TrackMouse);
 		document.attachEvent('keypress', TrackKeyboard);
 	}
+	if(typeof(window.sessionStorage) == "undefined") {
+	    console.log('No support of window.sessionStorage');
+	    return false;
+	}
+	
+	window.sessionStorage.setItem('recorder.active', true);
+	eventId = +window.sessionStorage.getItem('recorder.max')+1;
+	if(!eventId){
+		eventId=0;
+	}
 }
 
 function stopRecorder(){
-	saveToStorage(eventId, 'stop');
-
 	if(document.removeEventListener){
 		document.removeEventListener('click', TrackMouse);
 		document.removeEventListener('keypress', TrackKeyboard);
@@ -417,6 +477,13 @@ function stopRecorder(){
 		document.detachEvent('click', TrackMouse);
 		document.detachEvent('keypress', TrackKeyboard);
 	}
+	
+	if(typeof(window.sessionStorage) == "undefined") {
+	    console.log('No support of window.sessionStorage');
+	    return false;
+	}
+
+	window.sessionStorage.removeItem('recorder.active');
 }
 
 function getEventsAsString(){
@@ -443,6 +510,19 @@ function controlHook(event){
 	}
 }
 
+function shouldStartOnLoad(){
+	if(typeof(window.sessionStorage) == "undefined") {
+	    console.log('No support of window.sessionStorage');
+	    return false;
+	}
+	
+	if(window.sessionStorage.getItem('recorder.active')){
+		return true;
+	}
+	
+	return false
+}
+
 function addControlHook(){
 	var script = document.createElement('script')
 	script.type = 'text/javascript'
@@ -464,6 +544,7 @@ function addControlHook(){
 	        stopRecorder(); \
 	    } \
 	    function flight_clear(){ \
+			stopRecorder(); \
 	        clearStorage(); \
 	    }';
 	document.body.appendChild(script);
@@ -480,10 +561,10 @@ function addControlHook(){
 	   </form>\
 	</div>\
 		<div> \
-	       <button onclick="flight_start()">Start</button> \
-	       <button onclick="flight_stop()">Stop</button> \
-	       <button onclick="flight_clear()">Clear</button> \
-	       <button onclick="flight_hide()">Hide</button> \
+	       <button id="no-track-flight-cp1" onclick="flight_start()">Start</button> \
+	       <button id="no-track-flight-cp2" onclick="flight_stop()">Stop</button> \
+	       <button id="no-track-flight-cp3" onclick="flight_clear()">Clear</button> \
+	       <button id="no-track-flight-cp4" onclick="flight_hide()">Hide</button> \
 		</div> \
 		';
 
@@ -494,6 +575,10 @@ function addControlHook(){
 	} else {
 		document.attachEvent('keyup', controlHook);
 	}	
+	
+	if(shouldStartOnLoad()){
+		startRecorder();
+	}
 }
 
 function removeControlHook(){
