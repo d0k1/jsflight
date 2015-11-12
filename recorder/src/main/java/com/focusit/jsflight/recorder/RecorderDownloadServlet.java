@@ -1,7 +1,12 @@
 package com.focusit.jsflight.recorder;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -23,13 +28,21 @@ public class RecorderDownloadServlet extends HttpServlet {
 			while ((line = reader.readLine()) != null)
 				jb.append(line);
 		} catch (Exception e) {
-			/* report an error */ 
+			/* report an error */
 		}
 
-		System.out.println(jb.toString());
-		resp.setContentType("application/octet-stream");
-		resp.setHeader("Content-Disposition", "filename=\"hoge.txt\"");
-		resp.getWriter().println("Test");
+		String result = java.net.URLDecoder.decode(jb.toString(), "UTF-8");
+
+		System.out.println(result);
+		String name = "record_"+System.currentTimeMillis()+".json";
+		File file = new File(name);
+		Writer out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), "UTF-8"));
+		try {
+			out.write(result);
+		} finally {
+			out.close();
+		}
+		resp.getWriter().println("Saved to "+file.getAbsolutePath());
 		resp.getWriter().flush();
 	}
 

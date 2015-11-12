@@ -7,12 +7,30 @@
 	<div>
 	   <form action="../recorder/download" method="post">
 	       <input id="data" type="hidden" value="secret" name="data"/>
-	       <input type="submit" value="download"/>
+	       <input type="submit" value="download" onclick="getEvents()"/>
 	   </form>
 	</div>
 
     <script type="text/javascript">
-    document.getElementById("data").value = "123123";
+    function getEvents(){
+        document.getElementById("data").value = getEventsAsString();
+        return true;
+    }
+    function flight_start(){
+    	var panel = document.getElementById("flight-cp");
+    	panel.style.display='none';
+    	startRecorder();
+    }
+    function flight_stop(){
+        var panel = document.getElementById("flight-cp");
+        panel.style.display='none';
+        stopRecorder();
+    }
+    function flight_clear(){
+        var panel = document.getElementById("flight-cp");
+        panel.style.display='none';
+        clearStorage();
+    }
     </script>
 
 	<div>

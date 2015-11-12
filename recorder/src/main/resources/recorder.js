@@ -28,7 +28,8 @@ var saveAs = saveAs || (function(view) {
 	}
 	var
 		  doc = view.document
-		  // only get URL when necessary in case Blob.js hasn't overridden it yet
+		  // only get URL when necessary in case Blob.js hasn't overridden it
+			// yet
 		, get_URL = function() {
 			return view.URL || view.webkitURL || view;
 		}
@@ -125,7 +126,8 @@ var saveAs = saveAs || (function(view) {
 					} else {
 						var new_tab = view.open(object_url, "_blank");
 						if (new_tab == undefined && is_safari) {
-							//Apple do not allow window.open, see http://bit.ly/1kZffRI
+							// Apple do not allow window.open, see
+							// http://bit.ly/1kZffRI
 							view.location.href = object_url
 						}
 					}
@@ -159,7 +161,8 @@ var saveAs = saveAs || (function(view) {
 				});
 				return;
 			}
-			// Object and web filesystem URLs have a problem saving in Google Chrome when
+			// Object and web filesystem URLs have a problem saving in Google
+			// Chrome when
 			// viewed in a tab, so I force save with application/octet-stream
 			// http://code.google.com/p/chromium/issues/detail?id=91158
 			// Update: Google errantly closed 91158, I submitted it again:
@@ -169,7 +172,8 @@ var saveAs = saveAs || (function(view) {
 				blob = slice.call(blob, 0, blob.size, force_saveable_type);
 				blob_changed = true;
 			}
-			// Since I can't be sure that the guessed media type will trigger a download
+			// Since I can't be sure that the guessed media type will trigger a
+			// download
 			// in WebKit, I append .download to the filename.
 			// https://bugs.webkit.org/show_bug.cgi?id=65440
 			if (webkit_req_fs && name !== "download") {
@@ -370,7 +374,8 @@ function clearStorage(){
 }
 
 var eventId = 0;
-/*============================================*/
+
+/* ============================================ */
 var TrackMouse = function (mouseEvent) {
 	var data = JSON.stringify(getEventInfo(mouseEvent));
 	saveToStorage(eventId, data);
@@ -384,7 +389,7 @@ var TrackKeyboard = function (keyboardEvent) {
     console.log("Event: " + data + "\n");
 	eventId++;
 };
-/*============================================*/
+/* ============================================ */
 
 function saveToFile(){
 	window.alert('Woo-Hoo');
@@ -412,4 +417,89 @@ function stopRecorder(){
 		document.detachEvent('click', TrackMouse);
 		document.detachEvent('keypress', TrackKeyboard);
 	}
+}
+
+function getEventsAsString(){
+	if(typeof(window.sessionStorage) == "undefined") {
+	    console.log('No support of window.sessionStorage');
+	    return;
+	}
+	var storage = window.sessionStorage;
+	
+	var events = [];
+	for (var key in storage){
+		if(key.indexOf('recorder.eventId.')===0){
+		   events.push(storage.getItem(key)); 
+		}
+	}
+	
+	return JSON.stringify(events)
+}
+
+function controlHook(event){
+	if(event.ctrlKey && event.altKey && (event.which || event.keyCode)==38){
+		var panel = document.getElementById("flight-cp");
+		panel.style.display='block';
+	}
+}
+
+function addControlHook(){
+	var script = document.createElement('script')
+	script.type = 'text/javascript'
+	script.charset = 'utf-8'
+	script.text = ' \
+		function flight_hide(){ \
+	        var panel = document.getElementById("flight-cp"); \
+	        panel.style.display="none"; \
+		}\
+		function flight_getEvents(){ \
+        	document.getElementById("data").value = getEventsAsString();\
+        	return true; \
+	    } \
+	    function flight_start(){ \
+			flight_hide(); \
+	    	startRecorder(); \
+	    } \
+	    function flight_stop(){ \
+	        stopRecorder(); \
+	    } \
+	    function flight_clear(){ \
+	        clearStorage(); \
+	    }';
+	document.body.appendChild(script);
+
+	var div = document.createElement("div");
+	div.id="flight-cp";
+	div.style.display='none';
+	
+	div.innerHTML = '<h1>Control Panel</h1> \
+	<div> \
+	   <form action="jsflight/recorder/download" method="post"> \
+	       <input id="data" type="hidden" value="secret" name="data"/> \
+	       <input type="submit" value="download" onclick="flight_getEvents()"/> \
+	   </form>\
+	</div>\
+		<div> \
+	       <button onclick="flight_start()">Start</button> \
+	       <button onclick="flight_stop()">Stop</button> \
+	       <button onclick="flight_clear()">Clear</button> \
+	       <button onclick="flight_hide()">Hide</button> \
+		</div> \
+		';
+
+	document.body.appendChild(div);
+	
+	if(document.addEventListener){
+		document.addEventListener('keyup', controlHook);
+	} else {
+		document.attachEvent('keyup', controlHook);
+	}	
+}
+
+function removeControlHook(){
+	if(document.removeEventListener){
+		document.removeEventListener('keyup', controlHook);		
+	} else {
+		document.detachEvent('keyup', controlHook);
+	}	
 }

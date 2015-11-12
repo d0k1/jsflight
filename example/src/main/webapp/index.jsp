@@ -2,7 +2,10 @@
 <head>
     <script src="jsflight/recorder" type="text/javascript"></script>
     <script>
-        startRecorder();  
+	    window.onload = function() {
+	        addControlHook();
+	    }
+    //    startRecorder();  
     </script>
 </head>
 <body>
