@@ -33,17 +33,24 @@ public class RecorderDownloadServlet extends HttpServlet {
 
 		String result = java.net.URLDecoder.decode(jb.toString(), "UTF-8");
 		result = result.substring(5, result.length());
-		String name = "record_"+System.currentTimeMillis()+".json";
-		File file = new File(name);
-		Writer out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), "UTF-8"));
-		try {
-			out.write(result);
-		} finally {
-			out.close();
-		}
-		resp.getWriter().println("Saved to "+file.getAbsolutePath());
-		resp.getWriter().println();
-		resp.getWriter().println(result);
+		String name = "record_" + System.currentTimeMillis() + ".json";
+		// File file = new File(name);
+		// Writer out = new BufferedWriter(new OutputStreamWriter(new
+		// FileOutputStream(file), "UTF-8"));
+		// try {
+		// out.write(result);
+		// } finally {
+		// out.close();
+		// }
+		// resp.getWriter().println("Saved to "+file.getAbsolutePath());
+		// resp.getWriter().println();
+		// resp.getWriter().println(result);
+		// resp.getWriter().flush();
+		resp.setContentType("application/json");
+		resp.setHeader("Content-Transfer-Encoding", "binary");
+		resp.setHeader("Content-Length", ""+result.length());
+		resp.setHeader("Content-Disposition", "attachment; filename=\""+name+"\"");
+		resp.getWriter().print(result);
 		resp.getWriter().flush();
 	}
 

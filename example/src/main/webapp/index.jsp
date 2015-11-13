@@ -2,7 +2,7 @@
 <head>
     <script src="jsflight/recorder" type="text/javascript"></script>
     <script>
-    addJSFlightHooksOnDocumentLoad()
+    addJSFlightHooksOnDocumentLoad(true)
     //    startRecorder();  
     </script>
 </head>
