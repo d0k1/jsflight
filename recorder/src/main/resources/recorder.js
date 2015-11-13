@@ -6,6 +6,22 @@ var blob = new Blob(["Hello, world!"], {type: "text/plain;charset=utf-8"});
 saveAs(blob, "hello world.txt");
  */
 
+/*===================================================================================================================================*/
+/** Global variables * */
+// event id
+var eventId = 0;
+
+// browser window/tab uuid
+var tabUuid = guid();
+
+// is tracking mouse enabled
+var trackMove = false;
+/** Global variables * */
+
+// base url to make links right
+var baseUrl = '';
+/*===================================================================================================================================*/
+
 /**
  * Based on firebug method of getting xpath of dom element
  */
@@ -39,17 +55,6 @@ function getElementTreeXPath(element) {
 
 	return paths.length ? "/" + paths.join("/") : null;
 }
-
-/** Global variables * */
-// event id
-var eventId = 0;
-
-// browser window/tab uuid
-var tabUuid = guid();
-
-// is tracking mouse enabled
-var trackMove = false;
-/** Global variables * */
 
 /**
  * Make json of mouse event.
@@ -178,24 +183,6 @@ var TrackKeyboard = function(keyboardEvent) {
 	console.log("Event: " + data + "\n");
 	eventId++;
 };
-
-/**
- * Init method. should be called on host page. uses onload and onbeforeunload
- * mechanics to add/remove event listeners
- * 
- * @param trackMouseMove
- */
-function addJSFlightHooksOnDocumentLoad(trackMouseMove) {
-	window.onload = function() {
-		addControlHook();
-	}
-	window.onbeforeunload = function() {
-		removeControlHook();
-	};
-	if (trackMouseMove === true) {
-		trackMove = true;
-	}
-}
 
 /**
  * Start recorder
@@ -341,7 +328,7 @@ function addControlHook() {
 
 	div.innerHTML = '<h1>JSFlightRecorder</h1><h4><a href="https://github.com/d0k1/JSFlightRecorder">https://github.com/d0k1/JSFlightRecorder</a></h4><h2>Control panel</h2> \
 	<div> \
-	   <form action="jsflight/recorder/download" method="post" target="_blank"> \
+	   <form action="'+baseUrl+'/jsflight/recorder/download" method="post" target="_blank"> \
 	       <input id="data" type="hidden" value="secret" name="data"/> \
 	       <input type="submit" value="Download recording" onclick="flight_getEvents()"/> \
 	   </form>\
@@ -351,7 +338,7 @@ function addControlHook() {
 	        <button id="no-track-flight-cp2" onclick="flight_stop()">Stop</button> \
 	        <button id="no-track-flight-cp3" onclick="flight_clear()">Clear</button> \
 	        <button id="no-track-flight-cp4" onclick="flight_hide()">Hide</button> \
-	        <button id="no-track-flight-cp5" onclick="window.open(\'jsflight/recorder/status\', \'_blank\')">Status</button> \
+	        <button id="no-track-flight-cp5" onclick="window.open(\''+baseUrl+'/jsflight/recorder/status\', \'_blank\')">Status</button> \
 		    <br/> \
 			<br/> \
 			<button id="no-track-flight-cp6" onclick="trackMove=true;">Track Move</button> \
@@ -380,5 +367,26 @@ function removeControlHook() {
 		document.removeEventListener('keyup', controlHook);
 	} else {
 		document.detachEvent('keyup', controlHook);
+	}
+}
+
+/**
+ * Init method. should be called on host page. uses onload and onbeforeunload
+ * mechanics to add/remove event listeners
+ * 
+ * @param trackMouseMove
+ */
+function addJSFlightHooksOnDocumentLoad(url, trackMouseMove) {
+	window.onload = function() {
+		addControlHook();
+	}
+	window.onbeforeunload = function() {
+		removeControlHook();
+	};
+	
+	baseUrl = url;
+	
+	if (trackMouseMove === true) {
+		trackMove = true;
 	}
 }

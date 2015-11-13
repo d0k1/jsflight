@@ -2,7 +2,8 @@
 <head>
     <script src="jsflight/recorder" type="text/javascript"></script>
     <script>
-    addJSFlightHooksOnDocumentLoad(false)
+    
+    addJSFlightHooksOnDocumentLoad('<%=request.getContextPath()%>', false)
     //    startRecorder();  
     </script>
 </head>
