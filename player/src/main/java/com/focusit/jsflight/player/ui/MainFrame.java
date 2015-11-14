@@ -33,6 +33,10 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import javax.swing.JScrollPane;
+import javax.swing.JTextPane;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+import javax.swing.JTextArea;
 
 public class MainFrame {
 
@@ -47,8 +51,9 @@ public class MainFrame {
 	private JFrame frmJsflightrecorderPlayer;
 	private JTextField filenameField;
 	private JTable table;
-	private JEditorPane contentPane;
+	private JTextArea contentPane;
 	private String lastUrl = "";
+	private JTextArea eventContent;
 
 	/**
 	 * Create the application.
@@ -94,7 +99,7 @@ public class MainFrame {
 		gbc_filenameField.gridy = 0;
 		inputPanel.add(filenameField, gbc_filenameField);
 		filenameField.setColumns(10);
-//		filenameField.setText("/tmp/record_1447417853937.json");
+		filenameField.setText("/tmp/record_1447417853937.json");
 
 		JButton btnLoad = new JButton("Load");
 		btnLoad.addMouseListener(new MouseAdapter() {
@@ -143,21 +148,27 @@ public class MainFrame {
 		gbc_lblContent.gridx = 0;
 		gbc_lblContent.gridy = 2;
 		inputPanel.add(lblContent, gbc_lblContent);
+		
+		JScrollPane scrollPane_1 = new JScrollPane();
+		GridBagConstraints gbc_scrollPane_1 = new GridBagConstraints();
+		gbc_scrollPane_1.fill = GridBagConstraints.BOTH;
+		gbc_scrollPane_1.gridx = 1;
+		gbc_scrollPane_1.gridy = 2;
+		inputPanel.add(scrollPane_1, gbc_scrollPane_1);
 
-		contentPane = new JEditorPane();
-		GridBagConstraints gbc_contentPane = new GridBagConstraints();
-		gbc_contentPane.fill = GridBagConstraints.BOTH;
-		gbc_contentPane.gridx = 1;
-		gbc_contentPane.gridy = 2;
-		inputPanel.add(contentPane, gbc_contentPane);
+		contentPane = new JTextArea();
+		scrollPane_1.setViewportView(contentPane);
+		contentPane.setWrapStyleWord(true);
+		contentPane.setLineWrap(true);
+		contentPane.setEditable(false);
 
 		JPanel scenarioPanel = new JPanel();
 		tabbedPane.addTab("Scenario", null, scenarioPanel, null);
 		GridBagLayout gbl_scenarioPanel = new GridBagLayout();
 		gbl_scenarioPanel.columnWidths = new int[] { 59, 0, 0, 0, 0, 0, 331, 0 };
-		gbl_scenarioPanel.rowHeights = new int[] { 0, 449, 0 };
+		gbl_scenarioPanel.rowHeights = new int[] { 0, 449, 70, 0 };
 		gbl_scenarioPanel.columnWeights = new double[] { 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE };
-		gbl_scenarioPanel.rowWeights = new double[] { 0.0, 1.0, Double.MIN_VALUE };
+		gbl_scenarioPanel.rowWeights = new double[] { 0.0, 1.0, 1.0, Double.MIN_VALUE };
 		scenarioPanel.setLayout(gbl_scenarioPanel);
 
 		JButton btnParse = new JButton("Parse");
@@ -342,6 +353,7 @@ public class MainFrame {
 
 		JScrollPane scrollPane = new JScrollPane();
 		GridBagConstraints gbc_scrollPane = new GridBagConstraints();
+		gbc_scrollPane.insets = new Insets(0, 0, 5, 0);
 		gbc_scrollPane.fill = GridBagConstraints.BOTH;
 		gbc_scrollPane.gridwidth = 7;
 		gbc_scrollPane.gridx = 0;
@@ -350,33 +362,67 @@ public class MainFrame {
 
 		table = new JTable();
 		scrollPane.setViewportView(table);
+
+		table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+			
+			@Override
+			public void valueChanged(ListSelectionEvent e) {
+				int index = table.getSelectedRow();
+				eventContent.setText(events.get(index).toString());
+			}
+		});
+		
+		JScrollPane scrollPane_2 = new JScrollPane();
+		GridBagConstraints gbc_scrollPane_2 = new GridBagConstraints();
+		gbc_scrollPane_2.fill = GridBagConstraints.BOTH;
+		gbc_scrollPane_2.gridwidth = 7;
+		gbc_scrollPane_2.insets = new Insets(0, 0, 0, 5);
+		gbc_scrollPane_2.gridx = 0;
+		gbc_scrollPane_2.gridy = 2;
+		scenarioPanel.add(scrollPane_2, gbc_scrollPane_2);
+
+		eventContent = new JTextArea();
+		scrollPane_2.setViewportView(eventContent);
+		eventContent.setLineWrap(true);
+		eventContent.setEditable(false);
+		eventContent.setWrapStyleWord(true);
 	}
 
 	private void applyStep(int position) {
 		JSONObject event = events.get(position);
+		if(event.getString("type").equalsIgnoreCase("xhr"))
+			return;
 		String event_url = event.getString("url");
 		if (!lastUrl.equalsIgnoreCase(event_url)) {
 			lastUrl = event_url;
 			driver.get(lastUrl);
 		}
+		
 		WebElement element = driver.findElement(By.xpath(event.getString("target")));
 
-		if (event.has("charCode")) {
-			char ch = (char) event.getBigInteger(("charCode")).intValue();
-			char keys[] = new char[1];
-			keys[0] = ch;
-			element.sendKeys(new String(keys));
-		} else {
+		String eventType = event.getString("type");
+		if (eventType.equalsIgnoreCase("mousedown")) {
 			if (event.getInt("button") == 2) {
 				new Actions(driver).contextClick(element).perform();
 			} else {
 				element.click();
 			}
 		}
+		if (eventType.equalsIgnoreCase("keypress")) {
+			if (event.has("charCode")) {
+				char ch = (char) event.getBigInteger(("charCode")).intValue();
+				char keys[] = new char[1];
+				keys[0] = ch;
+				element.sendKeys(new String(keys));
+			}
+		}
 	}
 
 	private void checkElement(int position) {
 		JSONObject event = events.get(position);
+		if(!event.has("target") || event.getString("type").equalsIgnoreCase("xhr")){
+			return;
+		}
 		driver.findElement(By.xpath(event.getString("target")));
 		checks.set(position, true);
 		model.fireTableDataChanged();

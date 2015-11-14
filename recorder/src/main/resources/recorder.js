@@ -217,7 +217,7 @@ jsflight.TrackXhrOpen = function(data){
 }
 
 jsflight.TrackXhrSend = function(data){	
-	var senddata = {method: data.open.method, url:data.open.url, async:data.open.async, user:data.open.user, password:data.open.password, request:data.data, sended:data.data.length}	
+	var senddata = {method: data.open.method, target:data.open.target, async:data.open.async, user:data.open.user, password:data.open.password, request:data.data, sended:data.data.length}	
 	senddata.type="xhr";
 	senddata.call="send";
 	senddata.tabuuid = jsflight.tabUuid;
@@ -228,7 +228,7 @@ jsflight.TrackXhrSend = function(data){
 }
 
 jsflight.TrackXhrStateLoad = function(xhr){
-	var data = {method: xhr.currentTarget.openData.method, url:xhr.currentTarget.openData.url, async:xhr.currentTarget.openData.async, user:xhr.currentTarget.openData.user, password:xhr.currentTarget.openData.password, loaded:xhr.total, status: xhr.currentTarget.status, response:xhr.currentTarget.response}
+	var data = {method: xhr.currentTarget.openData.method, target:xhr.currentTarget.openData.target, async:xhr.currentTarget.openData.async, user:xhr.currentTarget.openData.user, password:xhr.currentTarget.openData.password, loaded:xhr.total, status: xhr.currentTarget.status, response:xhr.currentTarget.response}
 	data.type="xhr";
 	data.call="load";
 	data.tabuuid = jsflight.tabUuid;
@@ -478,7 +478,7 @@ jsflight.initXhrTracking = function(){
 	XMLHttpRequest.prototype.oldOpen = XMLHttpRequest.prototype.open;
 
 	var newOpen = function(method, url, async, user, password) {
-		var data = {method:method, url:url, async:async, user:user, password:password};
+		var data = {method:method, target:url, async:async, user:user, password:password};
 		jsflight.TrackXhrOpen(data);
 		this.openData = data;
 		this.oldOpen(method, url, async, user, password);

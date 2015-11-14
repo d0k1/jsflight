@@ -1,8 +1,12 @@
+<!-- This is an example of injecting JSFlightRecorder --> 
 <html>
 <head>
+    <!-- Add javascript -->
     <script src="jsflight/recorder" type="text/javascript"></script>
     <script>    
     /*
+        //Set desired options
+        // below listed default options
 		jsflight.options = {
 		        baseUrl:'',
 		        downloadPath:'/jsflight/recorder/download',
@@ -21,9 +25,9 @@
     		prop['customProp'] = (new Date()).getTime();
     	}
     	}, false)
-    //    startRecorder();  
     </script>
     <script>
+        // sample method to do xhr request
 	    function loadXMLDoc(url) {
 	    	  var xmlhttp;
 	    	    
@@ -45,6 +49,7 @@
     </script>
 </head>
 <body>
+    <!-- example ui to track -->
     <form id="test">
         <input id="btn1" type="button" value="b0"/>
         <div id="d1">123</div>
@@ -53,5 +58,6 @@
         <button onclick="loadXMLDoc('<%=request.getContextPath()%>/12/2/12/3')">XHR 404</button>
     </form>
     <a href='#testHash'>testHash</a>
+    <a href='#'>back from testHash</a>
 </body>
 </html>
