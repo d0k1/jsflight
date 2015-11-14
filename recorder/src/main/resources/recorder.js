@@ -6,23 +6,19 @@ var blob = new Blob(["Hello, world!"], {type: "text/plain;charset=utf-8"});
 saveAs(blob, "hello world.txt");
  */
 
+// jsflight namespace 
+var jsflight = jsflight || {}
+
 /*===================================================================================================================================*/
 /** Global variables * */
 // event id
-var eventId = 0;
+jsflight.eventId = 0;
 
 // browser window/tab uuid
-var tabUuid = guid();
-
-// is tracking mouse enabled
-var trackMove = false;
-/** Global variables * */
-
-// base url to make links right
-var baseUrl = '';
+jsflight.tabUuid = '';
 
 // recorder options
-var options = {
+jsflight.options = {
 		baseUrl:'',
 		downloadPath:'/jsflight/recorder/download',
 		statusPath:'/jsflight/recorder/status',
@@ -36,14 +32,14 @@ var options = {
 /**
  * Based on firebug method of getting xpath of dom element
  */
-function getElementXPath(element) {
+jsflight.getElementXPath = function(element) {
 	if (element && element.id)
 		return '// *[@id="' + element.id + '"]';
 	else
-		return getElementTreeXPath(element);
+		return jsflight.getElementTreeXPath(element);
 }
 
-function getElementTreeXPath(element) {
+jsflight.getElementTreeXPath = function(element) {
 	var paths = [];
 
 	// Use nodeName (instead of localName) so namespace prefix is included (if
@@ -73,7 +69,7 @@ function getElementTreeXPath(element) {
  * @param mouseEvent
  * @returns {___anonymous1625_1630}
  */
-function getEventInfo(mouseEvent) {
+jsflight.getEventInfo = function(mouseEvent) {
 	if (mouseEvent === undefined)
 		mouseEvent = window.event;
 
@@ -94,13 +90,14 @@ function getEventInfo(mouseEvent) {
 	// }
 	// result['path'] = xpaths;
 
-	result['tabuuid'] = tabUuid;
+	result['tabuuid'] = jsflight.tabUuid;
 	result['type'] = mouseEvent.type;
 	result['url'] = window.location.href;
 	result['charCode'] = mouseEvent.charCode;
 	result['button'] = mouseEvent.button;
+	result['hash'] = window.location.hash;
 
-	result['target'] = getElementXPath(mouseEvent.target);
+	result['target'] = jsflight.getElementXPath(mouseEvent.target);
 	result['timestamp'] = mouseEvent.timeStamp;
 
 	result['screenX'] = mouseEvent.screenX;
@@ -118,6 +115,10 @@ function getEventInfo(mouseEvent) {
 	result['page.width'] = window.innerWidth;
 	result['page.height'] = window.innerHeight;
 
+	if(jsflight.options.propertyProvider){	
+		jsflight.options.propertyProvider(result);
+	}
+	
 	return result;
 }
 
@@ -127,7 +128,7 @@ function getEventInfo(mouseEvent) {
  * @param eventid
  * @param eventdata
  */
-function saveToStorage(eventid, eventdata) {
+jsflight.saveToStorage = function(eventid, eventdata) {
 	if (typeof (window.sessionStorage) == "undefined") {
 		console.log('No support of window.sessionStorage');
 		return;
@@ -140,8 +141,8 @@ function saveToStorage(eventid, eventdata) {
 /**
  * Clear session storage
  */
-function clearStorage() {
-	eventId = 0;
+jsflight.clearStorage = function() {
+	jsflight.eventId = 0;
 	sessionStorage.clear();
 }
 
@@ -150,7 +151,7 @@ function clearStorage() {
  * 
  * @returns {String}
  */
-function guid() {
+jsflight.guid = function() {
 	function s4() {
 		return Math.floor((1 + Math.random()) * 0x10000).toString(16)
 				.substring(1);
@@ -162,8 +163,8 @@ function guid() {
 /**
  * Process mouse event
  */
-var TrackMouse = function(mouseEvent) {
-	if (mouseEvent.type == 'mousemove' && trackMove == false) {
+jsflight.TrackMouse = function(mouseEvent) {
+	if (mouseEvent.type == 'mousemove' && jsflight.options.trackMouse == false) {
 		return;
 	}
 	if (mouseEvent.target && mouseEvent.target.id) {
@@ -172,16 +173,16 @@ var TrackMouse = function(mouseEvent) {
 			return;
 		}
 	}
-	var data = JSON.stringify(getEventInfo(mouseEvent));
-	saveToStorage(eventId, data);
-	console.log("Event: " + data + "\n");
-	eventId++;
+	var data = JSON.stringify(jsflight.getEventInfo(mouseEvent));
+	jsflight.saveToStorage(jsflight.eventId, data);
+	// console.log("Event: " + data + "\n");
+	jsflight.eventId++;
 };
 
 /**
  * Process keyboard event
  */
-var TrackKeyboard = function(keyboardEvent) {
+jsflight.TrackKeyboard = function(keyboardEvent) {
 	if (keyboardEvent.target && keyboardEvent.target.id) {
 		// ignoring self buttons
 		if (keyboardEvent.target.id.indexOf("no-track-flight-cp") === 0) {
@@ -189,36 +190,84 @@ var TrackKeyboard = function(keyboardEvent) {
 		}
 	}
 
-	var data = JSON.stringify(getEventInfo(keyboardEvent));
-	saveToStorage(eventId, data);
-	console.log("Event: " + data + "\n");
-	eventId++;
+	var data = JSON.stringify(jsflight.getEventInfo(keyboardEvent));
+	jsflight.saveToStorage(jsflight.eventId, data);
+	// console.log("Event: " + data + "\n");
+	jsflight.eventId++;
 };
+
+jsflight.TrackHash = function(event){
+	if(jsflight.options.trackHash!=true)
+		return;
+		
+	var data = JSON.stringify(jsflight.getEventInfo(event));
+	jsflight.saveToStorage(jsflight.eventId, data);
+	// console.log("Event: " + data + "\n");
+	jsflight.eventId++;	
+}
+
+jsflight.TrackXhrOpen = function(data){
+	data.type="xhr";
+	data.call="open";
+	data.tabuuid = jsflight.tabUuid;
+	data.url = window.location.href;
+	data.timestamp = new Date().getTime()
+	jsflight.saveToStorage(jsflight.eventId, JSON.stringify(data));
+	jsflight.eventId++;
+}
+
+jsflight.TrackXhrSend = function(data){	
+	var senddata = {method: data.open.method, url:data.open.url, async:data.open.async, user:data.open.user, password:data.open.password, request:data.data, sended:data.data.length}	
+	senddata.type="xhr";
+	senddata.call="send";
+	senddata.tabuuid = jsflight.tabUuid;
+	senddata.url = window.location.href;
+	senddata.timestamp = new Date().getTime()
+	jsflight.saveToStorage(jsflight.eventId, JSON.stringify(senddata));
+	jsflight.eventId++;
+}
+
+jsflight.TrackXhrStateLoad = function(xhr){
+	var data = {method: xhr.currentTarget.openData.method, url:xhr.currentTarget.openData.url, async:xhr.currentTarget.openData.async, user:xhr.currentTarget.openData.user, password:xhr.currentTarget.openData.password, loaded:xhr.total, status: xhr.currentTarget.status, response:xhr.currentTarget.response}
+	data.type="xhr";
+	data.call="load";
+	data.tabuuid = jsflight.tabUuid;
+	data.url = window.location.href;
+	data.timestamp = new Date().getTime()
+	jsflight.saveToStorage(jsflight.eventId, JSON.stringify(data));
+	jsflight.eventId++;
+}
 
 /**
  * Start recorder
  * 
  * @returns {Boolean}
  */
-function startRecorder() {
+jsflight.startRecorder = function() {
 	if (document.addEventListener) {
-		document.addEventListener('mousedown', TrackMouse);
-		document.addEventListener('mousemove', TrackMouse);
-		document.addEventListener('keypress', TrackKeyboard);
+		document.addEventListener('mousedown', jsflight.TrackMouse);
+		document.addEventListener('mousemove', jsflight.TrackMouse);
+		document.addEventListener('keypress', jsflight.TrackKeyboard);
+		window.addEventListener('hashchange', jsflight.TrackHash);
 	} else {
-		document.attachEvent('mousedown', TrackMouse);
-		document.attachEvent('mousemove', TrackMouse);
-		document.attachEvent('keypress', TrackKeyboard);
+		document.attachEvent('mousedown', jsflight.TrackMouse);
+		document.attachEvent('mousemove', jsflight.TrackMouse);
+		document.attachEvent('keypress', jsflight.TrackKeyboard);
+		window.attachEvent('hashchange', jsflight.TrackHash);
 	}
 	if (typeof (window.sessionStorage) == "undefined") {
 		console.log('No support of window.sessionStorage');
 		return false;
 	}
 
-	window.sessionStorage.setItem('recorder.active', true);
-	eventId = +window.sessionStorage.getItem('recorder.max') + 1;
-	if (!eventId) {
-		eventId = 0;
+	window.sessionStorage.setItem('recorder.active', 'true');
+	jsflight.eventId = +window.sessionStorage.getItem('recorder.max') + 1;
+	if (!jsflight.eventId) {
+		jsflight.eventId = 0;
+	}
+	
+	if(jsflight.options.trackXhr){
+		jsflight.initXhrTracking();
 	}
 }
 
@@ -227,15 +276,17 @@ function startRecorder() {
  * 
  * @returns {Boolean}
  */
-function stopRecorder() {
+jsflight.stopRecorder = function() {
 	if (document.removeEventListener) {
-		document.removeEventListener('mousedown', TrackMouse);
-		document.removeEventListener('mousemove', TrackMouse);
-		document.removeEventListener('keypress', TrackKeyboard);
+		document.removeEventListener('mousedown', jsflight.TrackMouse);
+		document.removeEventListener('mousemove', jsflight.TrackMouse);
+		document.removeEventListener('keypress', jsflight.TrackKeyboard);
+		window.removeEventListener('hashchange', jsflight.TrackHash);
 	} else {
-		document.detachEvent('mousedown', TrackMouse);
-		document.detachEvent('mousemove', TrackMouse);
-		document.detachEvent('keypress', TrackKeyboard);
+		document.detachEvent('mousedown', jsflight.TrackMouse);
+		document.detachEvent('mousemove', jsflight.TrackMouse);
+		document.detachEvent('keypress', jsflight.TrackKeyboard);
+		window.detachEvent('hashchange', jsflight.TrackHash);
 	}
 
 	if (typeof (window.sessionStorage) == "undefined") {
@@ -244,6 +295,10 @@ function stopRecorder() {
 	}
 
 	window.sessionStorage.removeItem('recorder.active');
+
+	if(jsflight.options.trackXhr){
+		jsflight.stopXhrTracking();
+	}
 }
 
 /**
@@ -251,7 +306,7 @@ function stopRecorder() {
  * 
  * @returns
  */
-function getEventsAsString() {
+jsflight.getEventsAsString = function() {
 	if (typeof (window.sessionStorage) == "undefined") {
 		console.log('No support of window.sessionStorage');
 		return;
@@ -273,7 +328,7 @@ function getEventsAsString() {
  * 
  * @param event
  */
-function controlHook(event) {
+jsflight.controlHook = function(event) {
 	if (event.ctrlKey && event.altKey && (event.which || event.keyCode) == 38) {
 		var panel = document.getElementById("flight-cp");
 		panel.style.display = 'block';
@@ -289,7 +344,7 @@ function controlHook(event) {
  * 
  * @returns {Boolean}
  */
-function shouldStartOnLoad() {
+jsflight.shouldStartOnLoad = function() {
 	if (typeof (window.sessionStorage) == "undefined") {
 		console.log('No support of window.sessionStorage');
 		return false;
@@ -305,8 +360,8 @@ function shouldStartOnLoad() {
 /**
  * Inject control panel specific js-code and markup
  */
-function addControlHook() {
-	tabUuid = guid();
+jsflight.addControlHook = function() {
+	jsflight.tabUuid = jsflight.guid();
 
 	var script = document.createElement('script')
 	script.type = 'text/javascript'
@@ -317,19 +372,19 @@ function addControlHook() {
 	        panel.style.display="none"; \
 		}\
 		function flight_getEvents(){ \
-        	document.getElementById("data").value = getEventsAsString();\
+        	document.getElementById("data").value = jsflight.getEventsAsString();\
         	return true; \
 	    } \
 	    function flight_start(){ \
 			flight_hide(); \
-	    	startRecorder(); \
+	    	jsflight.startRecorder(); \
 	    } \
 	    function flight_stop(){ \
-	        stopRecorder(); \
+	        jsflight.stopRecorder(); \
 	    } \
 	    function flight_clear(){ \
-			stopRecorder(); \
-	        clearStorage(); \
+			jsflight.stopRecorder(); \
+	        jsflight.clearStorage(); \
 	    }';
 	document.body.appendChild(script);
 
@@ -339,7 +394,7 @@ function addControlHook() {
 
 	div.innerHTML = '<h1>JSFlightRecorder</h1><h4><a href="https://github.com/d0k1/JSFlightRecorder">https://github.com/d0k1/JSFlightRecorder</a></h4><h2>Control panel</h2> \
 	<div> \
-	   <form action="'+baseUrl+'/jsflight/recorder/download" method="post" target="_blank"> \
+	   <form action="'+jsflight.options.baseUrl+jsflight.options.downloadPath+'" method="post" target="_blank"> \
 	       <input id="data" type="hidden" value="secret" name="data"/> \
 	       <input type="submit" value="Download recording" onclick="flight_getEvents()"/> \
 	   </form>\
@@ -349,35 +404,35 @@ function addControlHook() {
 	        <button id="no-track-flight-cp2" onclick="flight_stop()">Stop</button> \
 	        <button id="no-track-flight-cp3" onclick="flight_clear()">Clear</button> \
 	        <button id="no-track-flight-cp4" onclick="flight_hide()">Hide</button> \
-	        <button id="no-track-flight-cp5" onclick="window.open(\''+baseUrl+'/jsflight/recorder/status\', \'_blank\')">Status</button> \
+	        <button id="no-track-flight-cp5" onclick="window.open(\''+jsflight.options.baseUrl+jsflight.options.statusPath+'\', \'_blank\')">Status</button> \
 		    <br/> \
 			<br/> \
-			<button id="no-track-flight-cp6" onclick="trackMove=true;">Track Move</button> \
-			<button id="no-track-flight-cp7" onclick="trackMove=false">Dont Track Move</button> \
+			<button id="no-track-flight-cp6" onclick="jsflight.options.trackMouse=true;">Track Move</button> \
+			<button id="no-track-flight-cp7" onclick="jsflight.options.trackMouse=false">Dont Track Move</button> \
 		</div> \
 		';
 
 	document.body.appendChild(div);
 
 	if (document.addEventListener) {
-		document.addEventListener('keyup', controlHook);
+		document.addEventListener('keyup', jsflight.controlHook);
 	} else {
-		document.attachEvent('keyup', controlHook);
+		document.attachEvent('keyup', jsflight.controlHook);
 	}
 
-	if (shouldStartOnLoad()) {
-		startRecorder();
+	if (jsflight.shouldStartOnLoad()) {
+		jsflight.startRecorder();
 	}
 }
 
 /**
  * Clean up when tab is closing
  */
-function removeControlHook() {
+jsflight.removeControlHook = function() {
 	if (document.removeEventListener) {
-		document.removeEventListener('keyup', controlHook);
+		document.removeEventListener('keyup', jsflight.controlHook);
 	} else {
-		document.detachEvent('keyup', controlHook);
+		document.detachEvent('keyup', jsflight.controlHook);
 	}
 }
 
@@ -387,17 +442,67 @@ function removeControlHook() {
  * 
  * @param trackMouseMove
  */
-function addJSFlightHooksOnDocumentLoad(url, trackMouseMove) {
+jsflight.addJSFlightHooksOnDocumentLoad = function(options) {
+	
+	if(options.baseUrl)
+		jsflight.options.baseUrl = options.baseUrl;
+	
+	if(options.downloadPath)
+		jsflight.options.downloadPath = options.downloadPath;
+	
+	if(options.statusPath)
+		jsflight.options.statusPath = options.statusPath;
+	
+	if(options.trackMouse)
+		jsflight.options.trackMouse = options.trackMouse;
+	
+	if(options.trackHash)
+		jsflight.options.trackHash = options.trackHash;
+	
+	if(options.trackXhr)
+		jsflight.options.trackXhr = options.trackXhr;
+	
+	if(options.propertyProvider)
+		jsflight.options.propertyProvider = options.propertyProvider;
+
 	window.onload = function() {
-		addControlHook();
+		jsflight.addControlHook();
 	}
+
 	window.onbeforeunload = function() {
-		removeControlHook();
+		jsflight.removeControlHook();
 	};
-	
-	baseUrl = url;
-	
-	if (trackMouseMove === true) {
-		trackMove = true;
+}
+
+jsflight.initXhrTracking = function(){
+	XMLHttpRequest.prototype.oldOpen = XMLHttpRequest.prototype.open;
+
+	var newOpen = function(method, url, async, user, password) {
+		var data = {method:method, url:url, async:async, user:user, password:password};
+		jsflight.TrackXhrOpen(data);
+		this.openData = data;
+		this.oldOpen(method, url, async, user, password);
 	}
+	
+	XMLHttpRequest.prototype.open = newOpen;
+
+	XMLHttpRequest.prototype.oldSend = XMLHttpRequest.prototype.send
+	XMLHttpRequest.prototype.send = function (data) {
+		if (document.addEventListener) {
+			this.addEventListener("load", jsflight.TrackXhrStateLoad, false);
+		} else {
+			this.attachEvent("load", jsflight.TrackXhrStateLoad, false)
+		}
+		var trackData = {open:this.openData, data:data};
+		jsflight.TrackXhrSend(trackData);
+		this.oldSend.call(this, data);
+	}	
+}
+
+jsflight.stopXhrTracking = function(){
+	XMLHttpRequest.prototype.open = XMLHttpRequest.prototype.oldOpen;
+	XMLHttpRequest.prototype.oldOpen = null;
+	
+	XMLHttpRequest.prototype.send = XMLHttpRequest.prototype.oldSend;
+	XMLHttpRequest.prototype.oldSend = null;
 }
