@@ -20,6 +20,17 @@ var trackMove = false;
 
 // base url to make links right
 var baseUrl = '';
+
+// recorder options
+var options = {
+		baseUrl:'',
+		downloadPath:'/jsflight/recorder/download',
+		statusPath:'/jsflight/recorder/status',
+		trackMouse:false,
+		trackHash:false,
+		trackXhr:false,
+		propertyProvider: function(prop){}
+}
 /*===================================================================================================================================*/
 
 /**
