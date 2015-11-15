@@ -9,7 +9,7 @@
 	<url>http://maven.apache.org</url>
 
 	<parent>
-		<groupId>com.focusit</groupId>
+		<groupId>com.github.d0k1</groupId>
 		<artifactId>jsflight</artifactId>
 		<version>1.0</version>
 		<!-- <relativePath>../sample-multi-module-parent</relativePath> -->
