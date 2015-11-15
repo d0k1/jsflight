@@ -4,21 +4,21 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.github.d0k1.jsflight</groupId>
 	<artifactId>example</artifactId>
-	<version>1.0</version>
+	<version>1.2</version>
 	<packaging>war</packaging>
 	<url>http://maven.apache.org</url>
 
 	<parent>
 		<groupId>com.github.d0k1</groupId>
 		<artifactId>jsflight</artifactId>
-		<version>1.0</version>
+		<version>1.2</version>
 	</parent>
 
 	<dependencies>
 		<dependency>
 			<groupId>com.github.d0k1.jsflight</groupId>
 			<artifactId>recorder</artifactId>
-			<version>1.0</version>
+			<version>1.2</version>
 		</dependency>
 
 		<dependency>
