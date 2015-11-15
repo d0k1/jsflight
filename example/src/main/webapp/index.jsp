@@ -2,7 +2,7 @@
 <html>
 <head>
     <!-- Add javascript -->
-    <script src="jsflight/recorder" type="text/javascript"></script>
+    <script src="<%=request.getContextPath()%>/jsflight/recorder" type="text/javascript"></script>
     <script>    
     /*
         //Set desired options
@@ -24,7 +24,7 @@
     	propertyProvider:function(prop){
     		prop['customProp'] = (new Date()).getTime();
     	}
-    	}, false)
+    	})
     </script>
     <script>
         // sample method to do xhr request

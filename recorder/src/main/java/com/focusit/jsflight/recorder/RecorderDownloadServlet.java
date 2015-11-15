@@ -1,18 +1,15 @@
 package com.focusit.jsflight.recorder;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
+import java.io.StringWriter;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.io.IOUtils;
 
 @WebServlet(urlPatterns = { "/jsflight/recorder/download" })
 public class RecorderDownloadServlet extends HttpServlet {
@@ -21,31 +18,17 @@ public class RecorderDownloadServlet extends HttpServlet {
 
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		StringBuffer jb = new StringBuffer();
-		String line = null;
-		try {
-			BufferedReader reader = req.getReader();
-			while ((line = reader.readLine()) != null)
-				jb.append(line);
-		} catch (Exception e) {
-			/* report an error */
+		StringWriter writer = new StringWriter();
+		IOUtils.copy(req.getInputStream(), writer, "UTF-8");
+		String theString = writer.toString();
+		
+		String result = java.net.URLDecoder.decode(theString, "UTF-8");
+		if(result.length()<5){
+			resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+			return;
 		}
-
-		String result = java.net.URLDecoder.decode(jb.toString(), "UTF-8");
 		result = result.substring(5, result.length());
 		String name = "record_" + System.currentTimeMillis() + ".json";
-		// File file = new File(name);
-		// Writer out = new BufferedWriter(new OutputStreamWriter(new
-		// FileOutputStream(file), "UTF-8"));
-		// try {
-		// out.write(result);
-		// } finally {
-		// out.close();
-		// }
-		// resp.getWriter().println("Saved to "+file.getAbsolutePath());
-		// resp.getWriter().println();
-		// resp.getWriter().println(result);
-		// resp.getWriter().flush();
 		resp.setContentType("application/json");
 		resp.setHeader("Content-Transfer-Encoding", "binary");
 		resp.setHeader("Content-Length", ""+result.length());
