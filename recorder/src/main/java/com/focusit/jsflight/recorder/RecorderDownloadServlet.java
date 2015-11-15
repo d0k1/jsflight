@@ -28,12 +28,13 @@ public class RecorderDownloadServlet extends HttpServlet {
 			return;
 		}
 		result = result.substring(5, result.length());
+		byte []data = result.getBytes();
 		String name = "record_" + System.currentTimeMillis() + ".json";
 		resp.setContentType("application/json");
 		resp.setHeader("Content-Transfer-Encoding", "binary");
-		resp.setHeader("Content-Length", ""+result.length());
+		resp.setHeader("Content-Length", ""+data.length);
 		resp.setHeader("Content-Disposition", "attachment; filename=\""+name+"\"");
-		resp.getWriter().print(result);
+		resp.getWriter().print(data);
 		resp.getWriter().flush();
 	}
 
