@@ -6,3 +6,7 @@ Javascript utility to store user interactions with web page and replay them
 
 [![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/d0k1/jsflightrecorder/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
 
+
+
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/d0k1/jsflight/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+
