@@ -183,6 +183,13 @@ jsflight.TrackMouse = function(mouseEvent) {
  * Process keyboard event
  */
 jsflight.TrackKeyboard = function(keyboardEvent) {
+	// ignoring self activation/deactivation
+	if (event.ctrlKey && event.altKey && (event.which || event.keyCode) == 38) {
+		return;
+	}
+	if (event.ctrlKey && event.altKey && (event.which || event.keyCode) == 40) {
+		return;
+	}
 	if (keyboardEvent.target && keyboardEvent.target.id) {
 		// ignoring self buttons
 		if (keyboardEvent.target.id.indexOf("no-track-flight-cp") === 0) {
@@ -228,7 +235,7 @@ jsflight.TrackXhrSend = function(data){
 }
 
 jsflight.TrackXhrStateLoad = function(xhr){
-	var data = {method: xhr.currentTarget.openData.method, target:xhr.currentTarget.openData.target, async:xhr.currentTarget.openData.async, user:xhr.currentTarget.openData.user, password:xhr.currentTarget.openData.password, loaded:xhr.total, status: xhr.currentTarget.status, response:xhr.currentTarget.response}
+	var data = {method: xhr.currentTarget.openData.method, target:xhr.currentTarget.openData.target, async:xhr.currentTarget.openData.async, user:xhr.currentTarget.openData.user, password:xhr.currentTarget.openData.password, loaded:xhr.loaded, status: xhr.currentTarget.status, response:xhr.currentTarget.response}
 	data.type="xhr";
 	data.call="load";
 	data.tabuuid = jsflight.tabUuid;
@@ -247,12 +254,12 @@ jsflight.startRecorder = function() {
 	if (document.addEventListener) {
 		document.addEventListener('mousedown', jsflight.TrackMouse);
 		document.addEventListener('mousemove', jsflight.TrackMouse);
-		document.addEventListener('keypress', jsflight.TrackKeyboard);
+		document.addEventListener('keyup', jsflight.TrackKeyboard);
 		window.addEventListener('hashchange', jsflight.TrackHash);
 	} else {
 		document.attachEvent('mousedown', jsflight.TrackMouse);
 		document.attachEvent('mousemove', jsflight.TrackMouse);
-		document.attachEvent('keypress', jsflight.TrackKeyboard);
+		document.attachEvent('keyup', jsflight.TrackKeyboard);
 		window.attachEvent('hashchange', jsflight.TrackHash);
 	}
 	if (typeof (window.sessionStorage) == "undefined") {
@@ -280,12 +287,12 @@ jsflight.stopRecorder = function() {
 	if (document.removeEventListener) {
 		document.removeEventListener('mousedown', jsflight.TrackMouse);
 		document.removeEventListener('mousemove', jsflight.TrackMouse);
-		document.removeEventListener('keypress', jsflight.TrackKeyboard);
+		document.removeEventListener('keyup', jsflight.TrackKeyboard);
 		window.removeEventListener('hashchange', jsflight.TrackHash);
 	} else {
 		document.detachEvent('mousedown', jsflight.TrackMouse);
 		document.detachEvent('mousemove', jsflight.TrackMouse);
-		document.detachEvent('keypress', jsflight.TrackKeyboard);
+		document.detachEvent('keyup', jsflight.TrackKeyboard);
 		window.detachEvent('hashchange', jsflight.TrackHash);
 	}
 

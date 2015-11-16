@@ -4,7 +4,7 @@
         <wb-resource deploy-path="/" source-path="/src/main/webapp" tag="defaultRootSource"/>
         <wb-resource deploy-path="/WEB-INF/classes" source-path="/src/main/java"/>
         <wb-resource deploy-path="/WEB-INF/classes" source-path="/src/main/resources"/>
-        <dependent-module archiveName="recorder-1.6.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/recorder/recorder">
+        <dependent-module archiveName="recorder-1.7.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/recorder/recorder">
             <dependency-type>uses</dependency-type>
         </dependent-module>
         <property name="context-root" value="example"/>
