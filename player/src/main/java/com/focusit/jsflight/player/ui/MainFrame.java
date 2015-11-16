@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
@@ -275,7 +276,7 @@ public class MainFrame
                     }
                 }
 
-                events.sort(new Comparator<JSONObject>()
+                Collections.sort(events, new Comparator<JSONObject>()
                 {
                     @Override
                     public int compare(JSONObject o1, JSONObject o2)
