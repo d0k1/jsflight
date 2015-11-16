@@ -113,7 +113,7 @@ public class MainFrame
                 element.click();
             }
         }
-        if (eventType.equalsIgnoreCase("keypress"))
+        if (eventType.equalsIgnoreCase("keyup"))
         {
             if (event.has("charCode"))
             {

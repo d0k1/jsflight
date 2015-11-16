@@ -93,7 +93,17 @@ jsflight.getEventInfo = function(mouseEvent) {
 	result['tabuuid'] = jsflight.tabUuid;
 	result['type'] = mouseEvent.type;
 	result['url'] = window.location.href;
-	result['charCode'] = mouseEvent.charCode;
+	result['charCode'] = (event.which || event.keyCode || mouseEvent.charCode);
+	
+	if(!event.shiftKey) {
+		result['charCode'] = String.fromCharCode(result['charCode'])..toLowerCase().charCodeAt(0);
+	}
+	
+	result['altKey'] = event.altKey;
+	result['ctrlKey'] = event.ctrlKey;
+	result['shiftKey'] = event.shiftKey;
+	result['metaKey'] = event.metaKey;
+	
 	result['button'] = mouseEvent.button;
 	result['hash'] = window.location.hash;
 
