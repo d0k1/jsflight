@@ -96,7 +96,7 @@ jsflight.getEventInfo = function(mouseEvent) {
 	result['charCode'] = (event.which || event.keyCode || mouseEvent.charCode);
 	
 	if(!event.shiftKey) {
-		result['charCode'] = String.fromCharCode(result['charCode'])..toLowerCase().charCodeAt(0);
+		result['charCode'] = String.fromCharCode(result['charCode']).toLowerCase().charCodeAt(0);
 	}
 	
 	result['altKey'] = event.altKey;
