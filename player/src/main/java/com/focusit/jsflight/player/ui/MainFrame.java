@@ -98,10 +98,15 @@ public class MainFrame
         {
             return;
         }
+        String eventType = event.getString("type");
+
+        if (!eventType.equalsIgnoreCase("mousedown") && !eventType.equalsIgnoreCase("keypress"))
+        {
+            return;
+        }
 
         WebElement element = driver.findElement(By.xpath(event.getString("target")));
         ((JavascriptExecutor)driver).executeScript("window.focus();");
-        String eventType = event.getString("type");
         if (eventType.equalsIgnoreCase("mousedown"))
         {
             if (event.getInt("button") == 2)
