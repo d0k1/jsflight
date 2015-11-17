@@ -544,12 +544,17 @@ jsflight.addJSFlightHooksOnDocumentLoad = function(options) {
 	if (options.propertyProvider)
 		jsflight.options.propertyProvider = options.propertyProvider;
 
+	// when document is rendered
 	window.onload = function() {
 		jsflight.addControlHook();
 	}
 
+	// when tab is above to close
 	window.onbeforeunload = function() {
+		// disable all event handlers
 		jsflight.removeControlHook();
+		// send captured events
+		jsflight.sendEventData();
 	};
 }
 
@@ -601,6 +606,9 @@ jsflight.stopXhrTracking = function() {
 	XMLHttpRequest.prototype.oldSend = null;
 }
 
+/**
+ * send current batch of stored events and clear session storage
+ */
 jsflight.sendEventData = function(){
 
 	if (typeof (window.sessionStorage) == "undefined") {
@@ -624,8 +632,8 @@ jsflight.sendEventData = function(){
 	xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
 	xhr.onload = function () {
 		if(xhr.status==200){
-			for ( var key in keys) {
-				storage.removeItem(key);
+			for (var i = 0; i < keys.length; i++) {
+				storage.removeItem(keys[i]);
 			}
 		} else {
 			console.log("error storing data. status " +xhr.status)
