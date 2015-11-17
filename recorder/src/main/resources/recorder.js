@@ -19,12 +19,19 @@ jsflight.tabUuid = '';
 
 // recorder options
 jsflight.options = {
+	// should record be started after page loaded
+	autostart : false,
+	// baseUrl to reach servlet. useful when logger is outside an web-app
 	baseUrl : '',
-	downloadPath : '/jsflight/recorder/download',
+	// url to find servlet to send data
+	downloadPath : '/jsflight/recorder/storage',
+	// url to find servlet to view status
 	statusPath : '/jsflight/recorder/status',
 	trackMouse : false,
 	trackHash : false,
 	trackXhr : false,
+	track_duration : -1,
+	send_interval : -1,
 	propertyProvider : function(prop) {
 	}
 }
@@ -197,10 +204,12 @@ jsflight.TrackMouse = function(mouseEvent) {
  */
 jsflight.TrackKeyboard = function(keyboardEvent) {
 	// ignoring self activation/deactivation
-	if (event.ctrlKey && event.altKey && (event.which || event.keyCode) == 38) {
+	if (event.ctrlKey && event.altKey && event.shiftKey
+			&& (event.which || event.keyCode) == 38) {
 		return;
 	}
-	if (event.ctrlKey && event.altKey && (event.which || event.keyCode) == 40) {
+	if (event.ctrlKey && event.altKey && event.shiftKey
+			&& (event.which || event.keyCode) == 40) {
 		return;
 	}
 	if (keyboardEvent.target && keyboardEvent.target.id) {
@@ -370,11 +379,13 @@ jsflight.getEventsAsString = function() {
  * @param event
  */
 jsflight.controlHook = function(event) {
-	if (event.ctrlKey && event.altKey && (event.which || event.keyCode) == 38) {
+	if (event.ctrlKey && event.altKey && event.shiftKey
+			&& (event.which || event.keyCode) == 38) {
 		var panel = document.getElementById("flight-cp");
 		panel.style.display = 'block';
 	}
-	if (event.ctrlKey && event.altKey && (event.which || event.keyCode) == 40) {
+	if (event.ctrlKey && event.altKey && event.shiftKey
+			&& (event.which || event.keyCode) == 40) {
 		var panel = document.getElementById("flight-cp");
 		panel.style.display = 'none';
 	}
@@ -386,6 +397,11 @@ jsflight.controlHook = function(event) {
  * @returns {Boolean}
  */
 jsflight.shouldStartOnLoad = function() {
+
+	if (jsflight.options.autostart == true) {
+		return true;
+	}
+
 	if (typeof (window.sessionStorage) == "undefined") {
 		console.log('No support of window.sessionStorage');
 		return false;
@@ -405,17 +421,23 @@ jsflight.addControlHook = function() {
 	jsflight.tabUuid = jsflight.guid();
 
 	var script = document.createElement('script')
-	script.type = 'text/javascript'
-	script.charset = 'utf-8'
+	script.type = 'text/javascript';
+	script.charset = 'utf-8';
+	
+	//document.getElementById("data").value = jsflight.getEventsAsString();\
+
 	script.text = ' \
 		function flight_hide(){ \
 	        var panel = document.getElementById("flight-cp"); \
 	        panel.style.display="none"; \
 		}\
 		function flight_getEvents(){ \
-        	document.getElementById("data").value = jsflight.getEventsAsString();\
+			document.getElementById("data").value = jsflight.getEventsAsString(); \
         	return true; \
 	    } \
+		function flight_store(){ \
+			jsflight.sendEventData(); \
+		} \
 	    function flight_start(){ \
 			flight_hide(); \
 	    	jsflight.startRecorder(); \
@@ -429,35 +451,45 @@ jsflight.addControlHook = function() {
 	    }';
 	document.body.appendChild(script);
 
+	var css = document.createElement('style');
+	css.type = 'text/css';
+
+	var styles = '.modalDialog {position: fixed; font-family: Arial, Helvetica, sans-serif; top: 0; right: 0; bottom: 0; left: 0; background: rgba(0, 0, 0, 0.8); z-index: 99999; -webkit-transition: opacity 400ms ease-in; -moz-transition: opacity 400ms ease-in; transition: opacity 400ms ease-in; } .modalDialog:target {opacity:1; } .modalDialog > div {width: 400px; position: relative; margin: 10% auto; padding: 5px 20px 13px 20px; border-radius: 10px; background: #fff; background: -moz-linear-gradient(#fff, #999); background: -webkit-linear-gradient(#fff, #999); background: -o-linear-gradient(#fff, #999); } .close {background: #606061; color: #FFFFFF; line-height: 25px; position: absolute; right: -12px; text-align: center; top: -10px; width: 24px; text-decoration: none; font-weight: bold; -webkit-border-radius: 12px; -moz-border-radius: 12px; border-radius: 12px; -moz-box-shadow: 1px 1px 3px #000; -webkit-box-shadow: 1px 1px 3px #000; box-shadow: 1px 1px 3px #000; } .close:hover {background: #00d9ff; }';
+
+	if (css.styleSheet)
+		css.styleSheet.cssText = styles;
+	else
+		css.appendChild(document.createTextNode(styles));
+
+	document.getElementsByTagName("head")[0].appendChild(css);
+
 	var div = document.createElement("div");
 	div.id = "flight-cp";
+	div.className = "modalDialog";
 	div.style.display = 'none';
 
-	div.innerHTML = '<h1>JSFlightRecorder</h1><h4><a href="https://github.com/d0k1/JSFlightRecorder">https://github.com/d0k1/JSFlightRecorder</a></h4><h2>Control panel</h2> \
-	<div> \
-	   <form action="'
+	div.innerHTML = '<div> \
+		   <h1>JSFlight</h1><h2>Control panel</h2> \
+		   <form action="'
 			+ jsflight.options.baseUrl
 			+ jsflight.options.downloadPath
-			+ '" method="post" target="_blank"> \
-	       <input id="data" type="hidden" value="secret" name="data"/> \
-	       <input type="submit" value="Download recording" onclick="flight_getEvents()"/> \
-	   </form>\
-	</div>\
-		<div> \
+			+ '?download" method="post" target="_blank"> \
+		       <input id="data" type="hidden" value="secret" name="data"/> \
+		       <input type="submit" value="Download recording" onclick="flight_getEvents()"/> \
+		   </form>\
 	        <button id="no-track-flight-cp1" onclick="flight_start()">Start</button> \
 	        <button id="no-track-flight-cp2" onclick="flight_stop()">Stop</button> \
+	        <button id="no-track-flight-cp0" onclick="flight_store()">Store</button> \
 	        <button id="no-track-flight-cp3" onclick="flight_clear()">Clear</button> \
 	        <button id="no-track-flight-cp4" onclick="flight_hide()">Hide</button> \
 	        <button id="no-track-flight-cp5" onclick="window.open(\''
 			+ jsflight.options.baseUrl
 			+ jsflight.options.statusPath
 			+ '\', \'_blank\')">Status</button> \
-		    <br/> \
-			<br/> \
 			<button id="no-track-flight-cp6" onclick="jsflight.options.trackMouse=true;">Track Move</button> \
 			<button id="no-track-flight-cp7" onclick="jsflight.options.trackMouse=false">Dont Track Move</button> \
-		</div> \
-		';
+			<h6><a href="https://github.com/d0k1/jsflight">https://github.com/d0k1/jsflight</a></h6> \
+			</div>';
 
 	document.body.appendChild(div);
 
@@ -532,7 +564,10 @@ jsflight.initXhrTracking = function() {
 			user : user,
 			password : password
 		};
-		jsflight.TrackXhrOpen(data);
+		// skip open to ourself url
+		if(url!=jsflight.options.baseUrl+jsflight.options.downloadPath) {
+			jsflight.TrackXhrOpen(data);
+		}
 		this.openData = data;
 		this.oldOpen(method, url, async, user, password);
 	}
@@ -550,7 +585,10 @@ jsflight.initXhrTracking = function() {
 			open : this.openData,
 			data : data
 		};
-		jsflight.TrackXhrSend(trackData);
+		// skip send to ourself url
+		if(trackData.open.target!=jsflight.options.baseUrl+jsflight.options.downloadPath) {
+			jsflight.TrackXhrSend(trackData);
+		}
 		this.oldSend.call(this, data);
 	}
 }
@@ -561,4 +599,37 @@ jsflight.stopXhrTracking = function() {
 
 	XMLHttpRequest.prototype.send = XMLHttpRequest.prototype.oldSend;
 	XMLHttpRequest.prototype.oldSend = null;
+}
+
+jsflight.sendEventData = function(){
+
+	if (typeof (window.sessionStorage) == "undefined") {
+		console.log('No support of window.sessionStorage');
+		return;
+	}
+	var storage = window.sessionStorage;
+
+	var events = [];
+	var keys = [];
+	for ( var key in storage) {
+		if (key.indexOf('recorder.eventId.') === 0) {
+			events.push(storage.getItem(key));
+			keys.push(key);
+		}
+	}
+	var data = JSON.stringify(events);
+	
+	var xhr = new XMLHttpRequest();
+	xhr.open('POST', jsflight.options.baseUrl+jsflight.options.downloadPath, true);
+	xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+	xhr.onload = function () {
+		if(xhr.status==200){
+			for ( var key in keys) {
+				storage.removeItem(key);
+			}
+		} else {
+			console.log("error storing data. status " +xhr.status)
+		}
+	};
+	xhr.send('data='+data);	
 }
