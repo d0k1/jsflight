@@ -21,6 +21,7 @@
     	baseUrl:'<%=request.getContextPath()%>',
     	trackHash:true,
     	trackXhr:true,
+    	send_interval: 1000,
     	propertyProvider:function(prop){
     		prop['customProp'] = (new Date()).getTime();
     	}

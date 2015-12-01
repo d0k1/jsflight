@@ -39,9 +39,9 @@ jsflight.options = {
 	trackHash : false,
 	// track xhr request/response
 	trackXhr : false,
-	// time to track
+	// time to track, milliseconds
 	track_duration : -1,
-	// time interval to send tracked data
+	// time interval to send tracked data, milliseconds
 	send_interval : -1,
 	propertyProvider : function(prop) {
 	}
@@ -276,6 +276,9 @@ jsflight.TrackXhrSend = function(data) {
 }
 
 jsflight.TrackXhrStateLoad = function(xhr) {
+	if(xhr.currentTarget.openData.target==jsflight.options.baseUrl+jsflight.options.downloadPath) {
+		return;
+	}
 	var data = {
 		method : xhr.currentTarget.openData.method,
 		target : xhr.currentTarget.openData.target,
@@ -340,6 +343,7 @@ jsflight.startRecorder = function() {
  * @returns {Boolean}
  */
 jsflight.stopRecorder = function() {
+	jsflight.stopTimers();
 	if (document.removeEventListener) {
 		document.removeEventListener('mousedown', jsflight.TrackMouse);
 		document.removeEventListener('mousemove', jsflight.TrackMouse);
@@ -360,6 +364,7 @@ jsflight.stopRecorder = function() {
 	}
 
 	window.sessionStorage.removeItem('recorder.active');
+	window.sessionStorage.removeItem('recorder.max');
 
 	if (jsflight.options.trackXhr) {
 		jsflight.stopXhrTracking();
@@ -559,6 +564,12 @@ jsflight.addJSFlightHooksOnDocumentLoad = function(options) {
 	if (options.propertyProvider)
 		jsflight.options.propertyProvider = options.propertyProvider;
 
+	if (options.send_interval)
+		jsflight.options.send_interval = options.send_interval;
+	
+	if (options.track_duration)
+		jsflight.options.track_duration = options.track_duration;
+
 	// when document is rendered
 	window.onload = function() {
 		jsflight.addControlHook();
@@ -575,22 +586,22 @@ jsflight.addJSFlightHooksOnDocumentLoad = function(options) {
 	};
 }
 
-jsflight.startTimers() = function(){
-	if(options.track_duration>0)
-		jsflight.stop_timer = windows.setTimeout(jflight.stop_recording_timer, options.track_duration)
+jsflight.startTimers = function(){
+	if(jsflight.options.track_duration>0)
+		jsflight.stop_timer = window.setInterval(jsflight.stop_recording_timer, jsflight.options.track_duration);
 		
-	if(options.send_interval>0)
-		jsflight.send_timer = window.setTimeout(jsflight.send_data_timer(), options.send_interval);
+	if(jsflight.options.send_interval>0)
+		jsflight.send_timer = window.setInterval(jsflight.send_data_timer, jsflight.options.send_interval);
 }
 
 jsflight.stopTimers = function(){
 	if(jsflight.stop_timer != null){
-		jsflight.stop_timer = windows.setTimeout(jflight.stop_recording_timer, options.track_duration)
+		window.clearInterval(jsflight.stop_timer);
 		jsflight.stop_timer = null;
 	}
 		
 	if(jsflight.send_timer != null) {
-		jsflight.send_timer = window.setTimeout(jsflight.send_data_timer(), options.send_interval);
+		window.clearInterval(jsflight.send_timer);
 		jsflight.send_timer = null;
 	}
 }
@@ -662,6 +673,11 @@ jsflight.sendEventData = function(){
 			keys.push(key);
 		}
 	}
+	
+	// it is pity to send an empty array. No tracked data no xhr post 
+	if(events.length==0)
+		return;
+	
 	var data = JSON.stringify(events);
 	
 	var xhr = new XMLHttpRequest();
@@ -679,7 +695,7 @@ jsflight.sendEventData = function(){
 	xhr.send('data='+data);	
 }
 
-jflight.stop_recording_timer = function(){
+jsflight.stop_recording_timer = function(){
 	jsflight.stopRecorder();
 }
 

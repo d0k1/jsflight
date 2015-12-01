@@ -12,6 +12,12 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.IOUtils;
 
+/**
+ * Servlet provides a js to track events in a browser
+ * 
+ * @author Denis V. Kirpichenkov
+ *
+ */
 @WebServlet(urlPatterns = { "/jsflight/recorder" })
 public class RecorderServlet extends HttpServlet {
 

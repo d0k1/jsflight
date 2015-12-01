@@ -11,10 +11,19 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.IOUtils;
 
+/**
+ * Servlet to process tracked data from a browser.
+ * It's logic can be overrided by {@link RecorderProcessor}
+ * 
+ * @author Denis V. Kirpichenkov
+ *
+ */
 @WebServlet(urlPatterns = { "/jsflight/recorder/storage" })
 public class RecorderStorageServlet extends HttpServlet {
 
 	private static final long serialVersionUID = 1L;
+	
+	private static volatile RecordingProcessor processor = new NoOpRecordingProcessor();
 
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -27,19 +36,23 @@ public class RecorderStorageServlet extends HttpServlet {
 			resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
 			return;
 		}
+		RecordingProcessor recProcess = processor;
+		if(recProcess==null)
+		{
+			resp.getWriter().print("{\"OK\"}");
+			resp.setStatus(HttpServletResponse.SC_OK);			
+		}
+		
+		// 'cause form's data starts with 'data='
 		result = result.substring(5, result.length());
 		if (req.getParameter("download") != null) {
-			byte[] data = result.getBytes();
-			String name = "record_" + System.currentTimeMillis() + ".json";
-			resp.setContentType("application/json");
-			resp.setHeader("Content-Transfer-Encoding", "binary");
-			resp.setHeader("Content-Length", "" + data.length);
-			resp.setHeader("Content-Disposition", "attachment; filename=\"" + name + "\"");
-			resp.getWriter().println(result);
-			resp.getWriter().flush();
+			recProcess.processDownloadRequest(req, resp, result);
 		} else {
-			resp.getWriter().print("{\"OK\"}");
-			resp.setStatus(HttpServletResponse.SC_OK);
+			recProcess.processStoreEvent(req, resp, result);
 		}
+	}
+
+	public static void setProcessor(RecordingProcessor processor) {
+		RecorderStorageServlet.processor = processor;
 	}
 }

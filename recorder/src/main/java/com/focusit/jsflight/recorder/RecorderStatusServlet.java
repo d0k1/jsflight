@@ -12,6 +12,12 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.IOUtils;
 
+/**
+ * Servlet to show some status information. Currently unused at all
+ * 
+ * @author Denis V. Kirpichenkov
+ *
+ */
 @WebServlet(urlPatterns = { "/jsflight/recorder/status"})
 public class RecorderStatusServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
