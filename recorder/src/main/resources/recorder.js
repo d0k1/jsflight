@@ -11,6 +11,12 @@ var jsflight = jsflight || {}
 
 /* =================================================================================================================================== */
 /** Global variables * */
+// periodically send tracked data timer variable
+jsflight.send_timer = null;
+
+// After track_duration seconds browser will stop tracking events. timer variable.
+jsflight.stop_timer = null;
+
 // event id
 jsflight.eventId = 0;
 
@@ -27,10 +33,15 @@ jsflight.options = {
 	downloadPath : '/jsflight/recorder/storage',
 	// url to find servlet to view status
 	statusPath : '/jsflight/recorder/status',
+	// track mouse movements
 	trackMouse : false,
+	// track url hash change
 	trackHash : false,
+	// track xhr request/response
 	trackXhr : false,
+	// time to track
 	track_duration : -1,
+	// time interval to send tracked data
 	send_interval : -1,
 	propertyProvider : function(prop) {
 	}
@@ -290,6 +301,10 @@ jsflight.TrackXhrStateLoad = function(xhr) {
  * @returns {Boolean}
  */
 jsflight.startRecorder = function() {
+	// do not forget about timers. first stop them, next start them if required
+	jsflight.stopTimers();
+	jsflight.startTimers();
+	
 	if (document.addEventListener) {
 		document.addEventListener('mousedown', jsflight.TrackMouse);
 		document.addEventListener('mousemove', jsflight.TrackMouse);
@@ -551,11 +566,33 @@ jsflight.addJSFlightHooksOnDocumentLoad = function(options) {
 
 	// when tab is above to close
 	window.onbeforeunload = function() {
+		jsflight.stopTimers();
 		// disable all event handlers
 		jsflight.removeControlHook();
 		// send captured events
 		jsflight.sendEventData();
+		
 	};
+}
+
+jsflight.startTimers() = function(){
+	if(options.track_duration>0)
+		jsflight.stop_timer = windows.setTimeout(jflight.stop_recording_timer, options.track_duration)
+		
+	if(options.send_interval>0)
+		jsflight.send_timer = window.setTimeout(jsflight.send_data_timer(), options.send_interval);
+}
+
+jsflight.stopTimers = function(){
+	if(jsflight.stop_timer != null){
+		jsflight.stop_timer = windows.setTimeout(jflight.stop_recording_timer, options.track_duration)
+		jsflight.stop_timer = null;
+	}
+		
+	if(jsflight.send_timer != null) {
+		jsflight.send_timer = window.setTimeout(jsflight.send_data_timer(), options.send_interval);
+		jsflight.send_timer = null;
+	}
 }
 
 jsflight.initXhrTracking = function() {
@@ -640,4 +677,12 @@ jsflight.sendEventData = function(){
 		}
 	};
 	xhr.send('data='+data);	
+}
+
+jflight.stop_recording_timer = function(){
+	jsflight.stopRecorder();
+}
+
+jsflight.send_data_timer = function(){
+	jsflight.sendEventData();
 }

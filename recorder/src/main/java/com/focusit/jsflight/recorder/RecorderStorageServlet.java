@@ -42,5 +42,4 @@ public class RecorderStorageServlet extends HttpServlet {
 			resp.setStatus(HttpServletResponse.SC_OK);
 		}
 	}
-
 }
