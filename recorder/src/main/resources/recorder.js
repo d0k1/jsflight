@@ -543,6 +543,9 @@ jsflight.removeControlHook = function() {
  */
 jsflight.addJSFlightHooksOnDocumentLoad = function(options) {
 
+	if (options.autostart)
+		jsflight.options.autostart = options.autostart;
+
 	if (options.baseUrl)
 		jsflight.options.baseUrl = options.baseUrl;
 
