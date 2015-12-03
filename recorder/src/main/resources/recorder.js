@@ -700,6 +700,7 @@ jsflight.sendEventData = function(){
 
 jsflight.stop_recording_timer = function(){
 	jsflight.stopRecorder();
+	jsflight.sendEventData();
 }
 
 jsflight.send_data_timer = function(){
