@@ -11,15 +11,22 @@ import javax.servlet.http.HttpServletResponse;
  * @author Denis V. Kirpichenkov
  *
  */
-public class NoOpRecordingProcessor implements RecordingProcessor {
+public class NoOpRecordingProcessor implements RecordingProcessor
+{
 
-	@Override
-	public void processDownloadRequest(HttpServletRequest req, HttpServletResponse resp, String data)
-			throws IOException {
-	}
+    @Override
+    public void processDownloadRequest(HttpServletRequest req, HttpServletResponse resp, String data)
+            throws IOException
+    {
+    }
 
-	@Override
-	public void processStoreEvent(HttpServletRequest req, HttpServletResponse resp, String data) throws IOException {
-	}
+    @Override
+    public void processRecordStop(HttpServletRequest req, HttpServletResponse resp, String data) throws IOException
+    {
+    }
 
+    @Override
+    public void processStoreEvent(HttpServletRequest req, HttpServletResponse resp, String data) throws IOException
+    {
+    }
 }

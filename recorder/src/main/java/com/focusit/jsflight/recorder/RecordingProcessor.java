@@ -11,7 +11,11 @@ import javax.servlet.http.HttpServletResponse;
  * @author Denis V. Kirpichenkov
  *
  */
-public interface RecordingProcessor {
-	void processDownloadRequest(HttpServletRequest req, HttpServletResponse resp, String data) throws IOException;
-	void processStoreEvent(HttpServletRequest req, HttpServletResponse resp, String data) throws IOException;
+public interface RecordingProcessor
+{
+    void processDownloadRequest(HttpServletRequest req, HttpServletResponse resp, String data) throws IOException;
+
+    void processRecordStop(HttpServletRequest req, HttpServletResponse resp, String data) throws IOException;
+
+    void processStoreEvent(HttpServletRequest req, HttpServletResponse resp, String data) throws IOException;
 }

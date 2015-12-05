@@ -19,40 +19,51 @@ import org.apache.commons.io.IOUtils;
  *
  */
 @WebServlet(urlPatterns = { "/jsflight/recorder/storage" })
-public class RecorderStorageServlet extends HttpServlet {
+public class RecorderStorageServlet extends HttpServlet
+{
 
-	private static final long serialVersionUID = 1L;
-	
-	private static volatile RecordingProcessor processor = new NoOpRecordingProcessor();
+    private static final long serialVersionUID = 1L;
 
-	@Override
-	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		StringWriter writer = new StringWriter();
-		IOUtils.copy(req.getInputStream(), writer, "UTF-8");
-		String theString = writer.toString();
+    private static volatile RecordingProcessor processor = new NoOpRecordingProcessor();
 
-		String result = java.net.URLDecoder.decode(theString, "UTF-8");
-		if (result.length() < 5) {
-			resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
-			return;
-		}
-		RecordingProcessor recProcess = processor;
-		if(recProcess==null)
-		{
-			resp.getWriter().print("{\"OK\"}");
-			resp.setStatus(HttpServletResponse.SC_OK);			
-		}
-		
-		// 'cause form's data starts with 'data='
-		result = result.substring(5, result.length());
-		if (req.getParameter("download") != null) {
-			recProcess.processDownloadRequest(req, resp, result);
-		} else {
-			recProcess.processStoreEvent(req, resp, result);
-		}
-	}
+    public static void setProcessor(RecordingProcessor processor)
+    {
+        RecorderStorageServlet.processor = processor;
+    }
 
-	public static void setProcessor(RecordingProcessor processor) {
-		RecorderStorageServlet.processor = processor;
-	}
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException
+    {
+        StringWriter writer = new StringWriter();
+        IOUtils.copy(req.getInputStream(), writer, "UTF-8");
+        String theString = writer.toString();
+
+        String result = java.net.URLDecoder.decode(theString, "UTF-8");
+        if (result.length() < 5)
+        {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+            return;
+        }
+        RecordingProcessor recProcess = processor;
+        if (recProcess == null)
+        {
+            resp.getWriter().print("{\"OK\"}");
+            resp.setStatus(HttpServletResponse.SC_OK);
+        }
+
+        // 'cause form's data starts with 'data='
+        result = result.substring(5, result.length());
+        if (req.getParameter("download") != null)
+        {
+            recProcess.processDownloadRequest(req, resp, result);
+        }
+        else if (req.getParameter("stop") != null)
+        {
+            recProcess.processRecordStop(req, resp, result);
+        }
+        else
+        {
+            recProcess.processStoreEvent(req, resp, result);
+        }
+    }
 }
