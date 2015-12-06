@@ -456,7 +456,7 @@ jsflight.addControlHook = function() {
         	return true; \
 	    } \
 		function flight_store(){ \
-			jsflight.sendEventData(); \
+			jsflight.sendEventData(false); \
 		} \
 	    function flight_start(){ \
 			flight_hide(); \
@@ -584,7 +584,7 @@ jsflight.addJSFlightHooksOnDocumentLoad = function(options) {
 		// disable all event handlers
 		jsflight.removeControlHook();
 		// send captured events
-		jsflight.sendEventData();
+		jsflight.sendEventData(true);
 		
 	};
 }
@@ -660,7 +660,7 @@ jsflight.stopXhrTracking = function() {
 /**
  * send current batch of stored events and clear session storage
  */
-jsflight.sendEventData = function(){
+jsflight.sendEventData = function(sendStop){
 
 	if (typeof (window.sessionStorage) == "undefined") {
 		console.log('No support of window.sessionStorage');
@@ -678,13 +678,16 @@ jsflight.sendEventData = function(){
 	}
 	
 	// it is pity to send an empty array. No tracked data no xhr post 
-	if(events.length==0)
+	if(events.length==0 && sendStop==false)
 		return;
 	
 	var data = JSON.stringify(events);
-	
+	var uri = jsflight.options.baseUrl+jsflight.options.downloadPath;
+	if(sendStop) {
+		uri+="?stop"
+	}
 	var xhr = new XMLHttpRequest();
-	xhr.open('POST', jsflight.options.baseUrl+jsflight.options.downloadPath, true);
+	xhr.open('POST', uri, true);
 	xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
 	xhr.onload = function () {
 		if(xhr.status==200){
@@ -700,9 +703,9 @@ jsflight.sendEventData = function(){
 
 jsflight.stop_recording_timer = function(){
 	jsflight.stopRecorder();
-	jsflight.sendEventData();
+	jsflight.sendEventData(true);
 }
 
 jsflight.send_data_timer = function(){
-	jsflight.sendEventData();
+	jsflight.sendEventData(false);
 }
