@@ -444,8 +444,6 @@ jsflight.addControlHook = function() {
 	script.type = 'text/javascript';
 	script.charset = 'utf-8';
 	
-	//document.getElementById("data").value = jsflight.getEventsAsString();\
-
 	script.text = ' \
 		function flight_hide(){ \
 	        var panel = document.getElementById("flight-cp"); \
@@ -463,6 +461,7 @@ jsflight.addControlHook = function() {
 	    	jsflight.startRecorder(); \
 	    } \
 	    function flight_stop(){ \
+			jsflight.sendEventData(true); \
 	        jsflight.stopRecorder(); \
 	    } \
 	    function flight_clear(){ \
@@ -698,7 +697,7 @@ jsflight.sendEventData = function(sendStop){
 			console.log("error storing data. status " +xhr.status)
 		}
 	};
-	xhr.send('data='+data);	
+	xhr.send('data='+encodeURIComponent(data));	
 }
 
 jsflight.stop_recording_timer = function(){
