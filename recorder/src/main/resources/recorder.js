@@ -14,7 +14,8 @@ var jsflight = jsflight || {}
 // periodically send tracked data timer variable
 jsflight.send_timer = null;
 
-// After track_duration seconds browser will stop tracking events. timer variable.
+// After track_duration seconds browser will stop tracking events. timer
+// variable.
 jsflight.stop_timer = null;
 
 // event id
@@ -22,6 +23,9 @@ jsflight.eventId = 0;
 
 // browser window/tab uuid
 jsflight.tabUuid = '';
+
+// id to compare xhr tacked data what was sent, what was received back
+jsflight.xhrId = 0;
 
 // recorder options
 jsflight.options = {
@@ -43,6 +47,8 @@ jsflight.options = {
 	track_duration : -1,
 	// time interval to send tracked data, milliseconds
 	send_interval : -1,
+	// control panel disabled by default
+	cp_disabled=true,
 	propertyProvider : function(prop) {
 	}
 }
@@ -98,16 +104,6 @@ jsflight.getEventInfo = function(mouseEvent) {
 	mouseEvent.target = target;
 
 	var result = new Object;
-	// To be really sure what target element was, it may be useful to hold the
-	// whole path to target element
-	// var path = mouseEvent.path;
-	// var xpaths = [];
-	// for(var i=0;i<path.length;i++){
-	// if(path[i] && path[i]!=document && path[i]!=window){
-	// xpaths.push(getElementXPath(path[i]))
-	// }
-	// }
-	// result['path'] = xpaths;
 
 	result['tabuuid'] = jsflight.tabUuid;
 	result['type'] = mouseEvent.type;
@@ -195,107 +191,144 @@ jsflight.guid = function() {
  * Process mouse event
  */
 jsflight.TrackMouse = function(mouseEvent) {
-	if (mouseEvent.type == 'mousemove' && jsflight.options.trackMouse == false) {
-		return;
-	}
-	if (mouseEvent.target && mouseEvent.target.id) {
-		// ignoring self buttons
-		if (mouseEvent.target.id.indexOf("no-track-flight-cp") === 0) {
+	try {
+		if (mouseEvent.type == 'mousemove'
+				&& jsflight.options.trackMouse == false) {
 			return;
 		}
+		if (mouseEvent.target && mouseEvent.target.id) {
+			// ignoring self buttons
+			if (mouseEvent.target.id.indexOf("no-track-flight-cp") === 0) {
+				return;
+			}
+		}
+		var data = JSON.stringify(jsflight.getEventInfo(mouseEvent));
+		jsflight.saveToStorage(jsflight.eventId, data);
+	} catch (e) {
+		console.log(e);
+	} finally {
+		// console.log("Event: " + data + "\n");
+		jsflight.eventId++;
 	}
-	var data = JSON.stringify(jsflight.getEventInfo(mouseEvent));
-	jsflight.saveToStorage(jsflight.eventId, data);
-	// console.log("Event: " + data + "\n");
-	jsflight.eventId++;
 };
 
 /**
  * Process keyboard event
  */
 jsflight.TrackKeyboard = function(keyboardEvent) {
-	// ignoring self activation/deactivation
-	if (event.ctrlKey && event.altKey && event.shiftKey
-			&& (event.which || event.keyCode) == 38) {
-		return;
-	}
-	if (event.ctrlKey && event.altKey && event.shiftKey
-			&& (event.which || event.keyCode) == 40) {
-		return;
-	}
-	if (keyboardEvent.target && keyboardEvent.target.id) {
-		// ignoring self buttons
-		if (keyboardEvent.target.id.indexOf("no-track-flight-cp") === 0) {
+	try {
+		// ignoring self activation/deactivation
+		if (event.ctrlKey && event.altKey && event.shiftKey
+				&& (event.which || event.keyCode) == 38) {
 			return;
 		}
-	}
+		if (event.ctrlKey && event.altKey && event.shiftKey
+				&& (event.which || event.keyCode) == 40) {
+			return;
+		}
+		if (keyboardEvent.target && keyboardEvent.target.id) {
+			// ignoring self buttons
+			if (keyboardEvent.target.id.indexOf("no-track-flight-cp") === 0) {
+				return;
+			}
+		}
 
-	var data = JSON.stringify(jsflight.getEventInfo(keyboardEvent));
-	jsflight.saveToStorage(jsflight.eventId, data);
-	// console.log("Event: " + data + "\n");
-	jsflight.eventId++;
+		var data = JSON.stringify(jsflight.getEventInfo(keyboardEvent));
+		jsflight.saveToStorage(jsflight.eventId, data);
+	} catch (e) {
+		console.log(e);
+	} finally {
+		jsflight.eventId++;
+	}
 };
 
 jsflight.TrackHash = function(event) {
-	if (jsflight.options.trackHash != true)
-		return;
+	try {
+		if (jsflight.options.trackHash != true)
+			return;
 
-	var data = JSON.stringify(jsflight.getEventInfo(event));
-	jsflight.saveToStorage(jsflight.eventId, data);
-	// console.log("Event: " + data + "\n");
-	jsflight.eventId++;
+		var data = JSON.stringify(jsflight.getEventInfo(event));
+		jsflight.saveToStorage(jsflight.eventId, data);
+	} catch (e) {
+		console.log(e);
+	} finally {
+		jsflight.eventId++;
+	}
 }
 
 jsflight.TrackXhrOpen = function(data) {
-	data.type = "xhr";
-	data.call = "open";
-	data.tabuuid = jsflight.tabUuid;
-	data.url = window.location.href;
-	data.timestamp = new Date().getTime()
-	jsflight.saveToStorage(jsflight.eventId, JSON.stringify(data));
-	jsflight.eventId++;
+	try {
+		data.type = "xhr";
+		data.call = "open";
+		data.tabuuid = jsflight.tabUuid;
+		data.url = window.location.href;
+		data.timestamp = new Date().getTime()		
+		jsflight.saveToStorage(jsflight.eventId, JSON.stringify(data));
+	} catch (e) {
+		console.log(e);
+	} finally {
+		jsflight.eventId++;
+	}
 }
 
 jsflight.TrackXhrSend = function(data) {
-	var senddata = {
-		method : data.open.method,
-		target : data.open.target,
-		async : data.open.async,
-		user : data.open.user,
-		password : data.open.password,
-		request : data.data,
-		sended : data.data.length
+	try {
+
+		if (data === null || data === undefined) {
+			data.data = "";
+		}
+
+		var senddata = {
+			method : data.open.method,
+			target : data.open.target,
+			async : data.open.async,
+			user : data.open.user,
+			password : data.open.password,
+			request : data.data,
+			xhrId : data.xhrId,
+			sended : data.data.length
+		}
+		senddata.type = "xhr";
+		senddata.call = "send";
+		senddata.tabuuid = jsflight.tabUuid;
+		senddata.url = window.location.href;
+		senddata.timestamp = new Date().getTime()
+		jsflight.saveToStorage(jsflight.eventId, JSON.stringify(senddata));
+	} catch (e) {
+		console.log(e);
+	} finally {
+		jsflight.eventId++;
 	}
-	senddata.type = "xhr";
-	senddata.call = "send";
-	senddata.tabuuid = jsflight.tabUuid;
-	senddata.url = window.location.href;
-	senddata.timestamp = new Date().getTime()
-	jsflight.saveToStorage(jsflight.eventId, JSON.stringify(senddata));
-	jsflight.eventId++;
 }
 
 jsflight.TrackXhrStateLoad = function(xhr) {
-	if(xhr.currentTarget.openData.target==jsflight.options.baseUrl+jsflight.options.downloadPath) {
-		return;
+	try {
+		if (xhr.currentTarget.openData.target == jsflight.options.baseUrl
+				+ jsflight.options.downloadPath) {
+			return;
+		}
+		var data = {
+			method : xhr.currentTarget.openData.method,
+			target : xhr.currentTarget.openData.target,
+			async : xhr.currentTarget.openData.async,
+			user : xhr.currentTarget.openData.user,
+			password : xhr.currentTarget.openData.password,
+			loaded : xhr.loaded,
+			status : xhr.currentTarget.status,
+			xhrId : xhr.currentTarget.openData.xhrId,
+			response : xhr.currentTarget.response
+		}
+		data.type = "xhr";
+		data.call = "load";
+		data.tabuuid = jsflight.tabUuid;
+		data.url = window.location.href;
+		data.timestamp = new Date().getTime()
+		jsflight.saveToStorage(jsflight.eventId, JSON.stringify(data));
+	} catch (e) {
+		console.log(e);
+	} finally {
+		jsflight.eventId++;
 	}
-	var data = {
-		method : xhr.currentTarget.openData.method,
-		target : xhr.currentTarget.openData.target,
-		async : xhr.currentTarget.openData.async,
-		user : xhr.currentTarget.openData.user,
-		password : xhr.currentTarget.openData.password,
-		loaded : xhr.loaded,
-		status : xhr.currentTarget.status,
-		response : xhr.currentTarget.response
-	}
-	data.type = "xhr";
-	data.call = "load";
-	data.tabuuid = jsflight.tabUuid;
-	data.url = window.location.href;
-	data.timestamp = new Date().getTime()
-	jsflight.saveToStorage(jsflight.eventId, JSON.stringify(data));
-	jsflight.eventId++;
 }
 
 /**
@@ -307,7 +340,7 @@ jsflight.startRecorder = function() {
 	// do not forget about timers. first stop them, next start them if required
 	jsflight.stopTimers();
 	jsflight.startTimers();
-	
+
 	if (document.addEventListener) {
 		document.addEventListener('mousedown', jsflight.TrackMouse);
 		document.addEventListener('mousemove', jsflight.TrackMouse);
@@ -434,16 +467,11 @@ jsflight.shouldStartOnLoad = function() {
 	return false
 }
 
-/**
- * Inject control panel specific js-code and markup
- */
-jsflight.addControlHook = function() {
-	jsflight.tabUuid = jsflight.guid();
-
+jsflight.addControlPanel = function(){
 	var script = document.createElement('script')
 	script.type = 'text/javascript';
 	script.charset = 'utf-8';
-	
+
 	script.text = ' \
 		function flight_hide(){ \
 	        var panel = document.getElementById("flight-cp"); \
@@ -517,6 +545,17 @@ jsflight.addControlHook = function() {
 	} else {
 		document.attachEvent('keyup', jsflight.controlHook);
 	}
+}
+
+/**
+ * Inject control panel specific js-code and markup
+ */
+jsflight.addControlHook = function() {
+	if(jsflight.options.cp_disabled==false) {
+		jsflight.addControlPanel();
+	}
+
+	jsflight.tabUuid = jsflight.guid();
 
 	if (jsflight.shouldStartOnLoad()) {
 		jsflight.startRecorder();
@@ -542,6 +581,11 @@ jsflight.removeControlHook = function() {
  */
 jsflight.addJSFlightHooksOnDocumentLoad = function(options) {
 
+	if(options.cp_disabled)
+		jsflight.options.cp_disabled = true;
+	else
+		jsflight.options.cp_disabled = false;
+	
 	if (options.autostart)
 		jsflight.options.autostart = options.autostart;
 
@@ -568,7 +612,7 @@ jsflight.addJSFlightHooksOnDocumentLoad = function(options) {
 
 	if (options.send_interval)
 		jsflight.options.send_interval = options.send_interval;
-	
+
 	if (options.track_duration)
 		jsflight.options.track_duration = options.track_duration;
 
@@ -584,25 +628,26 @@ jsflight.addJSFlightHooksOnDocumentLoad = function(options) {
 		jsflight.removeControlHook();
 		// send captured events
 		jsflight.sendEventData(true);
-		
 	};
 }
 
-jsflight.startTimers = function(){
-	if(jsflight.options.track_duration>0)
-		jsflight.stop_timer = window.setInterval(jsflight.stop_recording_timer, jsflight.options.track_duration);
-		
-	if(jsflight.options.send_interval>0)
-		jsflight.send_timer = window.setInterval(jsflight.send_data_timer, jsflight.options.send_interval);
+jsflight.startTimers = function() {
+	if (jsflight.options.track_duration > 0)
+		jsflight.stop_timer = window.setInterval(jsflight.stop_recording_timer,
+				jsflight.options.track_duration);
+
+	if (jsflight.options.send_interval > 0)
+		jsflight.send_timer = window.setInterval(jsflight.send_data_timer,
+				jsflight.options.send_interval);
 }
 
-jsflight.stopTimers = function(){
-	if(jsflight.stop_timer != null){
+jsflight.stopTimers = function() {
+	if (jsflight.stop_timer != null) {
 		window.clearInterval(jsflight.stop_timer);
 		jsflight.stop_timer = null;
 	}
-		
-	if(jsflight.send_timer != null) {
+
+	if (jsflight.send_timer != null) {
 		window.clearInterval(jsflight.send_timer);
 		jsflight.send_timer = null;
 	}
@@ -617,10 +662,12 @@ jsflight.initXhrTracking = function() {
 			target : url,
 			async : async,
 			user : user,
-			password : password
+			password : password,
+			xhrId: jsflight.xhrId 
 		};
+		jsflight.xhrId++;
 		// skip open to ourself url
-		if(url!=jsflight.options.baseUrl+jsflight.options.downloadPath) {
+		if (url != jsflight.options.baseUrl + jsflight.options.downloadPath) {
 			jsflight.TrackXhrOpen(data);
 		}
 		this.openData = data;
@@ -641,7 +688,8 @@ jsflight.initXhrTracking = function() {
 			data : data
 		};
 		// skip send to ourself url
-		if(trackData.open.target!=jsflight.options.baseUrl+jsflight.options.downloadPath) {
+		if (trackData.open.target.indexOf(jsflight.options.baseUrl
+				+ jsflight.options.downloadPath)!=0) {
 			jsflight.TrackXhrSend(trackData);
 		}
 		this.oldSend.call(this, data);
@@ -659,7 +707,7 @@ jsflight.stopXhrTracking = function() {
 /**
  * send current batch of stored events and clear session storage
  */
-jsflight.sendEventData = function(sendStop){
+jsflight.sendEventData = function(sendStop) {
 
 	if (typeof (window.sessionStorage) == "undefined") {
 		console.log('No support of window.sessionStorage');
@@ -675,36 +723,36 @@ jsflight.sendEventData = function(sendStop){
 			keys.push(key);
 		}
 	}
-	
-	// it is pity to send an empty array. No tracked data no xhr post 
-	if(events.length==0 && sendStop==false)
+
+	// it is pity to send an empty array. No tracked data no xhr post
+	if (events.length == 0 && sendStop == false)
 		return;
-	
+
 	var data = JSON.stringify(events);
-	var uri = jsflight.options.baseUrl+jsflight.options.downloadPath;
-	if(sendStop) {
-		uri+="?stop"
+	var uri = jsflight.options.baseUrl + jsflight.options.downloadPath;
+	if (sendStop) {
+		uri += "?stop"
 	}
 	var xhr = new XMLHttpRequest();
 	xhr.open('POST', uri, true);
 	xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-	xhr.onload = function () {
-		if(xhr.status==200){
+	xhr.onload = function() {
+		if (xhr.status == 200) {
 			for (var i = 0; i < keys.length; i++) {
 				storage.removeItem(keys[i]);
 			}
 		} else {
-			console.log("error storing data. status " +xhr.status)
+			console.log("error storing data. status " + xhr.status)
 		}
 	};
-	xhr.send('data='+encodeURIComponent(data));	
+	xhr.send('data=' + encodeURIComponent(data));
 }
 
-jsflight.stop_recording_timer = function(){
+jsflight.stop_recording_timer = function() {
 	jsflight.stopRecorder();
 	jsflight.sendEventData(true);
 }
 
-jsflight.send_data_timer = function(){
+jsflight.send_data_timer = function() {
 	jsflight.sendEventData(false);
 }

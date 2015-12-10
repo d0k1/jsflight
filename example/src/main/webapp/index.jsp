@@ -47,6 +47,25 @@
 	    	  xmlhttp.open("GET", url,true);
 	    	  xmlhttp.send("this is request body");
 	    	}
+        // sample method to do xhr request
+	    function emptyRequestXMLDoc(url) {
+	    	  var xmlhttp;
+	    	    
+	    	   if (window.XMLHttpRequest) {
+	    	    xmlhttp=new XMLHttpRequest();
+	    	  }
+	    	  else {
+	    	    xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+	    	  }
+	    	    
+	    	  xmlhttp.onreadystatechange=function() {
+	    	    if (xmlhttp.readyState==4 && xmlhttp.status==200) {
+	    	        //document.getElementById("myDiv").innerHTML=xmlhttp.responseText;
+	    	    }
+	    	  }
+	    	  xmlhttp.open("GET", url,true);
+	    	  xmlhttp.send();
+	    	}
     </script>
 </head>
 <body>
@@ -57,6 +76,7 @@
         <input id="btn2" type="button" value="b1"/> 
         <button onclick="loadXMLDoc('<%=request.getContextPath()%>')">XHR ok</button>
         <button onclick="loadXMLDoc('<%=request.getContextPath()%>/12/2/12/3')">XHR 404</button>
+        <button onclick="emptyRequestXMLDoc'<%=request.getContextPath()%>')">XHR with empty send</button>
     </form>
     <a href='#testHash'>testHash</a>
     <a href='#'>back from testHash</a>
