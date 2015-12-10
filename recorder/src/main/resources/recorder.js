@@ -589,9 +589,7 @@ jsflight.removeControlHook = function() {
  */
 jsflight.addJSFlightHooksOnDocumentLoad = function(options) {
 
-	if(options.cp_disabled)
-		jsflight.options.cp_disabled = true;
-	else
+	if(options.cp_disabled==false)
 		jsflight.options.cp_disabled = false;
 	
 	if (options.autostart)
