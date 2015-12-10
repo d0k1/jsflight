@@ -27,6 +27,9 @@ jsflight.tabUuid = '';
 // id to compare xhr tacked data what was sent, what was received back
 jsflight.xhrId = 0;
 
+// variable to determine if tracked was started
+jsflight.started = false;
+
 // recorder options
 jsflight.options = {
 	// should record be started after page loaded
@@ -48,7 +51,7 @@ jsflight.options = {
 	// time interval to send tracked data, milliseconds
 	send_interval : -1,
 	// control panel disabled by default
-	cp_disabled=true,
+	cp_disabled : true,
 	propertyProvider : function(prop) {
 	}
 }
@@ -191,11 +194,12 @@ jsflight.guid = function() {
  * Process mouse event
  */
 jsflight.TrackMouse = function(mouseEvent) {
+	if (mouseEvent.type == 'mousemove'
+			&& jsflight.options.trackMouse == false) {
+		return;
+	}
+
 	try {
-		if (mouseEvent.type == 'mousemove'
-				&& jsflight.options.trackMouse == false) {
-			return;
-		}
 		if (mouseEvent.target && mouseEvent.target.id) {
 			// ignoring self buttons
 			if (mouseEvent.target.id.indexOf("no-track-flight-cp") === 0) {
@@ -216,16 +220,16 @@ jsflight.TrackMouse = function(mouseEvent) {
  * Process keyboard event
  */
 jsflight.TrackKeyboard = function(keyboardEvent) {
+	// ignoring self activation/deactivation
+	if (event.ctrlKey && event.altKey && event.shiftKey
+			&& (event.which || event.keyCode) == 38) {
+		return;
+	}
+	if (event.ctrlKey && event.altKey && event.shiftKey
+			&& (event.which || event.keyCode) == 40) {
+		return;
+	}
 	try {
-		// ignoring self activation/deactivation
-		if (event.ctrlKey && event.altKey && event.shiftKey
-				&& (event.which || event.keyCode) == 38) {
-			return;
-		}
-		if (event.ctrlKey && event.altKey && event.shiftKey
-				&& (event.which || event.keyCode) == 40) {
-			return;
-		}
 		if (keyboardEvent.target && keyboardEvent.target.id) {
 			// ignoring self buttons
 			if (keyboardEvent.target.id.indexOf("no-track-flight-cp") === 0) {
@@ -243,10 +247,10 @@ jsflight.TrackKeyboard = function(keyboardEvent) {
 };
 
 jsflight.TrackHash = function(event) {
-	try {
-		if (jsflight.options.trackHash != true)
-			return;
+	if (jsflight.options.trackHash != true)
+		return;
 
+	try {
 		var data = JSON.stringify(jsflight.getEventInfo(event));
 		jsflight.saveToStorage(jsflight.eventId, data);
 	} catch (e) {
@@ -274,7 +278,7 @@ jsflight.TrackXhrOpen = function(data) {
 jsflight.TrackXhrSend = function(data) {
 	try {
 
-		if (data === null || data === undefined) {
+		if (data.data === null || data.data === undefined) {
 			data.data = "";
 		}
 
@@ -302,11 +306,11 @@ jsflight.TrackXhrSend = function(data) {
 }
 
 jsflight.TrackXhrStateLoad = function(xhr) {
+	if (xhr.currentTarget.openData.target == jsflight.options.baseUrl
+			+ jsflight.options.downloadPath) {
+		return;
+	}
 	try {
-		if (xhr.currentTarget.openData.target == jsflight.options.baseUrl
-				+ jsflight.options.downloadPath) {
-			return;
-		}
 		var data = {
 			method : xhr.currentTarget.openData.method,
 			target : xhr.currentTarget.openData.target,
@@ -368,6 +372,8 @@ jsflight.startRecorder = function() {
 	if (jsflight.options.trackXhr) {
 		jsflight.initXhrTracking();
 	}
+	
+	jsflight.started = true;
 }
 
 /**
@@ -402,6 +408,8 @@ jsflight.stopRecorder = function() {
 	if (jsflight.options.trackXhr) {
 		jsflight.stopXhrTracking();
 	}
+	
+	jsflight.started = false;
 }
 
 /**
@@ -709,6 +717,9 @@ jsflight.stopXhrTracking = function() {
  */
 jsflight.sendEventData = function(sendStop) {
 
+	if(jsflight.started===false)
+		return;
+	
 	if (typeof (window.sessionStorage) == "undefined") {
 		console.log('No support of window.sessionStorage');
 		return;
@@ -749,8 +760,8 @@ jsflight.sendEventData = function(sendStop) {
 }
 
 jsflight.stop_recording_timer = function() {
-	jsflight.stopRecorder();
 	jsflight.sendEventData(true);
+	jsflight.stopRecorder();
 }
 
 jsflight.send_data_timer = function() {

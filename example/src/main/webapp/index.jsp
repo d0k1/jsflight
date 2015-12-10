@@ -76,7 +76,7 @@
         <input id="btn2" type="button" value="b1"/> 
         <button onclick="loadXMLDoc('<%=request.getContextPath()%>')">XHR ok</button>
         <button onclick="loadXMLDoc('<%=request.getContextPath()%>/12/2/12/3')">XHR 404</button>
-        <button onclick="emptyRequestXMLDoc'<%=request.getContextPath()%>')">XHR with empty send</button>
+        <button onclick="emptyRequestXMLDoc('<%=request.getContextPath()%>')">XHR with empty send</button>
     </form>
     <a href='#testHash'>testHash</a>
     <a href='#'>back from testHash</a>

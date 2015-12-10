@@ -63,11 +63,26 @@
 						<id>default-minify</id>
 						<configuration>
 							<charset>UTF-8</charset>
-							<jsSourceFiles>
-								<jsSourceFile>recorder.js</jsSourceFile>
-							</jsSourceFiles>
-							<jsEngine>CLOSURE</jsEngine>
-						</configuration>
+							<webappSourceDir>${basedir}/src/main</webappSourceDir>
+							<webappTargetDir>${basedir}/target</webappTargetDir>
+							<jsSourceIncludes>
+								<jsSourceInclude>*.js</jsSourceInclude>
+							</jsSourceIncludes>
+							<jsSourceExcludes>
+								<jsSourceExclude>*.min.js</jsSourceExclude>
+							</jsSourceExcludes>
+							<jsSourceDir>resources</jsSourceDir>
+							<jsTargetDir>classes</jsTargetDir>
+							<skipMerge>true</skipMerge>
+ 							<jsEngine>CLOSURE</jsEngine>
+							<closureCreateSourceMap>true</closureCreateSourceMap>
+                            <debug>true</debug>
+                            <!--closureExterns>
+                                <closureExtern>extern/external-lib.js</closureExtern>
+                            </closureExterns-->
+                            <!-- <closureCompilationLevel>ADVANCED_OPTIMIZATIONS</closureCompilationLevel> -->
+ 							<closureCreateSourceMap>true</closureCreateSourceMap>
+ 						</configuration>
 						<goals>
 							<goal>minify</goal>
 						</goals>
