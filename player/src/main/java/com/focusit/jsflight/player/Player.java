@@ -3,14 +3,13 @@ package com.focusit.jsflight.player;
 import java.awt.EventQueue;
 import java.io.IOException;
 import java.lang.Thread.UncaughtExceptionHandler;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+
+import javax.swing.UIManager;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ezware.dialog.task.TaskDialogs;
+import com.focusit.jsflight.player.ui.ExceptionDialog;
 import com.focusit.jsflight.player.ui.MainFrame;
 
 public class Player
@@ -31,7 +30,8 @@ public class Player
             public void uncaughtException(Thread t, Throwable e)
             {
                 log.error(e.toString(), e);
-                TaskDialogs.showException(e);
+            	ExceptionDialog ld = new ExceptionDialog("Error", e.toString(), e);
+            	ld.setVisible(true);
             }
         });
         EventQueue.invokeLater(new Runnable()
@@ -41,8 +41,9 @@ public class Player
             {
                 try
                 {
+                	UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
                     MainFrame window = new MainFrame();
-                    window.getFrame().setVisible(true);
+                    window.getFrame().setVisible(true);                    
                 }
                 catch (Exception e)
                 {

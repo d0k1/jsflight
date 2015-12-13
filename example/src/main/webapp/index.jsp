@@ -21,7 +21,8 @@
     	baseUrl:'<%=request.getContextPath()%>',
     	trackHash:true,
     	trackXhr:true,
-    	send_interval: 1000,
+    	cp_disabled:false,
+    	send_interval: -1,
     	propertyProvider:function(prop){
     		prop['customProp'] = (new Date()).getTime();
     	}
@@ -77,6 +78,8 @@
         <button onclick="loadXMLDoc('<%=request.getContextPath()%>')">XHR ok</button>
         <button onclick="loadXMLDoc('<%=request.getContextPath()%>/12/2/12/3')">XHR 404</button>
         <button onclick="emptyRequestXMLDoc('<%=request.getContextPath()%>')">XHR with empty send</button>
+        <br/>
+        <textarea rows="10" cols="80">this is a text to debug keypress</textarea>
     </form>
     <a href='#testHash'>testHash</a>
     <a href='#'>back from testHash</a>

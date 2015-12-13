@@ -10,13 +10,11 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
-import java.util.regex.Pattern;
 
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -33,16 +31,18 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.AbstractTableModel;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.firefox.FirefoxBinary;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxProfile;
 import org.openqa.selenium.interactions.Actions;
+import org.openqa.selenium.remote.CapabilityType;
+import org.openqa.selenium.remote.DesiredCapabilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,6 +51,10 @@ import com.focusit.jsflight.player.input.Events;
 import com.focusit.jsflight.player.input.FileInput;
 import javax.swing.BoxLayout;
 import javax.swing.JSeparator;
+import com.jgoodies.forms.layout.FormLayout;
+import com.jgoodies.forms.layout.ColumnSpec;
+import com.jgoodies.forms.layout.RowSpec;
+import com.jgoodies.forms.layout.FormSpecs;
 
 public class MainFrame {
 
@@ -70,9 +74,13 @@ public class MainFrame {
 	private JTextArea eventContent;
 	private JLabel statisticsLabel;
 	private JTextField serverField;
+	private JTextField ffProxyHost;
+	private JTextField ffProxyPort;
+	private JTextField ffPath;
 
-	private Pattern urlPattern = Pattern.compile(
-			"^((http[s]?|ftp):\\/)?\\/?([^:\\/\\s]+)((\\/\\w+)*\\/)([\\w\\-\\.]+[^#?\\s]+)(.*)?(#[\\w\\-]+)?$");
+	// I will use it, probably, another day
+	// private Pattern urlPattern = Pattern.compile(
+	// "^((http[s]?|ftp):\\/)?\\/?([^:\\/\\s]+)((\\/\\w+)*\\/)([\\w\\-\\.]+[^#?\\s]+)(.*)?(#[\\w\\-]+)?$");
 
 	/**
 	 * Create the application.
@@ -122,7 +130,8 @@ public class MainFrame {
 		}
 		String eventType = event.getString("type");
 
-		if (!eventType.equalsIgnoreCase("mousedown") && !eventType.equalsIgnoreCase("keypress")) {
+		if (!eventType.equalsIgnoreCase("mousedown") && !eventType.equalsIgnoreCase("keypress")
+				&& !eventType.equalsIgnoreCase("keyup")) {
 			return;
 		}
 
@@ -135,12 +144,50 @@ public class MainFrame {
 				element.click();
 			}
 		}
+
 		if (eventType.equalsIgnoreCase("keypress")) {
 			if (event.has("charCode")) {
 				char ch = (char) event.getBigInteger(("charCode")).intValue();
 				char keys[] = new char[1];
 				keys[0] = ch;
 				element.sendKeys(new String(keys));
+			}
+		}
+
+		if (eventType.equalsIgnoreCase("keyup")) {
+			if (event.has("charCode")) {
+				int code = event.getBigInteger(("charCode")).intValue();
+
+				if (event.getBoolean("ctrlKey") == true) {
+					element.sendKeys(Keys.chord(Keys.CONTROL, new String(new byte[] { (byte) code })));
+				} else {
+					switch (code) {
+					case 8:
+						element.sendKeys(Keys.BACK_SPACE);
+						break;
+					case 27:
+						element.sendKeys(Keys.ESCAPE);
+						break;
+					case 127:
+						element.sendKeys(Keys.DELETE);
+						break;
+					case 13:
+						element.sendKeys(Keys.ENTER);
+						break;
+					case 37:
+						element.sendKeys(Keys.ARROW_LEFT);
+						break;
+					case 38:
+						element.sendKeys(Keys.ARROW_UP);
+						break;
+					case 39:
+						element.sendKeys(Keys.ARROW_RIGHT);
+						break;
+					case 40:
+						element.sendKeys(Keys.ARROW_DOWN);
+						break;
+					}
+				}
 			}
 		}
 	}
@@ -192,7 +239,9 @@ public class MainFrame {
 		gbc_filenameField.gridy = 0;
 		inputPanel.add(filenameField, gbc_filenameField);
 		filenameField.setColumns(10);
-		filenameField.setText("/tmp/records/employee$1348045_1449643293643");
+		filenameField.setText("/tmp/1.json");
+		filenameField.setText("/tmp/2.json");
+		filenameField.setText("/tmp/3.json");
 
 		JButton btnLoad = new JButton("Load");
 		btnLoad.addMouseListener(new MouseAdapter() {
@@ -361,12 +410,23 @@ public class MainFrame {
 		btnOpenBrowser.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				if (Player.firefoxPath != null && Player.firefoxPath.trim().length() > 0) {
-					FirefoxBinary binary = new FirefoxBinary(new File(Player.firefoxPath));
-					FirefoxProfile profile = new FirefoxProfile();
-					driver = new FirefoxDriver(binary, profile);
+			    FirefoxProfile profile = new FirefoxProfile();
+				DesiredCapabilities cap = new DesiredCapabilities();
+				if(ffProxyHost.getText().trim().length()>0){
+					String host = ffProxyHost.getText();
+					if(ffProxyPort.getText().trim().length()>0){
+						host+=":"+ffProxyPort.getText();
+					}
+					org.openqa.selenium.Proxy proxy = new org.openqa.selenium.Proxy();
+					proxy.setHttpProxy(host)
+					     .setFtpProxy(host)
+					     .setSslProxy(host);
+					cap.setCapability(CapabilityType.PROXY, proxy);				}
+				if (ffPath.getText() != null && ffPath.getText().trim().length() > 0) {
+					FirefoxBinary binary = new FirefoxBinary(new File(ffPath.getText()));
+					driver = new FirefoxDriver(binary, profile, cap);
 				} else {
-					driver = new FirefoxDriver();
+					driver = new FirefoxDriver(new FirefoxBinary(), profile, cap);
 				}
 			}
 		});
@@ -533,10 +593,67 @@ public class MainFrame {
 
 		JPanel optionsPanel = new JPanel();
 		tabbedPane.addTab("Options", null, optionsPanel, null);
+		optionsPanel.setLayout(new FormLayout(new ColumnSpec[] {
+				FormSpecs.RELATED_GAP_COLSPEC,
+				FormSpecs.DEFAULT_COLSPEC,
+				FormSpecs.RELATED_GAP_COLSPEC,
+				ColumnSpec.decodeSpecs("default:grow")[0],},
+			new RowSpec[] {
+				FormSpecs.RELATED_GAP_ROWSPEC,
+				FormSpecs.DEFAULT_ROWSPEC,
+				FormSpecs.RELATED_GAP_ROWSPEC,
+				FormSpecs.DEFAULT_ROWSPEC,
+				FormSpecs.RELATED_GAP_ROWSPEC,
+				FormSpecs.DEFAULT_ROWSPEC,
+				FormSpecs.RELATED_GAP_ROWSPEC,
+				FormSpecs.DEFAULT_ROWSPEC,}));
+		
+		JLabel lblFirefoxProxyHost = new JLabel("Firefox proxy host");
+		optionsPanel.add(lblFirefoxProxyHost, "2, 2, right, default");
+		
+		ffProxyHost = new JTextField();
+		optionsPanel.add(ffProxyHost, "4, 2, fill, default");
+		ffProxyHost.setColumns(10);
+		
+		JLabel lblFirefoxProxyPort = new JLabel("Firefox proxy port");
+		optionsPanel.add(lblFirefoxProxyPort, "2, 4, right, default");
+		
+		ffProxyPort = new JTextField();
+		optionsPanel.add(ffProxyPort, "4, 4, fill, default");
+		ffProxyPort.setColumns(10);
+		
+		JLabel lblFirefoxPath = new JLabel("Firefox path");
+		optionsPanel.add(lblFirefoxPath, "2, 6");
+		
+		ffPath = new JTextField();
+		optionsPanel.add(ffPath, "4, 6, fill, default");
+		ffPath.setColumns(10);
 	}
 
 	protected void playTheScenario() {
+		long begin = System.currentTimeMillis();
+
+		log.info("playing the scenario");
+
 		while (position < events.size()) {
+			if (position > 0) {
+				JSONObject event = events.get(position - 1);
+				long prev = event.getBigDecimal("timestamp").longValue();
+				event = events.get(position);
+				long now = event.getBigDecimal("timestamp").longValue();
+
+				if ((now - prev) > 0) {
+					try {
+						log.info("Emulate wait " + (now - prev) + "ms + 2000ms");
+						Thread.sleep(now - prev/* + 2000 */);
+					} catch (InterruptedException e) {
+						log.error("interrupted", e);
+					}
+				}
+				log.info("Step " + position);
+			} else {
+				log.info("Step 0");
+			}
 			applyStep(position);
 			checks.set(position, true);
 			position++;
@@ -545,7 +662,9 @@ public class MainFrame {
 					checks.set(i, false);
 				}
 			}
-			model.fireTableDataChanged();
 		}
+		log.info(String.format("Done(%d):playing", System.currentTimeMillis() - begin));
+		position--;
+		model.fireTableDataChanged();
 	}
 }

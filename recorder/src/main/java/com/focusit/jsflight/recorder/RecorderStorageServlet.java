@@ -24,7 +24,7 @@ public class RecorderStorageServlet extends HttpServlet
 
     private static final long serialVersionUID = 1L;
 
-    private static volatile RecordingProcessor processor = new NoOpRecordingProcessor();
+    private static volatile RecordingProcessor processor = new ExampleRecordingProcessor();
 
     public static void setProcessor(RecordingProcessor processor)
     {
