@@ -8,12 +8,15 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -68,6 +71,9 @@ public class MainFrame {
 	private JLabel statisticsLabel;
 	private JTextField serverField;
 
+	private Pattern urlPattern = Pattern.compile(
+			"^((http[s]?|ftp):\\/)?\\/?([^:\\/\\s]+)((\\/\\w+)*\\/)([\\w\\-\\.]+[^#?\\s]+)(.*)?(#[\\w\\-]+)?$");
+
 	/**
 	 * Create the application.
 	 */
@@ -85,6 +91,23 @@ public class MainFrame {
 			return;
 		}
 		String event_url = event.getString("url");
+
+		if (serverField.getText().trim().length() > 0) {
+			URL url;
+			try {
+				url = new URL(event_url);
+				String serverPort[] = serverField.getText().split(":");
+				int port = 80;
+				if (serverPort.length == 2 && serverPort[1] != null) {
+					port = Integer.parseInt(serverPort[1]);
+				}
+
+				URL newURL = new URL(url.getProtocol(), serverPort[0], port, url.getFile());
+				event_url = newURL.toExternalForm();
+			} catch (MalformedURLException e) {
+				log.error(e.toString(), e);
+			}
+		}
 
 		if (!lastUrl.equalsIgnoreCase(event_url)) {
 			lastUrl = event_url;
