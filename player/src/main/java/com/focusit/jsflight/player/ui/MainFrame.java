@@ -34,6 +34,9 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.AbstractTableModel;
 
+import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
+import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
+import org.fife.ui.rtextarea.RTextScrollPane;
 import org.json.JSONObject;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
@@ -55,6 +58,11 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
+import javax.swing.JToolBar;
+import java.awt.FlowLayout;
+import javax.swing.JTextPane;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
 
 public class MainFrame
 {
@@ -74,11 +82,11 @@ public class MainFrame
     private String lastUrl = "";
     private JTextArea eventContent;
     private JLabel statisticsLabel;
-    private JTextField serverField;
     private JTextField ffProxyHost;
     private JTextField ffProxyPort;
     private JTextField ffPath;
-    private JCheckBox ignoreXhrRecords;
+    private JTextField textField_1;
+    private JTextField maxStepDelayField;
 
     // I will use it, probably, another day
     // private Pattern urlPattern = Pattern.compile(
@@ -154,28 +162,6 @@ public class MainFrame
             return;
         }
         String event_url = event.getString("url");
-
-        if (serverField.getText().trim().length() > 0)
-        {
-            URL url;
-            try
-            {
-                url = new URL(event_url);
-                String serverPort[] = serverField.getText().split(":");
-                int port = 80;
-                if (serverPort.length == 2 && serverPort[1] != null)
-                {
-                    port = Integer.parseInt(serverPort[1]);
-                }
-
-                URL newURL = new URL("http", serverPort[0], port, url.getFile());
-                event_url = newURL.toExternalForm();
-            }
-            catch (MalformedURLException e)
-            {
-                log.error(e.toString(), e);
-            }
-        }
 
         if (!lastUrl.equalsIgnoreCase(event_url))
         {
@@ -397,117 +383,125 @@ public class MainFrame
         JPanel scenarioPanel = new JPanel();
         tabbedPane.addTab("Scenario", null, scenarioPanel, null);
         GridBagLayout gbl_scenarioPanel = new GridBagLayout();
-        gbl_scenarioPanel.columnWidths = new int[] { 59, 0, 0, 0, 0, 0, 331, 0 };
+        gbl_scenarioPanel.columnWidths = new int[] { 279, 0, 0, 0, 0, 0, 378, 0 };
         gbl_scenarioPanel.rowHeights = new int[] { 0, 449, 70, 0, 0 };
         gbl_scenarioPanel.columnWeights = new double[] { 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, Double.MIN_VALUE };
         gbl_scenarioPanel.rowWeights = new double[] { 0.0, 1.0, 1.0, 0.0, Double.MIN_VALUE };
         scenarioPanel.setLayout(gbl_scenarioPanel);
-
-        JButton btnParse = new JButton("Parse");
-        btnParse.addMouseListener(new MouseAdapter()
-        {
-            @Override
-            public void mouseClicked(MouseEvent e)
-            {
-                events = rawevents.getEvents(ignoreXhrRecords.isSelected());
-                checks = new ArrayList<>(events.size());
-                for (int i = 0; i < events.size(); i++)
+        
+        JPanel panel_2 = new JPanel();
+        GridBagConstraints gbc_panel_2 = new GridBagConstraints();
+        gbc_panel_2.fill = GridBagConstraints.BOTH;
+        gbc_panel_2.insets = new Insets(0, 0, 5, 5);
+        gbc_panel_2.gridx = 0;
+        gbc_panel_2.gridy = 0;
+        scenarioPanel.add(panel_2, gbc_panel_2);
+                panel_2.setLayout(new BoxLayout(panel_2, BoxLayout.X_AXIS));
+        
+                JButton btnParse = new JButton("Parse");
+                panel_2.add(btnParse);
+                
+                JButton btnSave_1 = new JButton("Save");
+                panel_2.add(btnSave_1);
+                btnParse.addMouseListener(new MouseAdapter()
                 {
-                    checks.add(new Boolean(false));
-                }
-
-                Collections.sort(events, new Comparator<JSONObject>()
-                {
                     @Override
-                    public int compare(JSONObject o1, JSONObject o2)
+                    public void mouseClicked(MouseEvent e)
                     {
-                        return ((Long)o1.getLong("timestamp")).compareTo(o2.getLong("timestamp"));
-                    }
-                });
-
-                long secs = events.get(events.size() - 1).getBigDecimal("timestamp").longValue()
-                        - events.get(0).getBigDecimal("timestamp").longValue();
-                statisticsLabel.setText(String.format("Events %d, duration %f sec", events.size(), secs / 1000.0));
-                model = new AbstractTableModel()
-                {
-
-                    private static final long serialVersionUID = 1L;
-
-                    private String[] columns = { "#", "*", "tab", "type", "url", "char", "button", "target",
-                            "timestamp", "status" };
-
-                    @Override
-                    public int getColumnCount()
-                    {
-                        return 10;
-                    }
-
-                    @Override
-                    public String getColumnName(int column)
-                    {
-                        return columns[column];
-                    }
-
-                    @Override
-                    public int getRowCount()
-                    {
-                        return events.size();
-                    }
-
-                    @Override
-                    public Object getValueAt(int rowIndex, int columnIndex)
-                    {
-                        if (rowIndex == position && columnIndex == 1)
+                        events = rawevents.getEvents();
+                        checks = new ArrayList<>(events.size());
+                        for (int i = 0; i < events.size(); i++)
                         {
-                            return "*";
-                        }
-                        if (columnIndex == 9)
-                        {
-                            return checks.get(rowIndex);
+                            checks.add(new Boolean(false));
                         }
 
-                        JSONObject event = events.get(rowIndex);
-
-                        switch (columnIndex)
+                        Collections.sort(events, new Comparator<JSONObject>()
                         {
-                        case 0:
-                            return rowIndex;
-                        case 2:
-                            return event.get("tabuuid");
-                        case 3:
-                            return event.get("type");
-                        case 4:
-                            return event.get("url");
-                        case 5:
-                        {
-                            if (!event.has("charCode"))
+                            @Override
+                            public int compare(JSONObject o1, JSONObject o2)
                             {
+                                return ((Long)o1.getLong("timestamp")).compareTo(o2.getLong("timestamp"));
+                            }
+                        });
+
+                        long secs = events.get(events.size() - 1).getBigDecimal("timestamp").longValue()
+                                - events.get(0).getBigDecimal("timestamp").longValue();
+                        statisticsLabel.setText(String.format("Events %d, duration %f sec", events.size(), secs / 1000.0));
+                        model = new AbstractTableModel()
+                        {
+
+                            private static final long serialVersionUID = 1L;
+
+                            private String[] columns = { "#", "*", "tab", "type", "url", "char", "button", "target",
+                                    "timestamp", "status" };
+
+                            @Override
+                            public int getColumnCount()
+                            {
+                                return 10;
+                            }
+
+                            @Override
+                            public String getColumnName(int column)
+                            {
+                                return columns[column];
+                            }
+
+                            @Override
+                            public int getRowCount()
+                            {
+                                return events.size();
+                            }
+
+                            @Override
+                            public Object getValueAt(int rowIndex, int columnIndex)
+                            {
+                                if (rowIndex == position && columnIndex == 1)
+                                {
+                                    return "*";
+                                }
+                                if (columnIndex == 9)
+                                {
+                                    return checks.get(rowIndex);
+                                }
+
+                                JSONObject event = events.get(rowIndex);
+
+                                switch (columnIndex)
+                                {
+                                case 0:
+                                    return rowIndex;
+                                case 2:
+                                    return event.get("tabuuid");
+                                case 3:
+                                    return event.get("type");
+                                case 4:
+                                    return event.get("url");
+                                case 5:
+                                {
+                                    if (!event.has("charCode"))
+                                    {
+                                        return null;
+                                    }
+                                    int code = event.getInt("charCode");
+                                    char[] key = new char[1];
+                                    key[0] = (char)code;
+                                    return String.format("%d ( %s )", code, new String(key));
+                                }
+                                case 6:
+                                    return event.has("button") ? event.get("button") : null;
+                                case 7:
+                                    return event.get("target");
+                                case 8:
+                                    return new Date(event.getBigDecimal("timestamp").longValue());
+                                }
                                 return null;
                             }
-                            int code = event.getInt("charCode");
-                            char[] key = new char[1];
-                            key[0] = (char)code;
-                            return String.format("%d ( %s )", code, new String(key));
-                        }
-                        case 6:
-                            return event.has("button") ? event.get("button") : null;
-                        case 7:
-                            return event.get("target");
-                        case 8:
-                            return new Date(event.getBigDecimal("timestamp").longValue());
-                        }
-                        return null;
-                    }
-                };
+                        };
 
-                table.setModel(model);
-            }
-        });
-        GridBagConstraints gbc_btnParse = new GridBagConstraints();
-        gbc_btnParse.insets = new Insets(0, 0, 5, 5);
-        gbc_btnParse.gridx = 0;
-        gbc_btnParse.gridy = 0;
-        scenarioPanel.add(btnParse, gbc_btnParse);
+                        table.setModel(model);
+                    }
+                });
 
         JButton btnOpenBrowser = new JButton("Open browser");
         btnOpenBrowser.addMouseListener(new MouseAdapter()
@@ -645,13 +639,6 @@ public class MainFrame
             }
         });
 
-        serverField = new JTextField();
-        panel.add(serverField);
-        serverField.setColumns(10);
-
-        JSeparator separator = new JSeparator();
-        panel.add(separator);
-
         JButton btnPlay = new JButton("Play");
         btnPlay.addMouseListener(new MouseAdapter()
         {
@@ -718,42 +705,94 @@ public class MainFrame
 
         statisticsLabel = new JLabel("DATA");
         panel_1.add(statisticsLabel);
-
-        JPanel optionsPanel = new JPanel();
-        tabbedPane.addTab("Options", null, optionsPanel, null);
-        optionsPanel.setLayout(new FormLayout(new ColumnSpec[] { FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC, FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"), },
-                new RowSpec[] { FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, }));
-
-        JLabel lblFirefoxProxyHost = new JLabel("Firefox proxy host");
-        optionsPanel.add(lblFirefoxProxyHost, "2, 2, right, default");
-
-        ffProxyHost = new JTextField();
-        optionsPanel.add(ffProxyHost, "4, 2, fill, default");
-        ffProxyHost.setColumns(10);
-
-        JLabel lblFirefoxProxyPort = new JLabel("Firefox proxy port");
-        optionsPanel.add(lblFirefoxProxyPort, "2, 4, right, default");
-
-        ffProxyPort = new JTextField();
-        optionsPanel.add(ffProxyPort, "4, 4, fill, default");
-        ffProxyPort.setColumns(10);
-
-        JLabel lblFirefoxPath = new JLabel("Firefox path");
-        optionsPanel.add(lblFirefoxPath, "2, 6");
-
-        ffPath = new JTextField();
-        optionsPanel.add(ffPath, "4, 6, fill, default");
-        ffPath.setColumns(10);
-
-        JLabel lblIgnoreXhrRecords = new JLabel("Ignore XHR records");
-        optionsPanel.add(lblIgnoreXhrRecords, "2, 8");
-
-        ignoreXhrRecords = new JCheckBox("");
-        ignoreXhrRecords.setSelected(true);
-        optionsPanel.add(ignoreXhrRecords, "4, 8");
+        
+        JPanel postProcessPanel = new JPanel();
+        tabbedPane.addTab("Post process", null, postProcessPanel, null);
+        postProcessPanel.setLayout(new BorderLayout(0, 0));
+        
+        JToolBar toolBar = new JToolBar();
+        toolBar.setFloatable(false);
+        postProcessPanel.add(toolBar, BorderLayout.NORTH);
+        
+        JLabel lblScript = new JLabel("Script");
+        toolBar.add(lblScript);
+        
+        textField_1 = new JTextField();
+        toolBar.add(textField_1);
+        textField_1.setColumns(15);
+        
+        JButton btnBrowse_1 = new JButton("Browse");
+        toolBar.add(btnBrowse_1);
+        
+        JButton btnLoad_1 = new JButton("Load");
+        btnLoad_1.addActionListener(new ActionListener() {
+        	public void actionPerformed(ActionEvent e) {
+        	}
+        });
+        toolBar.add(btnLoad_1);
+        
+        JButton btnSave = new JButton("Save");
+        toolBar.add(btnSave);
+        
+        JButton btnReset = new JButton("Reset");
+        toolBar.add(btnReset);
+        
+        JButton btnRun = new JButton("Run");
+        toolBar.add(btnRun);
+        
+        RTextScrollPane scrollPane_3 = new RTextScrollPane();
+        postProcessPanel.add(scrollPane_3, BorderLayout.CENTER);
+        
+        RSyntaxTextArea textArea = new RSyntaxTextArea();
+        textArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_GROOVY);
+        textArea.setCodeFoldingEnabled(true);
+        scrollPane_3.setViewportView(textArea);
+        
+                JPanel optionsPanel = new JPanel();
+                tabbedPane.addTab("Options", null, optionsPanel, null);
+                optionsPanel.setLayout(new FormLayout(new ColumnSpec[] {
+                		FormSpecs.RELATED_GAP_COLSPEC,
+                		FormSpecs.DEFAULT_COLSPEC,
+                		FormSpecs.RELATED_GAP_COLSPEC,
+                		ColumnSpec.decode("default:grow"),},
+                	new RowSpec[] {
+                		FormSpecs.RELATED_GAP_ROWSPEC,
+                		FormSpecs.DEFAULT_ROWSPEC,
+                		FormSpecs.RELATED_GAP_ROWSPEC,
+                		FormSpecs.DEFAULT_ROWSPEC,
+                		FormSpecs.RELATED_GAP_ROWSPEC,
+                		FormSpecs.DEFAULT_ROWSPEC,
+                		FormSpecs.RELATED_GAP_ROWSPEC,
+                		FormSpecs.DEFAULT_ROWSPEC,
+                		FormSpecs.RELATED_GAP_ROWSPEC,
+                		FormSpecs.DEFAULT_ROWSPEC,}));
+                
+                        JLabel lblFirefoxProxyHost = new JLabel("Firefox proxy host");
+                        optionsPanel.add(lblFirefoxProxyHost, "2, 2, right, default");
+                        
+                                ffProxyHost = new JTextField();
+                                optionsPanel.add(ffProxyHost, "4, 2, fill, default");
+                                ffProxyHost.setColumns(10);
+                                
+                                        JLabel lblFirefoxProxyPort = new JLabel("Firefox proxy port");
+                                        optionsPanel.add(lblFirefoxProxyPort, "2, 4, right, default");
+                                        
+                                                ffProxyPort = new JTextField();
+                                                optionsPanel.add(ffProxyPort, "4, 4, fill, default");
+                                                ffProxyPort.setColumns(10);
+                                                
+                                                        JLabel lblFirefoxPath = new JLabel("Firefox path");
+                                                        optionsPanel.add(lblFirefoxPath, "2, 6, right, default");
+                                                        
+                                                                ffPath = new JTextField();
+                                                                optionsPanel.add(ffPath, "4, 6, fill, default");
+                                                                ffPath.setColumns(10);
+                                                                
+                                                                JLabel lblMaxDelayBetween = new JLabel("Max delay between steps");
+                                                                optionsPanel.add(lblMaxDelayBetween, "2, 8, right, default");
+                                                                
+                                                                maxStepDelayField = new JTextField();
+                                                                optionsPanel.add(maxStepDelayField, "4, 8, fill, default");
+                                                                maxStepDelayField.setColumns(10);
     }
 }
