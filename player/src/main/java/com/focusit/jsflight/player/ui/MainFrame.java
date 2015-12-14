@@ -82,8 +82,8 @@ public class MainFrame
     private String lastUrl = "";
     private JTextArea eventContent;
     private JLabel statisticsLabel;
-    private JTextField ffProxyHost;
-    private JTextField ffProxyPort;
+    private JTextField proxyHost;
+    private JTextField proxyPort;
     private JTextField ffPath;
     private JTextField textField_1;
     private JTextField maxStepDelayField;
@@ -511,12 +511,12 @@ public class MainFrame
             {
                 FirefoxProfile profile = new FirefoxProfile();
                 DesiredCapabilities cap = new DesiredCapabilities();
-                if (ffProxyHost.getText().trim().length() > 0)
+                if (proxyHost.getText().trim().length() > 0)
                 {
-                    String host = ffProxyHost.getText();
-                    if (ffProxyPort.getText().trim().length() > 0)
+                    String host = proxyHost.getText();
+                    if (proxyPort.getText().trim().length() > 0)
                     {
-                        host += ":" + ffProxyPort.getText();
+                        host += ":" + proxyPort.getText();
                     }
                     org.openqa.selenium.Proxy proxy = new org.openqa.selenium.Proxy();
                     proxy.setHttpProxy(host).setFtpProxy(host).setSslProxy(host);
@@ -770,16 +770,16 @@ public class MainFrame
                         JLabel lblFirefoxProxyHost = new JLabel("Firefox proxy host");
                         optionsPanel.add(lblFirefoxProxyHost, "2, 2, right, default");
                         
-                                ffProxyHost = new JTextField();
-                                optionsPanel.add(ffProxyHost, "4, 2, fill, default");
-                                ffProxyHost.setColumns(10);
+                                proxyHost = new JTextField();
+                                optionsPanel.add(proxyHost, "4, 2, fill, default");
+                                proxyHost.setColumns(10);
                                 
                                         JLabel lblFirefoxProxyPort = new JLabel("Firefox proxy port");
                                         optionsPanel.add(lblFirefoxProxyPort, "2, 4, right, default");
                                         
-                                                ffProxyPort = new JTextField();
-                                                optionsPanel.add(ffProxyPort, "4, 4, fill, default");
-                                                ffProxyPort.setColumns(10);
+                                                proxyPort = new JTextField();
+                                                optionsPanel.add(proxyPort, "4, 4, fill, default");
+                                                proxyPort.setColumns(10);
                                                 
                                                         JLabel lblFirefoxPath = new JLabel("Firefox path");
                                                         optionsPanel.add(lblFirefoxPath, "2, 6, right, default");
