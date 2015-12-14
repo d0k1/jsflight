@@ -8,20 +8,46 @@ import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-public class Events {
-	private List<JSONObject> events = new ArrayList<>();
+public class Events
+{
+    private List<JSONObject> events = new ArrayList<>();
 
-	public void parse(List<String> content) {
-		JSONArray rawevents;
-		for (String line : content) {
-			rawevents = new JSONArray(line);
-			for (int i = 0; i < rawevents.length(); i++) {
-				String event = rawevents.getString(i);
-				if (!event.contains("flight-cp")) {
-					events.add(new JSONObject(event));
-				}
-			}
-		}
+    public List<JSONObject> getEvents()
+    {
+        return events;
+    }
+
+    public List<JSONObject> getEvents(boolean noXhr)
+    {
+        List<JSONObject> events = new ArrayList<>();
+        for (JSONObject event : getEvents())
+        {
+            if (noXhr && ((String)event.get("type")).equalsIgnoreCase("xhr"))
+            {
+                continue;
+            }
+
+            events.add(event);
+        }
+
+        return events;
+    }
+
+    public void parse(List<String> content)
+    {
+        JSONArray rawevents;
+        for (String line : content)
+        {
+            rawevents = new JSONArray(line);
+            for (int i = 0; i < rawevents.length(); i++)
+            {
+                String event = rawevents.getString(i);
+                if (!event.contains("flight-cp"))
+                {
+                    events.add(new JSONObject(event));
+                }
+            }
+        }
         Collections.sort(events, new Comparator<JSONObject>()
         {
             @Override
@@ -30,9 +56,5 @@ public class Events {
                 return ((Long)o1.getLong("timestamp")).compareTo(o2.getLong("timestamp"));
             }
         });
-	}
-
-	public List<JSONObject> getEvents() {
-		return events;
-	}
+    }
 }

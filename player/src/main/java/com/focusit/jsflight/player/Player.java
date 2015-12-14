@@ -17,6 +17,7 @@ public class Player
     private static final Logger log = LoggerFactory.getLogger(Player.class);
 
     public static String firefoxPath = null;
+    public static boolean ignoreXhr = true;
 
     public static void main(String[] args) throws IOException
     {
@@ -30,8 +31,8 @@ public class Player
             public void uncaughtException(Thread t, Throwable e)
             {
                 log.error(e.toString(), e);
-            	ExceptionDialog ld = new ExceptionDialog("Error", e.toString(), e);
-            	ld.setVisible(true);
+                ExceptionDialog ld = new ExceptionDialog("Error", e.toString(), e);
+                ld.setVisible(true);
             }
         });
         EventQueue.invokeLater(new Runnable()
@@ -41,9 +42,9 @@ public class Player
             {
                 try
                 {
-                	UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+                    UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
                     MainFrame window = new MainFrame();
-                    window.getFrame().setVisible(true);                    
+                    window.getFrame().setVisible(true);
                 }
                 catch (Exception e)
                 {
