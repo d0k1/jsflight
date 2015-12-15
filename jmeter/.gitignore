@@ -1,1 +1,4 @@
 /target/
+/ApacheJMeterTemporaryRootCA.crt
+/ApacheJMeterTemporaryRootCA.usr
+/test.jmx
