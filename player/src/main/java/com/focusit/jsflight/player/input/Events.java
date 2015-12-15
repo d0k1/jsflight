@@ -17,22 +17,6 @@ public class Events
         return events;
     }
 
-    public List<JSONObject> getEvents(boolean noXhr)
-    {
-        List<JSONObject> events = new ArrayList<>();
-        for (JSONObject event : getEvents())
-        {
-            if (noXhr && ((String)event.get("type")).equalsIgnoreCase("xhr"))
-            {
-                continue;
-            }
-
-            events.add(event);
-        }
-
-        return events;
-    }
-
     public void parse(List<String> content)
     {
         JSONArray rawevents;

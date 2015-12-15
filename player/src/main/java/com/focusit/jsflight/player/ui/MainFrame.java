@@ -54,6 +54,7 @@ import org.slf4j.LoggerFactory;
 
 import com.focusit.jsflight.player.input.Events;
 import com.focusit.jsflight.player.input.FileInput;
+import com.focusit.jsflight.player.script.Engine;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
@@ -87,6 +88,7 @@ public class MainFrame
     private JTextField ffPath;
     private JTextField textField_1;
     private JTextField maxStepDelayField;
+    private RSyntaxTextArea scriptArea;
 
     // I will use it, probably, another day
     // private Pattern urlPattern = Pattern.compile(
@@ -409,6 +411,9 @@ public class MainFrame
                     public void mouseClicked(MouseEvent e)
                     {
                         events = rawevents.getEvents();
+                        if(!scriptArea.getText().isEmpty()){
+                        	new Engine(scriptArea.getText()).postProcess(events);
+                        }
                         checks = new ArrayList<>(events.size());
                         for (int i = 0; i < events.size(); i++)
                         {
@@ -424,8 +429,11 @@ public class MainFrame
                             }
                         });
 
-                        long secs = events.get(events.size() - 1).getBigDecimal("timestamp").longValue()
-                                - events.get(0).getBigDecimal("timestamp").longValue();
+                        long secs = 0;
+                        
+                        if(events.size()>0){
+                        	secs = events.get(events.size() - 1).getBigDecimal("timestamp").longValue() - events.get(0).getBigDecimal("timestamp").longValue();
+                        }
                         statisticsLabel.setText(String.format("Events %d, duration %f sec", events.size(), secs / 1000.0));
                         model = new AbstractTableModel()
                         {
@@ -738,15 +746,25 @@ public class MainFrame
         toolBar.add(btnReset);
         
         JButton btnRun = new JButton("Run");
+        btnRun.addActionListener(new ActionListener() {
+        	public void actionPerformed(ActionEvent e) {
+        		Engine engine = new Engine(scriptArea.getText());
+        		List<JSONObject> events = new ArrayList<>();
+        		if(rawevents!=null && rawevents.getEvents()!=null){
+        			events = rawevents.getEvents();
+        		}
+        		engine.testPostProcess(events);
+        	}
+        });
         toolBar.add(btnRun);
         
         RTextScrollPane scrollPane_3 = new RTextScrollPane();
         postProcessPanel.add(scrollPane_3, BorderLayout.CENTER);
         
-        RSyntaxTextArea textArea = new RSyntaxTextArea();
-        textArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_GROOVY);
-        textArea.setCodeFoldingEnabled(true);
-        scrollPane_3.setViewportView(textArea);
+        scriptArea = new RSyntaxTextArea();
+        scriptArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_GROOVY);
+        scriptArea.setCodeFoldingEnabled(true);
+        scrollPane_3.setViewportView(scriptArea);
         
                 JPanel optionsPanel = new JPanel();
                 tabbedPane.addTab("Options", null, optionsPanel, null);
@@ -788,10 +806,11 @@ public class MainFrame
                                                                 optionsPanel.add(ffPath, "4, 6, fill, default");
                                                                 ffPath.setColumns(10);
                                                                 
-                                                                JLabel lblMaxDelayBetween = new JLabel("Max delay between steps");
+                                                                JLabel lblMaxDelayBetween = new JLabel("Max delay between steps, sec");
                                                                 optionsPanel.add(lblMaxDelayBetween, "2, 8, right, default");
                                                                 
                                                                 maxStepDelayField = new JTextField();
+                                                                maxStepDelayField.setText("60");
                                                                 optionsPanel.add(maxStepDelayField, "4, 8, fill, default");
                                                                 maxStepDelayField.setColumns(10);
     }

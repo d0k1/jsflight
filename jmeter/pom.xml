@@ -3,40 +3,129 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.github.d0k1.jsflight</groupId>
-	<artifactId>example</artifactId>
-	<packaging>war</packaging>
+	<artifactId>jmeter</artifactId>
+	<packaging>jar</packaging>
 	<url>http://maven.apache.org</url>
-
 	<parent>
 		<groupId>com.github.d0k1</groupId>
 		<artifactId>jsflight</artifactId>
 		<version>3.0</version>
+		<!-- <relativePath>../sample-multi-module-parent</relativePath> -->
 	</parent>
 
 	<dependencies>
 		<dependency>
-			<groupId>com.github.d0k1.jsflight</groupId>
-			<artifactId>recorder</artifactId>
-			<version>3.0</version>
-		</dependency>
-
-		<dependency>
-			<groupId>javax.inject</groupId>
-			<artifactId>javax.inject</artifactId>
-			<version>1</version>
+			<groupId>org.codehaus.groovy</groupId>
+			<artifactId>groovy-all</artifactId>
+			<version>2.4.5</version>
 		</dependency>
 		<dependency>
-			<groupId>jstl</groupId>
-			<artifactId>jstl</artifactId>
-			<version>1.2</version>
+			<groupId>org.json</groupId>
+			<artifactId>json</artifactId>
+			<version>20150729</version>
 		</dependency>
-
 		<dependency>
-			<groupId>javax.servlet</groupId>
-			<artifactId>javax.servlet-api</artifactId>
-			<version>3.1.0</version>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>1.7.7</version>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>jul-to-slf4j</artifactId>
+			<version>1.7.7</version>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>jcl-over-slf4j</artifactId>
+			<version>1.7.7</version>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-log4j12</artifactId>
+			<version>1.7.7</version>
+		</dependency>
+		<dependency>
+			<groupId>log4j</groupId>
+			<artifactId>log4j</artifactId>
+			<version>1.2.17</version>
+		</dependency>
+		<dependency>
+			<groupId>com.jgoodies</groupId>
+			<artifactId>jgoodies-forms</artifactId>
+			<version>1.9.0</version>
+		</dependency>
+		<dependency>
+		    <groupId>org.apache.commons</groupId>
+		    <artifactId>commons-math3</artifactId>
+		    <version>3.4.1</version>
+		</dependency>
+		<dependency>
+		    <groupId>org.apache.jmeter</groupId>
+		    <artifactId>ApacheJMeter_core</artifactId>
+		    <version>2.13</version>
+            <exclusions>
+	            <exclusion>
+	                <artifactId>commons-math3</artifactId>
+	                <groupId>commons-math3</groupId>
+	            </exclusion>
+	            <exclusion>
+	                <artifactId>commons-pool2</artifactId>
+	                <groupId>commons-pool2</groupId>
+	            </exclusion>
+            </exclusions>
+		</dependency>
+		<dependency>
+		    <groupId>org.apache.jmeter</groupId>
+		    <artifactId>ApacheJMeter_http</artifactId>
+		    <version>2.13</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>commons-math3</artifactId>
+                    <groupId>commons-math3</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>commons-pool2</artifactId>
+                    <groupId>commons-pool2</groupId>
+                </exclusion>
+            </exclusions>
+		</dependency>
+		<dependency>
+		    <groupId>org.apache.jmeter</groupId>
+		    <artifactId>ApacheJMeter_components</artifactId>
+		    <version>2.13</version>
+		    <exclusions>
+		        <exclusion>
+		            <artifactId>commons-math3</artifactId>
+		            <groupId>commons-math3</groupId>
+		        </exclusion>
+		        <exclusion>
+		            <artifactId>commons-pool2</artifactId>
+		            <groupId>commons-pool2</groupId>
+		        </exclusion>
+		    </exclusions>
+		</dependency>
+		<dependency>
+		    <groupId>org.apache.commons</groupId>
+		    <artifactId>commons-pool2</artifactId>
+		    <version>2.3</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.jmeter</groupId>
+			<artifactId>jorphan</artifactId>
+			<version>2.13</version>
+			<exclusions>
+				<exclusion>
+					<artifactId>commons-math3</artifactId>
+					<groupId>commons-math3</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>commons-pool2</artifactId>
+					<groupId>commons-pool2</groupId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 	</dependencies>
+
 	<repositories>
 		<repository>
 			<id>spring-snapshots</id>

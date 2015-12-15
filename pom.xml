@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.github.d0k1</groupId>
 	<artifactId>jsflight</artifactId>
-	<version>2.9</version>
+	<version>3.0</version>
 	<name>jsflight</name>
 	<description>Javascript Flight Recorder, Player</description>
 	<packaging>pom</packaging>
@@ -11,6 +11,7 @@
 		<module>player</module>
 		<module>example</module>
 		<module>recorder</module>
+		<module>jmeter</module>
 	</modules>
 
 	<dependencies>
