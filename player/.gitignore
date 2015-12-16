@@ -2,3 +2,4 @@
 phantomjs/
 shots/
 *.mpg
+/phantomjs/
