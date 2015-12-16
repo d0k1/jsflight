@@ -69,7 +69,7 @@
 	    	}
     </script>
 </head>
-<body>
+<body style="color: white;">
     <!-- example ui to track -->
     <form id="test">
         <input id="btn1" type="button" value="b0"/>

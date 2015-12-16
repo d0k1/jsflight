@@ -3,7 +3,9 @@ package com.focusit.jsflight.player.input;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -20,6 +22,7 @@ public class Events
     public void parse(List<String> content)
     {
         JSONArray rawevents;
+        Set<JSONObject> temp = new HashSet<>();
         for (String line : content)
         {
             rawevents = new JSONArray(line);
@@ -28,10 +31,11 @@ public class Events
                 String event = rawevents.getString(i);
                 if (!event.contains("flight-cp"))
                 {
-                    events.add(new JSONObject(event));
+                    temp.add(new JSONObject(event));
                 }
             }
         }
+        events.addAll(temp);
         Collections.sort(events, new Comparator<JSONObject>()
         {
             @Override
