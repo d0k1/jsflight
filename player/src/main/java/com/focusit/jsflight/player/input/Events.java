@@ -28,7 +28,7 @@ public class Events
             rawevents = new JSONArray(line);
             for (int i = 0; i < rawevents.length(); i++)
             {
-                String event = rawevents.getString(i);
+                String event = rawevents.get(i).toString();
                 if (!event.contains("flight-cp"))
                 {
                     temp.add(new JSONObject(event));
