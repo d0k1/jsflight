@@ -774,7 +774,7 @@ public class MainFrame
             @Override
             public void actionPerformed(ActionEvent e)
             {
-                events.remove(position);
+                events.remove(table.getSelectedRow());
                 model.fireTableDataChanged();
             }
         });

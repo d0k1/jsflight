@@ -91,6 +91,18 @@ jsflight.getElementTreeXPath = function(element) {
 	return paths.length ? "/" + paths.join("/") : null;
 }
 
+jsflight.getTargetId = function(event){
+	var ids = [];
+	
+	var id1={};
+	var id2={};
+		
+	ids.push(id1);
+	ids.push(id2);
+	
+	return ids;
+}
+
 /**
  * Make json of mouse event.
  * 
@@ -128,6 +140,8 @@ jsflight.getEventInfo = function(mouseEvent) {
 	result['hash'] = window.location.hash;
 
 	result['target'] = jsflight.getElementXPath(mouseEvent.target);
+	result['terget1'] = jsflight.getTargetId(mouseEvent);
+	
 	result['timestamp'] = mouseEvent.timeStamp;
 
 	result['screenX'] = mouseEvent.screenX;
