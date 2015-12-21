@@ -40,6 +40,10 @@ jsflight.options = {
 	downloadPath : '/jsflight/recorder/storage',
 	// url to find servlet to view status
 	statusPath : '/jsflight/recorder/status',
+	// save initial dom after document has loaded 
+	saveInitialDom: true,
+	// save page shot when document loaded
+	saveInitialScreenshot: true,
 	// track mouse movements
 	trackMouse : false,
 	// track url hash change
@@ -91,11 +95,21 @@ jsflight.getElementTreeXPath = function(element) {
 	return paths.length ? "/" + paths.join("/") : null;
 }
 
+jsflight.getCssSelector = function(element){
+	
+}
+
 jsflight.getTargetId = function(event){
+	var target = event.target;
+	
+	if(target==null){
+		return;
+	}
+	
 	var ids = [];
 	
-	var id1={};
-	var id2={};
+	var id1={id1: getElementTreeXPath(target)};
+	var id2={id2: };
 		
 	ids.push(id1);
 	ids.push(id2);
