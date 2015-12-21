@@ -3,6 +3,9 @@
 <head>
     <!-- Add javascript -->
     <script src="<%=request.getContextPath()%>/jsflight/recorder" type="text/javascript"></script>
+    <script src="<%=request.getContextPath()%>/jsflight/recorder?int=css.js" type="text/javascript"></script>
+    <script src="<%=request.getContextPath()%>/jsflight/recorder?int=dom.js" type="text/javascript"></script>
+    <script src="<%=request.getContextPath()%>/jsflight/recorder?int=xpath.js" type="text/javascript"></script>
     <script>    
     /*
         //Set desired options

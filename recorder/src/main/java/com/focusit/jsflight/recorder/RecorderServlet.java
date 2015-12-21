@@ -29,8 +29,17 @@ public class RecorderServlet extends HttpServlet
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException
     {
-        String filename = "recorder.js";
+        String filename = req.getParameter("int");
+        
+        if(filename==null){
+        	filename = "recorder.js";
+        }
+        
+        if(filename!=null && filename.trim().length()>0){
+        	filename = "recorder.js";
+        }
         if (req.getParameter("min") != null)
+        
         {
             filename = "recorder.min.js";
         }

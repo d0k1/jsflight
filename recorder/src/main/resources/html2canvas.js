@@ -1,4 +1,4 @@
-/*
+/**
   html2canvas 0.5.0-alpha1 <http://html2canvas.hertzen.com>
   Copyright (c) 2015 Niklas von Hertzen
 
@@ -7,8 +7,8 @@
 
 (function(window, document, exports, global, define, undefined){
 
-/*!
- * @overview es6-promise - a tiny implementation of Promises/A+.
+/**!
+ * overview es6-promise - a tiny implementation of Promises/A+.
  * @copyright Copyright (c) 2014 Yehuda Katz, Tom Dale, Stefan Penner and contributors (Conversion to ES6 API by Jake Archibald)
  * @license   Licensed under MIT license
  *            See https://raw.githubusercontent.com/jakearchibald/es6-promise/master/LICENSE
@@ -3116,12 +3116,12 @@ function decode64(base64) {
     return output;
 }
 
-function SVGNodeContainer(node, native) {
+function SVGNodeContainer(node, native1) {
     this.src = node;
     this.image = null;
     var self = this;
 
-    this.promise = native ? new Promise(function(resolve, reject) {
+    this.promise = native1 ? new Promise(function(resolve, reject) {
         self.image = new Image();
         self.image.onload = resolve;
         self.image.onerror = reject;

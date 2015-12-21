@@ -109,7 +109,7 @@ jsflight.getTargetId = function(event){
 	var ids = [];
 	
 	var id1={id1: getElementTreeXPath(target)};
-	var id2={id2: };
+	var id2={id2: getCssSelector(target)};
 		
 	ids.push(id1);
 	ids.push(id2);
@@ -154,7 +154,7 @@ jsflight.getEventInfo = function(mouseEvent) {
 	result['hash'] = window.location.hash;
 
 	result['target'] = jsflight.getElementXPath(mouseEvent.target);
-	result['terget1'] = jsflight.getTargetId(mouseEvent);
+	result['target1'] = jsflight.getTargetId(mouseEvent);
 	
 	result['timestamp'] = mouseEvent.timeStamp;
 
@@ -173,6 +173,8 @@ jsflight.getEventInfo = function(mouseEvent) {
 	result['page.width'] = window.innerWidth;
 	result['page.height'] = window.innerHeight;
 
+	result['agent'] = navigator.userAgent;
+	
 	if (jsflight.options.propertyProvider) {
 		jsflight.options.propertyProvider(result);
 	}
