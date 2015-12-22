@@ -1,13 +1,5 @@
-/*
-May it be usefull - download scenario just from browser
-
-https://github.com/eligrey/FileSaver.js
-var blob = new Blob(["Hello, world!"], {type: "text/plain;charset=utf-8"});
-saveAs(blob, "hello world.txt");
- */
-
 // jsflight namespace 
-var jsflight = jsflight || {}
+var jsflight = {}
 
 /* =================================================================================================================================== */
 /** Global variables * */
@@ -44,6 +36,8 @@ jsflight.options = {
 	saveInitialDom: true,
 	// save page shot when document loaded
 	saveInitialScreenshot: true,
+	// take screenshot on hash change
+	saveShotOnHashChange:true,
 	// track mouse movements
 	trackMouse : false,
 	// track url hash change

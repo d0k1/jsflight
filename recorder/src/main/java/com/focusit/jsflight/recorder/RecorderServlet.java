@@ -21,53 +21,53 @@ import org.apache.commons.io.IOUtils;
  *
  */
 @WebServlet(urlPatterns = { "/jsflight/recorder", "/jsflight/recorder.min.js.map" })
-public class RecorderServlet extends HttpServlet
-{
+public class RecorderServlet extends HttpServlet {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException
-    {
-        String filename = req.getParameter("int");
-        
-        if(filename==null){
-        	filename = "recorder.js";
-        }
-        
-        if(filename!=null && filename.trim().length()>0){
-        	filename = "recorder.js";
-        }
-        if (req.getParameter("min") != null)
-        
-        {
-            filename = "recorder.min.js";
-        }
+	@Override
+	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+		String filename = req.getParameter("int");
 
-        if (req.getRequestURI().endsWith("recorder.min.js.map"))
-        {
-            filename = "recorder.min.js.map";
-        }
+		if (filename == null) {
+			filename = "recorder.js";
+		}
 
-        String ext = req.getParameter("ext");
-        try (InputStream is = ext == null ? getStreamFromResource(filename) : getStreamFromExternalFile(ext))
-        {
-            resp.setContentType("application/javascript");
-            try (OutputStream out = resp.getOutputStream())
-            {
-                IOUtils.copy(is, out);
-                out.flush();
-            }
-        }
-    }
+		if (filename != null && (filename.trim().length() == 0 || !filename.toLowerCase().trim().endsWith(".js"))) {
+			filename = "recorder.js";
+		}
+		
+		if (req.getParameter("min") != null)
+		{
+			filename = "recorder.min.js";
+		}
 
-    private InputStream getStreamFromExternalFile(String filename) throws FileNotFoundException
-    {
-        return new FileInputStream(getServletContext().getRealPath(filename));
-    }
+		if (req.getRequestURI().endsWith("recorder.min.js.map")) {
+			filename = "recorder.min.js.map";
+		}
 
-    private InputStream getStreamFromResource(String filename)
-    {
-        return Thread.currentThread().getContextClassLoader().getResourceAsStream(filename);
-    }
+		String ext = req.getParameter("ext");
+		try (InputStream is = ext == null ? getStreamFromResource(filename) : getStreamFromExternalFile(ext)) {
+			if (is == null) {
+				resp.sendError(HttpServletResponse.SC_PRECONDITION_FAILED);
+				return;
+			}
+			resp.setContentType("application/javascript");
+			try (OutputStream out = resp.getOutputStream()) {
+				IOUtils.copy(is, out);
+				out.flush();
+			}
+		}
+	}
+
+	private InputStream getStreamFromExternalFile(String filename) throws FileNotFoundException {
+		if (filename.toLowerCase().endsWith(".js")) {
+			return new FileInputStream(getServletContext().getRealPath(filename));
+		}
+		return null;
+	}
+
+	private InputStream getStreamFromResource(String filename) {
+		return Thread.currentThread().getContextClassLoader().getResourceAsStream(filename);
+	}
 }

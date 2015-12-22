@@ -80,7 +80,7 @@
                             <!--closureExterns>
                                 <closureExtern>extern/external-lib.js</closureExtern>
                             </closureExterns-->
-                            <!-- <closureCompilationLevel>ADVANCED_OPTIMIZATIONS</closureCompilationLevel> -->
+<!--                            <closureCompilationLevel>ADVANCED_OPTIMIZATIONS</closureCompilationLevel>-->
  							<closureCreateSourceMap>true</closureCreateSourceMap>
  						</configuration>
 						<goals>
