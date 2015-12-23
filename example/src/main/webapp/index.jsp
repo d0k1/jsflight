@@ -6,6 +6,8 @@
     <script src="<%=request.getContextPath()%>/jsflight/recorder?int=css.js" type="text/javascript"></script>
     <script src="<%=request.getContextPath()%>/jsflight/recorder?int=dom.js" type="text/javascript"></script>
     <script src="<%=request.getContextPath()%>/jsflight/recorder?int=xpath.js" type="text/javascript"></script>
+    <script src="<%=request.getContextPath()%>/jsflight/recorder?int=xml.js" type="text/javascript"></script>
+    <script src="<%=request.getContextPath()%>/jsflight/recorder?int=str.js" type="text/javascript"></script>
     <script src="<%=request.getContextPath()%>/jsflight/recorder?int=html2canvas.js" type="text/javascript"></script>
     <script>    
     /*
@@ -27,6 +29,10 @@
     	trackXhr:true,
     	cp_disabled:false,
     	send_interval: -1,
+    	saveInitialDom: true,
+    	saveInitialScreenshot: true,
+    	saveShotOnHashChange: true,
+    	saveDomOnHashChange: true, 
     	propertyProvider:function(prop){
     		prop['customProp'] = (new Date()).getTime();
     	}

@@ -32,12 +32,14 @@ jsflight.options = {
 	downloadPath : '/jsflight/recorder/storage',
 	// url to find servlet to view status
 	statusPath : '/jsflight/recorder/status',
-	// save initial dom after document has loaded 
-	saveInitialDom: true,
+	// save initial dom after document has loaded
+	saveInitialDom : false,
 	// save page shot when document loaded
-	saveInitialScreenshot: true,
+	saveInitialScreenshot : false,
 	// take screenshot on hash change
-	saveShotOnHashChange:true,
+	saveShotOnHashChange : false,
+	// take DOM snapshot when has changing
+	saveDomOnHashChange : false,
 	// track mouse movements
 	trackMouse : false,
 	// track url hash change
@@ -89,25 +91,29 @@ jsflight.getElementTreeXPath = function(element) {
 	return paths.length ? "/" + paths.join("/") : null;
 }
 
-jsflight.getCssSelector = function(element){
-	
+jsflight.getCssSelector = function(element) {
+
 }
 
-jsflight.getTargetId = function(event){
+jsflight.getTargetId = function(event) {
 	var target = event.target;
-	
-	if(target==null){
+
+	if (target == null) {
 		return;
 	}
-	
+
 	var ids = [];
-	
-	var id1={id1: getElementTreeXPath(target)};
-	var id2={id2: getCssSelector(target)};
-		
+
+	var id1 = {
+		id1 : getElementTreeXPath(target)
+	};
+	var id2 = {
+		id2 : getCssSelector(target)
+	};
+
 	ids.push(id1);
 	ids.push(id2);
-	
+
 	return ids;
 }
 
@@ -131,7 +137,7 @@ jsflight.getEventInfo = function(mouseEvent) {
 	result['tabuuid'] = jsflight.tabUuid;
 	result['type'] = mouseEvent.type;
 	result['url'] = window.location.href;
-	result['charCode'] = (event.which || event.keyCode || mouseEvent.charCode);
+	result['charCode'] = (mouseEvent.which || mouseEvent.keyCode || mouseEvent.charCode);
 
 	if (mouseEvent.type === 'keyup') {
 		if (!event.shiftKey) {
@@ -139,17 +145,17 @@ jsflight.getEventInfo = function(mouseEvent) {
 					.toLowerCase().charCodeAt(0);
 		}
 	}
-	result['altKey'] = event.altKey;
-	result['ctrlKey'] = event.ctrlKey;
-	result['shiftKey'] = event.shiftKey;
-	result['metaKey'] = event.metaKey;
+	result['altKey'] = mouseEvent.altKey;
+	result['ctrlKey'] = mouseEvent.ctrlKey;
+	result['shiftKey'] = mouseEvent.shiftKey;
+	result['metaKey'] = mouseEvent.metaKey;
 
 	result['button'] = mouseEvent.button;
 	result['hash'] = window.location.hash;
 
 	result['target'] = jsflight.getElementXPath(mouseEvent.target);
 	result['target1'] = jsflight.getTargetId(mouseEvent);
-	
+
 	result['timestamp'] = mouseEvent.timeStamp;
 
 	result['screenX'] = mouseEvent.screenX;
@@ -168,7 +174,8 @@ jsflight.getEventInfo = function(mouseEvent) {
 	result['page.height'] = window.innerHeight;
 
 	result['agent'] = navigator.userAgent;
-	
+	result['image'] = mouseEvent.image;
+
 	if (jsflight.options.propertyProvider) {
 		jsflight.options.propertyProvider(result);
 	}
@@ -218,8 +225,7 @@ jsflight.guid = function() {
  * Process mouse event
  */
 jsflight.TrackMouse = function(mouseEvent) {
-	if (mouseEvent.type == 'mousemove'
-			&& jsflight.options.trackMouse == false) {
+	if (mouseEvent.type == 'mousemove' && jsflight.options.trackMouse == false) {
 		return;
 	}
 
@@ -290,7 +296,7 @@ jsflight.TrackXhrOpen = function(data) {
 		data.call = "open";
 		data.tabuuid = jsflight.tabUuid;
 		data.url = window.location.href;
-		data.timestamp = new Date().getTime()		
+		data.timestamp = new Date().getTime()
 		jsflight.saveToStorage(jsflight.eventId, JSON.stringify(data));
 	} catch (e) {
 		console.log(e);
@@ -396,7 +402,7 @@ jsflight.startRecorder = function() {
 	if (jsflight.options.trackXhr) {
 		jsflight.initXhrTracking();
 	}
-	
+
 	jsflight.started = true;
 }
 
@@ -432,7 +438,7 @@ jsflight.stopRecorder = function() {
 	if (jsflight.options.trackXhr) {
 		jsflight.stopXhrTracking();
 	}
-	
+
 	jsflight.started = false;
 }
 
@@ -499,7 +505,7 @@ jsflight.shouldStartOnLoad = function() {
 	return false
 }
 
-jsflight.addControlPanel = function(){
+jsflight.addControlPanel = function() {
 	var script = document.createElement('script')
 	script.type = 'text/javascript';
 	script.charset = 'utf-8';
@@ -583,7 +589,7 @@ jsflight.addControlPanel = function(){
  * Inject control panel specific js-code and markup
  */
 jsflight.addControlHook = function() {
-	if(jsflight.options.cp_disabled==false) {
+	if (jsflight.options.cp_disabled == false) {
 		jsflight.addControlPanel();
 	}
 
@@ -613,9 +619,21 @@ jsflight.removeControlHook = function() {
  */
 jsflight.addJSFlightHooksOnDocumentLoad = function(options) {
 
-	if(options.cp_disabled==false)
+	if (options.saveInitialDom)
+		jsflight.options.saveInitialDom = options.saveInitialDom;
+
+	if (options.saveInitialScreenshot)
+		jsflight.options.saveInitialScreenshot = options.saveInitialScreenshot;
+
+	if (options.saveShotOnHashChange)
+		jsflight.options.saveShotOnHashChange = options.saveShotOnHashChange;
+
+	if (options.saveDomOnHashChange)
+		jsflight.options.saveDomOnHashChange = options.saveDomOnHashChange;
+
+	if (options.cp_disabled == false)
 		jsflight.options.cp_disabled = false;
-	
+
 	if (options.autostart)
 		jsflight.options.autostart = options.autostart;
 
@@ -693,7 +711,7 @@ jsflight.initXhrTracking = function() {
 			async : async,
 			user : user,
 			password : password,
-			xhrId: jsflight.xhrId 
+			xhrId : jsflight.xhrId
 		};
 		jsflight.xhrId++;
 		// skip open to ourself url
@@ -719,7 +737,7 @@ jsflight.initXhrTracking = function() {
 		};
 		// skip send to ourself url
 		if (trackData.open.target.indexOf(jsflight.options.baseUrl
-				+ jsflight.options.downloadPath)!=0) {
+				+ jsflight.options.downloadPath) != 0) {
 			jsflight.TrackXhrSend(trackData);
 		}
 		this.oldSend.call(this, data);
@@ -739,9 +757,9 @@ jsflight.stopXhrTracking = function() {
  */
 jsflight.sendEventData = function(sendStop) {
 
-	if(jsflight.started===false)
+	if (jsflight.started === false)
 		return;
-	
+
 	if (typeof (window.sessionStorage) == "undefined") {
 		console.log('No support of window.sessionStorage');
 		return;
@@ -779,6 +797,40 @@ jsflight.sendEventData = function(sendStop) {
 		}
 	};
 	xhr.send('data=' + encodeURIComponent(data));
+}
+
+jsflight.take_a_screenshot = function() {
+	var event = {};
+	html2canvas(document.body, {
+		onrendered : function(canvas) {
+			try {
+				var myImage = canvas.toDataURL("image/png");
+				event.image = myImage;
+				event.type = 'screenshot';
+				var data = JSON.stringify(jsflight.getEventInfo(event));
+				jsflight.saveToStorage(jsflight.eventId, data);
+			} catch (e) {
+				console.log(e);
+			} finally {
+				jsflight.eventId++;
+			}
+		}
+	});
+}
+
+jsflight.take_dom_snapshot = function() {
+	try {
+		var tree = Xml.getElementHTML(document.body);
+		var event = {};
+		event.type = 'snapshot';
+		event.dom = tree;
+		var data = JSON.stringify(jsflight.getEventInfo(event));
+		jsflight.saveToStorage(jsflight.eventId, data);
+	} catch (e) {
+		console.log(e);
+	} finally {
+		jsflight.eventId++;
+	}
 }
 
 jsflight.stop_recording_timer = function() {

@@ -8,18 +8,6 @@ var tagAttributesMap = {};
 var commonAttributes = {};
 var commonAttributesMap = {};
 
-// Set up HTML attributes from the CodeMirror data
-commonAttributesMap.html = HtmlData.globalAttributes;
-commonAttributes.html = Object.keys(commonAttributesMap.html).sort();
-tagAttributesMap.html = {};
-tagAttributes.html = {};
-for (var tag in HtmlData.specificAttributes)
-{
-    var attrs = HtmlData.specificAttributes[tag].attrs;
-    tagAttributesMap.html[tag] = attrs;
-    tagAttributes.html[tag] = Object.keys(attrs).sort();
-}
-
 // SVG data, taken from: http://www.w3.org/TR/SVG/attindex.html
 // and removing attributes unimplemented in Firefox, going by the commented-out lines in:
 // http://dxr.mozilla.org/mozilla-central/source/content/base/src/nsTreeSanitizer.cpp
@@ -124,7 +112,6 @@ tagAttributesMap.svg.feMorphology.operator = ["erode", "dilate"];
 tagAttributesMap.svg.feBlend.mode = ["normal", "multiply", "screen", "darken", "lighten"];
 tagAttributesMap.svg.script.type = ["text/javascript", "application/ecmascript"];
 tagAttributesMap.svg.style.type = ["text/css"];
-tagAttributesMap.svg.style.media = tagAttributesMap.html.style.media;
 tagAttributesMap.svg.svg.contentStyleType = ["text/css"];
 tagAttributesMap.svg.svg.contentScriptType = ["text/javascript", "application/ecmascript"];
 tagAttributesMap.svg["font-face"]["font-variant"] = ["normal", "small-caps"];
@@ -387,9 +374,6 @@ Xml.getElementHTML = function(element)
     {
         if (elt.nodeType == Node.ELEMENT_NODE)
         {
-            if (Firebug.shouldIgnore(elt))
-                return;
-
             var nodeName = getNodeName(elt);
             html.push('<', nodeName);
 
@@ -459,9 +443,6 @@ Xml.getElementXML = function(element)
     {
         if (elt.nodeType == Node.ELEMENT_NODE)
         {
-            if (Firebug.shouldIgnore(elt))
-                return;
-
             var nodeName = getNodeName(elt);
             xml.push('<', nodeName);
 
@@ -510,8 +491,6 @@ Xml.getElementXML = function(element)
 
 // ************************************************************************************************
 // Whitespace and Entity conversions
-
-var domUtils = Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
 
 /**
  * Returns true if given document is based on a XML and so displaying pretty printed XML elements.
