@@ -8,6 +8,7 @@
     <script src="<%=request.getContextPath()%>/jsflight/recorder?int=xpath.js" type="text/javascript"></script>
     <script src="<%=request.getContextPath()%>/jsflight/recorder?int=xml.js" type="text/javascript"></script>
     <script src="<%=request.getContextPath()%>/jsflight/recorder?int=str.js" type="text/javascript"></script>
+    <script src="<%=request.getContextPath()%>/jsflight/recorder?int=css-selector-generator.js" type="text/javascript"></script>
     <script src="<%=request.getContextPath()%>/jsflight/recorder?int=html2canvas.js" type="text/javascript"></script>
     <script>    
     /*
@@ -89,7 +90,7 @@
         <button onclick="loadXMLDoc('<%=request.getContextPath()%>/12/2/12/3')">XHR 404</button>
         <button onclick="emptyRequestXMLDoc('<%=request.getContextPath()%>')">XHR with empty send</button>
         <br/>
-        <textarea rows="10" cols="80">this is a text to debug keypress</textarea>
+        <textarea id='a1' rows="10" cols="80">this is a text to debug keypress</textarea>
     </form>
     <a href='#testHash'>testHash</a>
     <a href='#'>back from testHash</a>

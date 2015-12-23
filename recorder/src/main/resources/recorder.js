@@ -94,27 +94,41 @@ jsflight.getElementTreeXPath = function(element) {
 jsflight.getCssSelector = function(element) {
 
 }
-
 jsflight.getTargetId = function(event) {
+	var paths = [];
 	var target = event.target;
+	
+	if(target==null)
+		return paths;
+	
+	var elt = target;
+	do{
+		paths.push(jsflight.getElementFullId(elt))
+		elt = elt.parentNode;
+	}while(elt!=null && elt!=document);
+	
+	return paths;
+}
 
+jsflight.getElementFullId = function(target) {
 	if (target == null) {
 		return;
 	}
 
-	var ids = [];
-
 	var id1 = {
-		id1 : getElementTreeXPath(target)
-	};
-	var id2 = {
-		id2 : getCssSelector(target)
-	};
-
-	ids.push(id1);
-	ids.push(id2);
-
-	return ids;
+		getxp : Xpath.getElementTreeXPath(target),
+		gecp : Css.getElementCSSPath(target),
+		gecs : Css.getElementCSSSelector(target),
+		csg : new CssSelectorGenerator().getAllSelectors(target)
+		/* ,
+		csg1 : new CssSelectorGenerator(['id', 'class', 'tag', 'nthchild']).getSelector(target),
+		csg2 : new CssSelectorGenerator(['class', 'tag', 'nthchild']).getSelector(target),
+		csg3 : new CssSelectorGenerator(['tag', 'nthchild']).getSelector(target),
+		csg4 : new CssSelectorGenerator(['nthchild']).getSelector(target)
+		*/
+	}
+	
+	return id1;
 }
 
 /**
@@ -175,6 +189,7 @@ jsflight.getEventInfo = function(mouseEvent) {
 
 	result['agent'] = navigator.userAgent;
 	result['image'] = mouseEvent.image;
+	result['dom'] = mouseEvent.dom;
 
 	if (jsflight.options.propertyProvider) {
 		jsflight.options.propertyProvider(result);
@@ -287,6 +302,14 @@ jsflight.TrackHash = function(event) {
 		console.log(e);
 	} finally {
 		jsflight.eventId++;
+	}
+	
+	if(jsflight.options.saveShotOnHashChange){
+		jsflight.take_a_screenshot();
+	}
+	
+	if(jsflight.options.saveDomOnHashChange){
+		jsflight.take_dom_snapshot();
 	}
 }
 
@@ -553,7 +576,7 @@ jsflight.addControlPanel = function() {
 	div.className = "modalDialog";
 	div.style.display = 'none';
 
-	div.innerHTML = '<div> \
+	div.innerHTML = '<div style="color:black"> \
 		   <h1>JSFlight</h1><h2>Control panel</h2> \
 		   <form action="'
 			+ jsflight.options.baseUrl
@@ -664,8 +687,27 @@ jsflight.addJSFlightHooksOnDocumentLoad = function(options) {
 	if (options.track_duration)
 		jsflight.options.track_duration = options.track_duration;
 
+	function initialDump(){
+		if(jsflight.options.saveInitialScreenshot){
+			jsflight.take_a_screenshot();
+		}
+		
+		if(jsflight.options.saveInitialDom){
+			jsflight.take_dom_snapshot();
+		}
+	}
+	
 	// when document is rendered
 	window.onload = function() {
+
+		if(jsflight.options.saveInitialScreenshot || jsflight.options.saveInitialDom){
+
+			window.setTimeout(200, initialDump());			
+			window.setTimeout(1500, initialDump());
+			window.setTimeout(2500, initialDump());
+			window.setTimeout(5000, initialDump());
+		}
+
 		jsflight.addControlHook();
 	}
 
