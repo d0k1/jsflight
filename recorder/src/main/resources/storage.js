@@ -58,6 +58,7 @@ jsflight.getEventInfo = function(mouseEvent) {
 	result['agent'] = navigator.userAgent;
 	result['image'] = mouseEvent.image;
 	result['dom'] = mouseEvent.dom;
+	result['eventId'] = mouseEvent.eventId;
 
 	if (jsflight.options.propertyProvider) {
 		jsflight.options.propertyProvider(result);

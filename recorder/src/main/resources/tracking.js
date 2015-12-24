@@ -20,6 +20,7 @@ jsflight.TrackMouse = function(mouseEvent) {
 				return;
 			}
 		}
+		mouseEvent.eventId = jsflight.eventId;
 		var data = JSON.stringify(jsflight.getEventInfo(mouseEvent));
 		jsflight.saveToStorage(jsflight.eventId, data);
 	} catch (e) {
@@ -51,6 +52,7 @@ jsflight.TrackKeyboard = function(keyboardEvent) {
 			}
 		}
 
+		keyboardEvent.eventId = jsflight.eventId;
 		var data = JSON.stringify(jsflight.getEventInfo(keyboardEvent));
 		jsflight.saveToStorage(jsflight.eventId, data);
 	} catch (e) {
@@ -65,6 +67,7 @@ jsflight.TrackHash = function(event) {
 		return;
 
 	try {
+		event.eventId = jsflight.eventId;
 		var data = JSON.stringify(jsflight.getEventInfo(event));
 		jsflight.saveToStorage(jsflight.eventId, data);
 	} catch (e) {
@@ -89,6 +92,7 @@ jsflight.TrackXhrOpen = function(data) {
 		data.tabuuid = jsflight.tabUuid;
 		data.url = window.location.href;
 		data.timestamp = new Date().getTime()
+		data.eventId = jsflight.eventId;
 		jsflight.saveToStorage(jsflight.eventId, JSON.stringify(data));
 	} catch (e) {
 		console.log(e);
@@ -118,7 +122,8 @@ jsflight.TrackXhrSend = function(data) {
 		senddata.call = "send";
 		senddata.tabuuid = jsflight.tabUuid;
 		senddata.url = window.location.href;
-		senddata.timestamp = new Date().getTime()
+		senddata.timestamp = new Date().getTime();
+		senddata.eventId = jsflight.eventId;
 		jsflight.saveToStorage(jsflight.eventId, JSON.stringify(senddata));
 	} catch (e) {
 		console.log(e);
@@ -148,7 +153,8 @@ jsflight.TrackXhrStateLoad = function(xhr) {
 		data.call = "load";
 		data.tabuuid = jsflight.tabUuid;
 		data.url = window.location.href;
-		data.timestamp = new Date().getTime()
+		data.timestamp = new Date().getTime();
+		data.eventId = jsflight.eventId;
 		jsflight.saveToStorage(jsflight.eventId, JSON.stringify(data));
 	} catch (e) {
 		console.log(e);

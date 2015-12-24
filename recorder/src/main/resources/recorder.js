@@ -184,6 +184,7 @@ jsflight.take_a_screenshot = function() {
 				event.image = myImage;
 				event.type = 'screenshot';
 				event.timeStamp = Date.now();
+				event.eventId = jsflight.eventId;
 				var data = JSON.stringify(jsflight.getEventInfo(event));
 				jsflight.saveToStorage(jsflight.eventId, data);
 			} catch (e) {
@@ -202,6 +203,7 @@ jsflight.take_dom_snapshot = function() {
 		event.type = 'snapshot';
 		event.timeStamp = Date.now();
 		event.dom = tree;
+		event.eventId = jsflight.eventId;
 		var data = JSON.stringify(jsflight.getEventInfo(event));
 		jsflight.saveToStorage(jsflight.eventId, data);
 	} catch (e) {
