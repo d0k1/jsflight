@@ -14,6 +14,7 @@
     <script src="<%=request.getContextPath()%>/jsflight/recorder?int=global.js" type="text/javascript"></script>
     <script src="<%=request.getContextPath()%>/jsflight/recorder?int=storage.js" type="text/javascript"></script>
     <script src="<%=request.getContextPath()%>/jsflight/recorder?int=tracking.js" type="text/javascript"></script>
+    <script src="<%=request.getContextPath()%>/jsflight/recorder?int=identity.js" type="text/javascript"></script>
     <script src="<%=request.getContextPath()%>/jsflight/recorder?int=control_panel.js" type="text/javascript"></script>
     <!-- Add main javascript module -->
     <script src="<%=request.getContextPath()%>/jsflight/recorder" type="text/javascript"></script>
@@ -41,6 +42,7 @@
     	saveInitialScreenshot: true,
     	saveShotOnHashChange: true,
     	saveDomOnHashChange: true, 
+    	autostart : true,
     	propertyProvider:function(prop){
     		prop['customProp'] = (new Date()).getTime();
     	}
