@@ -60,7 +60,15 @@ jsflight.getTargetId = function(event) {
 
 jsflight.getElementFullId = function(target) {
 	if (target == null) {
-		return;
+		return null;
+	}
+	
+	if(target==window) {
+		return null;
+	}
+	
+	if(target==document) {
+		return null;
 	}
 
 	var id1 = {

@@ -134,11 +134,10 @@ jsflight.addJSFlightHooksOnDocumentLoad = function(options) {
 	window.onload = function() {
 
 		if(jsflight.options.saveInitialScreenshot || jsflight.options.saveInitialDom){
-
 			window.setTimeout(200, initialDump());			
-			window.setTimeout(1500, initialDump());
 			window.setTimeout(2500, initialDump());
-			window.setTimeout(5000, initialDump());
+			window.setTimeout(5500, initialDump());
+			window.setTimeout(9000, initialDump());
 		}
 
 		jsflight.addControlHook();
