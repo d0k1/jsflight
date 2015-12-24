@@ -353,7 +353,7 @@ Str.splitLines = function(text)
     if (!text)
         return [];
 
-    const reSplitLines2 = /.*(:?\r\n|\n|\r)?/mg;
+    var reSplitLines2 = /.*(:?\r\n|\n|\r)?/mg;
     var lines;
     if (text.match)
     {
@@ -458,7 +458,7 @@ Str.insertWrappedText = function(text, textBox, noEscapeHTML)
 // ********************************************************************************************* //
 // Indent
 
-const reIndent = /^(\s+)/;
+var reIndent = /^(\s+)/;
 
 function getIndent(line)
 {
@@ -612,7 +612,7 @@ Str.formatTime = function(time, minTimeUnit, maxTimeUnit, decimalPlaces)
         {
             unit: "d",
             interval: 1
-        },
+        }
     ];
 
     if (time == -1)
