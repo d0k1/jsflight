@@ -1,5 +1,5 @@
 // jsflight namespace 
-var jsflight = {}
+var jsflight = jsflight || {}
 
 /* =================================================================================================================================== */
 /** Global variables * */
@@ -131,12 +131,6 @@ jsflight.getElementFullId = function(target) {
 	return id1;
 }
 
-/**
- * Make json of mouse event.
- * 
- * @param mouseEvent
- * @returns {___anonymous1625_1630}
- */
 jsflight.getEventInfo = function(mouseEvent) {
 	if (mouseEvent === undefined)
 		mouseEvent = window.event;
@@ -497,6 +491,7 @@ jsflight.controlHook = function(event) {
 			&& (event.which || event.keyCode) == 38) {
 		var panel = document.getElementById("flight-cp");
 		panel.style.display = 'block';
+		panel.className = 'modalDialog';
 	}
 	if (event.ctrlKey && event.altKey && event.shiftKey
 			&& (event.which || event.keyCode) == 40) {

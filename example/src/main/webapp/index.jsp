@@ -1,8 +1,7 @@
 <!-- This is an example of injecting JSFlightRecorder --> 
 <html>
 <head>
-    <!-- Add javascript -->
-    <script src="<%=request.getContextPath()%>/jsflight/recorder" type="text/javascript"></script>
+    <!-- Add javascript modules -->
     <script src="<%=request.getContextPath()%>/jsflight/recorder?int=css.js" type="text/javascript"></script>
     <script src="<%=request.getContextPath()%>/jsflight/recorder?int=dom.js" type="text/javascript"></script>
     <script src="<%=request.getContextPath()%>/jsflight/recorder?int=xpath.js" type="text/javascript"></script>
@@ -10,7 +9,15 @@
     <script src="<%=request.getContextPath()%>/jsflight/recorder?int=str.js" type="text/javascript"></script>
     <script src="<%=request.getContextPath()%>/jsflight/recorder?int=css-selector-generator.js" type="text/javascript"></script>
     <script src="<%=request.getContextPath()%>/jsflight/recorder?int=html2canvas.js" type="text/javascript"></script>
-    <script>    
+    
+    <script src="<%=request.getContextPath()%>/jsflight/recorder?int=options.js" type="text/javascript"></script>
+    <script src="<%=request.getContextPath()%>/jsflight/recorder?int=global.js" type="text/javascript"></script>
+    <script src="<%=request.getContextPath()%>/jsflight/recorder?int=storage.js" type="text/javascript"></script>
+    <script src="<%=request.getContextPath()%>/jsflight/recorder?int=tracking.js" type="text/javascript"></script>
+    <script src="<%=request.getContextPath()%>/jsflight/recorder?int=control_panel.js" type="text/javascript"></script>
+    <!-- Add main javascript module -->
+    <script src="<%=request.getContextPath()%>/jsflight/recorder" type="text/javascript"></script>
+    <script>
     /*
         //Set desired options
         // below listed default options
