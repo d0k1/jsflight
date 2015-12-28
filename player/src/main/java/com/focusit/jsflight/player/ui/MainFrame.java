@@ -60,9 +60,9 @@ import org.openqa.selenium.remote.DesiredCapabilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.focusit.jmeter.JMeterRecorder;
 import com.focusit.jsflight.player.input.Events;
 import com.focusit.jsflight.player.input.FileInput;
-import com.focusit.jsflight.player.jmeter.JMeterInterop;
 import com.focusit.jsflight.player.script.Engine;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -103,6 +103,7 @@ public class MainFrame
     private JTextField screenDirTextField;
     private JTextField scenarioTextField;
     private JTextField pjsPath;
+    private JMeterRecorder jmeter = new JMeterRecorder();
 
     // I will use it, probably, another day
     // private Pattern urlPattern = Pattern.compile(
@@ -110,10 +111,12 @@ public class MainFrame
 
     /**
      * Create the application.
+     * @throws IOException 
      */
-    public MainFrame()
+    public MainFrame() throws IOException
     {
         initialize();
+        jmeter.init();
     }
 
     public JFrame getFrame()
@@ -1033,7 +1036,11 @@ public class MainFrame
         JButton startProxyButton = new JButton("Start proxy");
         startProxyButton.addActionListener(new ActionListener() {
         	public void actionPerformed(ActionEvent e) {
-        		JMeterInterop.startProxy();
+        		try {
+					jmeter.startRecording();
+				} catch (IOException e1) {
+					log.error(e1.toString(), e1);
+				}
         	}
         });
         startProxyButton.setSelected(true);
@@ -1042,7 +1049,7 @@ public class MainFrame
         JButton stopProxyButton = new JButton("Stop proxy");
         stopProxyButton.addActionListener(new ActionListener() {
         	public void actionPerformed(ActionEvent e) {
-        		JMeterInterop.stopProxy();
+        		jmeter.stopRecording();
         	}
         });
         stopProxyButton.setSelected(true);
@@ -1051,7 +1058,11 @@ public class MainFrame
         JButton saveRecordingButton = new JButton("Save recording");
         saveRecordingButton.addActionListener(new ActionListener() {
         	public void actionPerformed(ActionEvent e) {
-        		JMeterInterop.saveRecord(scenarioTextField.getText());
+        		try {
+					jmeter.saveScenario(scenarioTextField.getText());
+				} catch (IOException e1) {
+					log.error(e1.toString(), e1);
+				}
         	}
         });
         saveRecordingButton.setSelected(true);
