@@ -62,6 +62,7 @@ import org.slf4j.LoggerFactory;
 
 import com.focusit.jsflight.player.input.Events;
 import com.focusit.jsflight.player.input.FileInput;
+import com.focusit.jsflight.player.jmeter.JMeterInterop;
 import com.focusit.jsflight.player.script.Engine;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -1030,14 +1031,29 @@ public class MainFrame
         label_5.setLayout(new BoxLayout(label_5, BoxLayout.X_AXIS));
 
         JButton startProxyButton = new JButton("Start proxy");
+        startProxyButton.addActionListener(new ActionListener() {
+        	public void actionPerformed(ActionEvent e) {
+        		JMeterInterop.startProxy();
+        	}
+        });
         startProxyButton.setSelected(true);
         label_5.add(startProxyButton);
 
         JButton stopProxyButton = new JButton("Stop proxy");
+        stopProxyButton.addActionListener(new ActionListener() {
+        	public void actionPerformed(ActionEvent e) {
+        		JMeterInterop.stopProxy();
+        	}
+        });
         stopProxyButton.setSelected(true);
         label_5.add(stopProxyButton);
 
         JButton saveRecordingButton = new JButton("Save recording");
+        saveRecordingButton.addActionListener(new ActionListener() {
+        	public void actionPerformed(ActionEvent e) {
+        		JMeterInterop.saveRecord(scenarioTextField.getText());
+        	}
+        });
         saveRecordingButton.setSelected(true);
         label_5.add(saveRecordingButton);
 
