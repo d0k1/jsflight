@@ -3,6 +3,7 @@ package com.focusit.jmeter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Locale;
 
 import org.apache.jmeter.save.SaveService;
 import org.apache.jmeter.util.JMeterUtils;
@@ -18,6 +19,7 @@ public class JMeterRecorder {
 		JMeterUtils.setProperty("saveservice_properties", File.separator+"saveservice.properties");
 		JMeterUtils.setProperty("user_properties", File.separator+"user.properties");
 		JMeterUtils.setProperty("upgrade_properties", File.separator+"upgrade.properties");
+		JMeterUtils.setLocale(Locale.ENGLISH);
 		
 		JMeterUtils.setProperty("proxy.cert.directory", new File("").getAbsolutePath());
 		hashTree = SaveService.loadTree(new File("template.jmx"));
