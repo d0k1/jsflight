@@ -13,8 +13,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
@@ -407,10 +405,9 @@ public class MainFrame
                 }
                 try
                 {
-                    String data = FileInput.getContentInString(filename);
                     rawevents = new Events();
                     rawevents.parse(FileInput.getContent(filename));
-                    contentPane.setText(data);
+                    contentPane.setText(FileInput.getContentInString(filename));
                 }
                 catch (IOException e1)
                 {
@@ -520,15 +517,15 @@ public class MainFrame
                     checks.add(new Boolean(false));
                 }
 
-                Collections.sort(events, new Comparator<JSONObject>()
-                {
-                    @Override
-                    public int compare(JSONObject o1, JSONObject o2)
-                    {
-                        return ((Long)o1.getLong("timestamp")).compareTo(o2.getLong("timestamp"));
-                    }
-                });
-
+                //                Collections.sort(events, new Comparator<JSONObject>()
+                //                {
+                //                    @Override
+                //                    public int compare(JSONObject o1, JSONObject o2)
+                //                    {
+                //                        return ((Long)o1.getLong("timestamp")).compareTo(o2.getLong("timestamp"));
+                //                    }
+                //                });
+                //
                 long secs = 0;
 
                 if (events.size() > 0)
@@ -582,7 +579,7 @@ public class MainFrame
                         case 0:
                             return rowIndex;
                         case 2:
-                            return event.get("tabuuid");
+                            return event.get("eventId");
                         case 3:
                             return event.get("type");
                         case 4:
@@ -964,7 +961,7 @@ public class MainFrame
         optionsPanel.add(lblFirefoxPath, "2, 6, right, default");
 
         ffPath = new JTextField();
-        ffPath.setText("firefox-headless.sh");
+        ffPath.setText("/usr/bin/firefox");
         optionsPanel.add(ffPath, "4, 6, fill, default");
         ffPath.setColumns(10);
 
@@ -1034,36 +1031,51 @@ public class MainFrame
         label_5.setLayout(new BoxLayout(label_5, BoxLayout.X_AXIS));
 
         JButton startProxyButton = new JButton("Start proxy");
-        startProxyButton.addActionListener(new ActionListener() {
-        	public void actionPerformed(ActionEvent e) {
-        		try {
-					jmeter.startRecording();
-				} catch (IOException e1) {
-					log.error(e1.toString(), e1);
-				}
-        	}
+        startProxyButton.addActionListener(new ActionListener()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                try
+                {
+                    jmeter.startRecording();
+                }
+                catch (IOException e1)
+                {
+                    log.error(e1.toString(), e1);
+                }
+            }
         });
         startProxyButton.setSelected(true);
         label_5.add(startProxyButton);
 
         JButton stopProxyButton = new JButton("Stop proxy");
-        stopProxyButton.addActionListener(new ActionListener() {
-        	public void actionPerformed(ActionEvent e) {
-        		jmeter.stopRecording();
-        	}
+        stopProxyButton.addActionListener(new ActionListener()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                jmeter.stopRecording();
+            }
         });
         stopProxyButton.setSelected(true);
         label_5.add(stopProxyButton);
 
         JButton saveRecordingButton = new JButton("Save recording");
-        saveRecordingButton.addActionListener(new ActionListener() {
-        	public void actionPerformed(ActionEvent e) {
-        		try {
-					jmeter.saveScenario(scenarioTextField.getText());
-				} catch (IOException e1) {
-					log.error(e1.toString(), e1);
-				}
-        	}
+        saveRecordingButton.addActionListener(new ActionListener()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                try
+                {
+                    jmeter.saveScenario(scenarioTextField.getText());
+                }
+                catch (IOException e1)
+                {
+                    log.error(e1.toString(), e1);
+                }
+            }
         });
         saveRecordingButton.setSelected(true);
         label_5.add(saveRecordingButton);
