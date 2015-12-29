@@ -111,7 +111,7 @@ public class MainFrame
      * Create the application.
      * @throws IOException 
      */
-    public MainFrame() throws IOException
+    public MainFrame() throws Exception
     {
         initialize();
         jmeter.init();
