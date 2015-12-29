@@ -66,6 +66,9 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
+import javax.swing.JSeparator;
+import javax.swing.border.TitledBorder;
+import javax.swing.JSplitPane;
 
 public class MainFrame
 {
@@ -102,6 +105,7 @@ public class MainFrame
     private JTextField scenarioTextField;
     private JTextField pjsPath;
     private JMeterRecorder jmeter = new JMeterRecorder();
+    private JTextField textField;
 
     // I will use it, probably, another day
     // private Pattern urlPattern = Pattern.compile(
@@ -357,7 +361,7 @@ public class MainFrame
     {
         frmJsflightrecorderPlayer = new JFrame();
         frmJsflightrecorderPlayer.setTitle("JSFlightRecorder Player");
-        frmJsflightrecorderPlayer.setBounds(100, 100, 938, 635);
+        frmJsflightrecorderPlayer.setBounds(100, 100, 1066, 650);
         frmJsflightrecorderPlayer.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         JTabbedPane tabbedPane = new JTabbedPane(SwingConstants.TOP);
@@ -465,405 +469,417 @@ public class MainFrame
 
         JPanel scenarioPanel = new JPanel();
         tabbedPane.addTab("Scenario", null, scenarioPanel, null);
-        GridBagLayout gbl_scenarioPanel = new GridBagLayout();
-        gbl_scenarioPanel.columnWidths = new int[] { 279, 0, 0, 0, 0, 0, 0, 0, 378, 0 };
-        gbl_scenarioPanel.rowHeights = new int[] { 0, 449, 70, 0, 0 };
-        gbl_scenarioPanel.columnWeights = new double[] { 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, Double.MIN_VALUE };
-        gbl_scenarioPanel.rowWeights = new double[] { 0.0, 1.0, 1.0, 0.0, Double.MIN_VALUE };
-        scenarioPanel.setLayout(gbl_scenarioPanel);
+        scenarioPanel.setLayout(new BorderLayout(0, 0));
+        
+        JPanel panel_4 = new JPanel();
+        panel_4.setBorder(null);
+        panel_4.setLayout(new BorderLayout(0, 0));
+        
+        JPanel panel_5 = new JPanel();
+        panel_4.add(panel_5, BorderLayout.NORTH);
+        GridBagLayout gbl_panel_5 = new GridBagLayout();
+        gbl_panel_5.columnWidths = new int[]{237, 135, 136, 86, 65, 66, 64, 93, 144, 0};
+        gbl_panel_5.rowHeights = new int[]{25, 0};
+        gbl_panel_5.columnWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
+        gbl_panel_5.rowWeights = new double[]{0.0, Double.MIN_VALUE};
+        panel_5.setLayout(gbl_panel_5);
+        
+                JPanel panel_2 = new JPanel();
+                GridBagConstraints gbc_panel_2 = new GridBagConstraints();
+                gbc_panel_2.fill = GridBagConstraints.BOTH;
+                gbc_panel_2.insets = new Insets(0, 0, 0, 5);
+                gbc_panel_2.gridx = 0;
+                gbc_panel_2.gridy = 0;
+                panel_5.add(panel_2, gbc_panel_2);
+                panel_2.setLayout(new BoxLayout(panel_2, BoxLayout.X_AXIS));
+                
+                        JButton btnParse = new JButton("Parse");
+                        panel_2.add(btnParse);
+                        
+                                JButton btnSave_1 = new JButton("Save");
+                                btnSave_1.addActionListener(new ActionListener()
+                                {
+                                    @Override
+                                    public void actionPerformed(ActionEvent e)
+                                    {
+                                        try
+                                        {
+                                            FileInput.saveEvents(events, "test.json");
+                                        }
+                                        catch (IOException e1)
+                                        {
+                                            log.error(e1.toString(), e1);
+                                        }
+                                    }
+                                });
+                                panel_2.add(btnSave_1);
+                                
+                                        JButton btnOpenBrowser = new JButton("Open browser");
+                                        GridBagConstraints gbc_btnOpenBrowser = new GridBagConstraints();
+                                        gbc_btnOpenBrowser.insets = new Insets(0, 0, 0, 5);
+                                        gbc_btnOpenBrowser.gridx = 1;
+                                        gbc_btnOpenBrowser.gridy = 0;
+                                        panel_5.add(btnOpenBrowser, gbc_btnOpenBrowser);
+                                        
+                                                JButton btnCloseBrowser = new JButton("Close browser");
+                                                GridBagConstraints gbc_btnCloseBrowser = new GridBagConstraints();
+                                                gbc_btnCloseBrowser.insets = new Insets(0, 0, 0, 5);
+                                                gbc_btnCloseBrowser.gridx = 2;
+                                                gbc_btnCloseBrowser.gridy = 0;
+                                                panel_5.add(btnCloseBrowser, gbc_btnCloseBrowser);
+                                                
+                                                        JButton btnRewind = new JButton("Rewind");
+                                                        GridBagConstraints gbc_btnRewind = new GridBagConstraints();
+                                                        gbc_btnRewind.insets = new Insets(0, 0, 0, 5);
+                                                        gbc_btnRewind.gridx = 3;
+                                                        gbc_btnRewind.gridy = 0;
+                                                        panel_5.add(btnRewind, gbc_btnRewind);
+                                                        
+                                                                JButton btnPrev = new JButton("Prev");
+                                                                GridBagConstraints gbc_btnPrev = new GridBagConstraints();
+                                                                gbc_btnPrev.insets = new Insets(0, 0, 0, 5);
+                                                                gbc_btnPrev.gridx = 4;
+                                                                gbc_btnPrev.gridy = 0;
+                                                                panel_5.add(btnPrev, gbc_btnPrev);
+                                                                
+                                                                        JButton btnNext = new JButton("Next");
+                                                                        GridBagConstraints gbc_btnNext = new GridBagConstraints();
+                                                                        gbc_btnNext.insets = new Insets(0, 0, 0, 5);
+                                                                        gbc_btnNext.gridx = 5;
+                                                                        gbc_btnNext.gridy = 0;
+                                                                        panel_5.add(btnNext, gbc_btnNext);
+                                                                        
+                                                                                JButton btnSkip = new JButton("Skip");
+                                                                                GridBagConstraints gbc_btnSkip = new GridBagConstraints();
+                                                                                gbc_btnSkip.insets = new Insets(0, 0, 0, 5);
+                                                                                gbc_btnSkip.gridx = 6;
+                                                                                gbc_btnSkip.gridy = 0;
+                                                                                panel_5.add(btnSkip, gbc_btnSkip);
+                                                                                
+                                                                                        JButton btnDel = new JButton("Del step");
+                                                                                        GridBagConstraints gbc_btnDel = new GridBagConstraints();
+                                                                                        gbc_btnDel.insets = new Insets(0, 0, 0, 5);
+                                                                                        gbc_btnDel.gridx = 7;
+                                                                                        gbc_btnDel.gridy = 0;
+                                                                                        panel_5.add(btnDel, gbc_btnDel);
+                                                                                        
+                                                                                                JPanel panel = new JPanel();
+                                                                                                GridBagConstraints gbc_panel = new GridBagConstraints();
+                                                                                                gbc_panel.fill = GridBagConstraints.BOTH;
+                                                                                                gbc_panel.gridx = 8;
+                                                                                                gbc_panel.gridy = 0;
+                                                                                                panel_5.add(panel, gbc_panel);
+                                                                                                panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
+                                                                                                
+                                                                                                        JButton btnCheck = new JButton("Check");
+                                                                                                        panel.add(btnCheck);
+                                                                                                        btnCheck.addMouseListener(new MouseAdapter()
+                                                                                                        {
+                                                                                                            @Override
+                                                                                                            public void mouseClicked(MouseEvent e)
+                                                                                                            {
+                                                                                                                checkElement(table.getSelectedRow());
+                                                                                                            }
+                                                                                                        });
+                                                                                                        
+                                                                                                                JButton btnPlay = new JButton("Play");
+                                                                                                                btnPlay.addMouseListener(new MouseAdapter()
+                                                                                                                {
+                                                                                                                    @Override
+                                                                                                                    public void mouseClicked(MouseEvent e)
+                                                                                                                    {
+                                                                                                                        playTheScenario();
+                                                                                                                    }
+                                                                                                                });
+                                                                                                                panel.add(btnPlay);
+                                                                                                                btnDel.addActionListener(new ActionListener()
+                                                                                                                {
+                                                                                                                    @Override
+                                                                                                                    public void actionPerformed(ActionEvent e)
+                                                                                                                    {
+                                                                                                                        events.remove(table.getSelectedRow());
+                                                                                                                        model.fireTableDataChanged();
+                                                                                                                    }
+                                                                                                                });
+                                                                                                                btnSkip.addMouseListener(new MouseAdapter()
+                                                                                                                {
+                                                                                                                    @Override
+                                                                                                                    public void mouseClicked(MouseEvent e)
+                                                                                                                    {
+                                                                                                                        position++;
+                                                                                                                        model.fireTableDataChanged();
+                                                                                                                    }
+                                                                                                                });
+                                                                                                                btnNext.addMouseListener(new MouseAdapter()
+                                                                                                                {
+                                                                                                                    @Override
+                                                                                                                    public void mouseClicked(MouseEvent e)
+                                                                                                                    {
+                                                                                                                        try
+                                                                                                                        {
+                                                                                                                            applyStep(position);
+                                                                                                                        }
+                                                                                                                        catch (Exception ex)
+                                                                                                                        {
+                                                                                                                            log.error(e.toString(), ex);
+                                                                                                                            throw ex;
+                                                                                                                        }
+                                                                                                                        checks.set(position, true);
+                                                                                                                        position++;
+                                                                                                                        if (position == events.size())
+                                                                                                                        {
+                                                                                                                            for (int i = 0; i < position; i++)
+                                                                                                                            {
+                                                                                                                                checks.set(i, false);
+                                                                                                                            }
+                                                                                                                            position = 0;
+                                                                                                                        }
+                                                                                                                        model.fireTableDataChanged();
+                                                                                                                    }
+                                                                                                                });
+                                                                                                                btnPrev.addActionListener(new ActionListener()
+                                                                                                                {
+                                                                                                                    @Override
+                                                                                                                    public void actionPerformed(ActionEvent e)
+                                                                                                                    {
+                                                                                                                        if (position > 0)
+                                                                                                                        {
+                                                                                                                            position--;
+                                                                                                                        }
+                                                                                                                    }
+                                                                                                                });
+                                                                                                                btnRewind.addMouseListener(new MouseAdapter()
+                                                                                                                {
+                                                                                                                    @Override
+                                                                                                                    public void mouseClicked(MouseEvent e)
+                                                                                                                    {
+                                                                                                                        for (int i = 0; i < events.size(); i++)
+                                                                                                                        {
+                                                                                                                            checks.set(i, false);
+                                                                                                                        }
+                                                                                                                        lastUrl = "";
+                                                                                                                        position = 0;
+                                                                                                                        model.fireTableDataChanged();
+                                                                                                                    }
+                                                                                                                });
+                                                                                                                btnCloseBrowser.addMouseListener(new MouseAdapter()
+                                                                                                                {
+                                                                                                                    @Override
+                                                                                                                    public void mouseClicked(MouseEvent e)
+                                                                                                                    {
+                                                                                                                        if (driver != null)
+                                                                                                                        {
+                                                                                                                            driver.close();
+                                                                                                                        }
+                                                                                                                    }
+                                                                                                                });
+                                                                                                                btnOpenBrowser.addMouseListener(new MouseAdapter()
+                                                                                                                {
+                                                                                                                    @Override
+                                                                                                                    public void mouseClicked(MouseEvent e)
+                                                                                                                    {
+                                                                                                                        FirefoxProfile profile = new FirefoxProfile();
+                                                                                                                        DesiredCapabilities cap = new DesiredCapabilities();
+                                                                                                                        if (proxyHost.getText().trim().length() > 0)
+                                                                                                                        {
+                                                                                                                            String host = proxyHost.getText();
+                                                                                                                            if (proxyPort.getText().trim().length() > 0)
+                                                                                                                            {
+                                                                                                                                host += ":" + proxyPort.getText();
+                                                                                                                            }
+                                                                                                                            org.openqa.selenium.Proxy proxy = new org.openqa.selenium.Proxy();
+                                                                                                                            proxy.setHttpProxy(host).setFtpProxy(host).setSslProxy(host);
+                                                                                                                            cap.setCapability(CapabilityType.PROXY, proxy);
+                                                                                                                        }
+                                                                                                                        if (useFirefoxButton.isSelected())
+                                                                                                                        {
+                                                                                                                            if (ffPath.getText() != null && ffPath.getText().trim().length() > 0)
+                                                                                                                            {
+                                                                                                                                FirefoxBinary binary = new FirefoxBinary(new File(ffPath.getText()));
+                                                                                                                                driver = new FirefoxDriver(binary, profile, cap);
+                                                                                                                            }
+                                                                                                                            else
+                                                                                                                            {
+                                                                                                                                driver = new FirefoxDriver(new FirefoxBinary(), profile, cap);
+                                                                                                                            }
+                                                                                                                        }
+                                                                                                                        else if (usePhantomButton.isSelected())
+                                                                                                                        {
+                                                                                                                            if (pjsPath.getText() != null && pjsPath.getText().trim().length() > 0)
+                                                                                                                            {
+                                                                                                                                cap.setCapability("phantomjs.binary.path", pjsPath.getText());
+                                                                                                                                driver = new PhantomJSDriver(cap);
+                                                                                                                            }
+                                                                                                                            else
+                                                                                                                            {
+                                                                                                                                driver = new PhantomJSDriver(cap);
+                                                                                                                            }
+                                                                                                                        }
+                                                                                                                    }
+                                                                                                                });
+                                                                                                                btnParse.addMouseListener(new MouseAdapter()
+                                                                                                                {
+                                                                                                                    @Override
+                                                                                                                    public void mouseClicked(MouseEvent e)
+                                                                                                                    {
+                                                                                                                        events = rawevents.getEvents();
+                                                                                                                        if (!scriptArea.getText().isEmpty())
+                                                                                                                        {
+                                                                                                                            new Engine(scriptArea.getText()).postProcess(events);
+                                                                                                                        }
+                                                                                                                        checks = new ArrayList<>(events.size());
+                                                                                                                        for (int i = 0; i < events.size(); i++)
+                                                                                                                        {
+                                                                                                                            checks.add(new Boolean(false));
+                                                                                                                        }
 
-        JPanel panel_2 = new JPanel();
-        GridBagConstraints gbc_panel_2 = new GridBagConstraints();
-        gbc_panel_2.fill = GridBagConstraints.BOTH;
-        gbc_panel_2.insets = new Insets(0, 0, 5, 5);
-        gbc_panel_2.gridx = 0;
-        gbc_panel_2.gridy = 0;
-        scenarioPanel.add(panel_2, gbc_panel_2);
-        panel_2.setLayout(new BoxLayout(panel_2, BoxLayout.X_AXIS));
+                                                                                                                        //                Collections.sort(events, new Comparator<JSONObject>()
+                                                                                                                        //                {
+                                                                                                                        //                    @Override
+                                                                                                                        //                    public int compare(JSONObject o1, JSONObject o2)
+                                                                                                                        //                    {
+                                                                                                                        //                        return ((Long)o1.getLong("timestamp")).compareTo(o2.getLong("timestamp"));
+                                                                                                                        //                    }
+                                                                                                                        //                });
+                                                                                                                        //
+                                                                                                                        long secs = 0;
 
-        JButton btnParse = new JButton("Parse");
-        panel_2.add(btnParse);
+                                                                                                                        if (events.size() > 0)
+                                                                                                                        {
+                                                                                                                            secs = events.get(events.size() - 1).getBigDecimal("timestamp").longValue()
+                                                                                                                                    - events.get(0).getBigDecimal("timestamp").longValue();
+                                                                                                                        }
+                                                                                                                        statisticsLabel.setText(String.format("Events %d, duration %f sec", events.size(), secs / 1000.0));
+                                                                                                                        model = new AbstractTableModel()
+                                                                                                                        {
 
-        JButton btnSave_1 = new JButton("Save");
-        btnSave_1.addActionListener(new ActionListener()
-        {
-            @Override
-            public void actionPerformed(ActionEvent e)
-            {
-                try
-                {
-                    FileInput.saveEvents(events, "test.json");
-                }
-                catch (IOException e1)
-                {
-                    log.error(e1.toString(), e1);
-                }
-            }
-        });
-        panel_2.add(btnSave_1);
-        btnParse.addMouseListener(new MouseAdapter()
-        {
-            @Override
-            public void mouseClicked(MouseEvent e)
-            {
-                events = rawevents.getEvents();
-                if (!scriptArea.getText().isEmpty())
-                {
-                    new Engine(scriptArea.getText()).postProcess(events);
-                }
-                checks = new ArrayList<>(events.size());
-                for (int i = 0; i < events.size(); i++)
-                {
-                    checks.add(new Boolean(false));
-                }
+                                                                                                                            private static final long serialVersionUID = 1L;
 
-                //                Collections.sort(events, new Comparator<JSONObject>()
-                //                {
-                //                    @Override
-                //                    public int compare(JSONObject o1, JSONObject o2)
-                //                    {
-                //                        return ((Long)o1.getLong("timestamp")).compareTo(o2.getLong("timestamp"));
-                //                    }
-                //                });
-                //
-                long secs = 0;
+                                                                                                                            private String[] columns = { "#", "*", "tab", "type", "url", "char", "button", "target",
+                                                                                                                                    "timestamp", "status" };
 
-                if (events.size() > 0)
-                {
-                    secs = events.get(events.size() - 1).getBigDecimal("timestamp").longValue()
-                            - events.get(0).getBigDecimal("timestamp").longValue();
-                }
-                statisticsLabel.setText(String.format("Events %d, duration %f sec", events.size(), secs / 1000.0));
-                model = new AbstractTableModel()
-                {
+                                                                                                                            @Override
+                                                                                                                            public int getColumnCount()
+                                                                                                                            {
+                                                                                                                                return 10;
+                                                                                                                            }
 
-                    private static final long serialVersionUID = 1L;
+                                                                                                                            @Override
+                                                                                                                            public String getColumnName(int column)
+                                                                                                                            {
+                                                                                                                                return columns[column];
+                                                                                                                            }
 
-                    private String[] columns = { "#", "*", "tab", "type", "url", "char", "button", "target",
-                            "timestamp", "status" };
+                                                                                                                            @Override
+                                                                                                                            public int getRowCount()
+                                                                                                                            {
+                                                                                                                                return events.size();
+                                                                                                                            }
 
-                    @Override
-                    public int getColumnCount()
-                    {
-                        return 10;
-                    }
+                                                                                                                            @Override
+                                                                                                                            public Object getValueAt(int rowIndex, int columnIndex)
+                                                                                                                            {
+                                                                                                                                if (rowIndex == position && columnIndex == 1)
+                                                                                                                                {
+                                                                                                                                    return "*";
+                                                                                                                                }
+                                                                                                                                if (columnIndex == 9)
+                                                                                                                                {
+                                                                                                                                    return checks.get(rowIndex);
+                                                                                                                                }
 
-                    @Override
-                    public String getColumnName(int column)
-                    {
-                        return columns[column];
-                    }
+                                                                                                                                JSONObject event = events.get(rowIndex);
 
-                    @Override
-                    public int getRowCount()
-                    {
-                        return events.size();
-                    }
+                                                                                                                                switch (columnIndex)
+                                                                                                                                {
+                                                                                                                                case 0:
+                                                                                                                                    return rowIndex;
+                                                                                                                                case 2:
+                                                                                                                                    return event.get("eventId");
+                                                                                                                                case 3:
+                                                                                                                                    return event.get("type");
+                                                                                                                                case 4:
+                                                                                                                                    return event.get("url");
+                                                                                                                                case 5:
+                                                                                                                                {
+                                                                                                                                    if (!event.has("charCode"))
+                                                                                                                                    {
+                                                                                                                                        return null;
+                                                                                                                                    }
+                                                                                                                                    int code = event.getInt("charCode");
+                                                                                                                                    char[] key = new char[1];
+                                                                                                                                    key[0] = (char)code;
+                                                                                                                                    return String.format("%d ( %s )", code, new String(key));
+                                                                                                                                }
+                                                                                                                                case 6:
+                                                                                                                                    return event.has("button") ? event.get("button") : null;
+                                                                                                                                case 7:
+                                                                                                                                    return event.get("target");
+                                                                                                                                case 8:
+                                                                                                                                    return new Date(event.getBigDecimal("timestamp").longValue());
+                                                                                                                                }
+                                                                                                                                return null;
+                                                                                                                            }
+                                                                                                                        };
 
-                    @Override
-                    public Object getValueAt(int rowIndex, int columnIndex)
-                    {
-                        if (rowIndex == position && columnIndex == 1)
-                        {
-                            return "*";
-                        }
-                        if (columnIndex == 9)
-                        {
-                            return checks.get(rowIndex);
-                        }
-
-                        JSONObject event = events.get(rowIndex);
-
-                        switch (columnIndex)
-                        {
-                        case 0:
-                            return rowIndex;
-                        case 2:
-                            return event.get("eventId");
-                        case 3:
-                            return event.get("type");
-                        case 4:
-                            return event.get("url");
-                        case 5:
-                        {
-                            if (!event.has("charCode"))
-                            {
-                                return null;
-                            }
-                            int code = event.getInt("charCode");
-                            char[] key = new char[1];
-                            key[0] = (char)code;
-                            return String.format("%d ( %s )", code, new String(key));
-                        }
-                        case 6:
-                            return event.has("button") ? event.get("button") : null;
-                        case 7:
-                            return event.get("target");
-                        case 8:
-                            return new Date(event.getBigDecimal("timestamp").longValue());
-                        }
-                        return null;
-                    }
-                };
-
-                table.setModel(model);
-                model.fireTableDataChanged();
-            }
-        });
-
-        JButton btnOpenBrowser = new JButton("Open browser");
-        btnOpenBrowser.addMouseListener(new MouseAdapter()
-        {
-            @Override
-            public void mouseClicked(MouseEvent e)
-            {
-                FirefoxProfile profile = new FirefoxProfile();
-                DesiredCapabilities cap = new DesiredCapabilities();
-                if (proxyHost.getText().trim().length() > 0)
-                {
-                    String host = proxyHost.getText();
-                    if (proxyPort.getText().trim().length() > 0)
-                    {
-                        host += ":" + proxyPort.getText();
-                    }
-                    org.openqa.selenium.Proxy proxy = new org.openqa.selenium.Proxy();
-                    proxy.setHttpProxy(host).setFtpProxy(host).setSslProxy(host);
-                    cap.setCapability(CapabilityType.PROXY, proxy);
-                }
-                if (useFirefoxButton.isSelected())
-                {
-                    if (ffPath.getText() != null && ffPath.getText().trim().length() > 0)
-                    {
-                        FirefoxBinary binary = new FirefoxBinary(new File(ffPath.getText()));
-                        driver = new FirefoxDriver(binary, profile, cap);
-                    }
-                    else
-                    {
-                        driver = new FirefoxDriver(new FirefoxBinary(), profile, cap);
-                    }
-                }
-                else if (usePhantomButton.isSelected())
-                {
-                    if (pjsPath.getText() != null && pjsPath.getText().trim().length() > 0)
-                    {
-                        cap.setCapability("phantomjs.binary.path", pjsPath.getText());
-                        driver = new PhantomJSDriver(cap);
-                    }
-                    else
-                    {
-                        driver = new PhantomJSDriver(cap);
-                    }
-                }
-            }
-        });
-        GridBagConstraints gbc_btnOpenBrowser = new GridBagConstraints();
-        gbc_btnOpenBrowser.insets = new Insets(0, 0, 5, 5);
-        gbc_btnOpenBrowser.gridx = 1;
-        gbc_btnOpenBrowser.gridy = 0;
-        scenarioPanel.add(btnOpenBrowser, gbc_btnOpenBrowser);
-
-        JButton btnCloseBrowser = new JButton("Close browser");
-        btnCloseBrowser.addMouseListener(new MouseAdapter()
-        {
-            @Override
-            public void mouseClicked(MouseEvent e)
-            {
-                if (driver != null)
-                {
-                    driver.close();
-                }
-            }
-        });
-        GridBagConstraints gbc_btnCloseBrowser = new GridBagConstraints();
-        gbc_btnCloseBrowser.insets = new Insets(0, 0, 5, 5);
-        gbc_btnCloseBrowser.gridx = 2;
-        gbc_btnCloseBrowser.gridy = 0;
-        scenarioPanel.add(btnCloseBrowser, gbc_btnCloseBrowser);
-
-        JButton btnRewind = new JButton("Rewind");
-        btnRewind.addMouseListener(new MouseAdapter()
-        {
-            @Override
-            public void mouseClicked(MouseEvent e)
-            {
-                for (int i = 0; i < events.size(); i++)
-                {
-                    checks.set(i, false);
-                }
-                lastUrl = "";
-                position = 0;
-                model.fireTableDataChanged();
-            }
-        });
-        GridBagConstraints gbc_btnRewind = new GridBagConstraints();
-        gbc_btnRewind.insets = new Insets(0, 0, 5, 5);
-        gbc_btnRewind.gridx = 3;
-        gbc_btnRewind.gridy = 0;
-        scenarioPanel.add(btnRewind, gbc_btnRewind);
-
-        JButton btnNext = new JButton("Next");
-        btnNext.addMouseListener(new MouseAdapter()
-        {
-            @Override
-            public void mouseClicked(MouseEvent e)
-            {
-                try
-                {
-                    applyStep(position);
-                }
-                catch (Exception ex)
-                {
-                    log.error(e.toString(), ex);
-                    throw ex;
-                }
-                checks.set(position, true);
-                position++;
-                if (position == events.size())
-                {
-                    for (int i = 0; i < position; i++)
-                    {
-                        checks.set(i, false);
-                    }
-                    position = 0;
-                }
-                model.fireTableDataChanged();
-            }
-        });
-
-        JButton btnPrev = new JButton("Prev");
-        btnPrev.addActionListener(new ActionListener()
-        {
-            @Override
-            public void actionPerformed(ActionEvent e)
-            {
-                if (position > 0)
-                {
-                    position--;
-                }
-            }
-        });
-        GridBagConstraints gbc_btnPrev = new GridBagConstraints();
-        gbc_btnPrev.insets = new Insets(0, 0, 5, 5);
-        gbc_btnPrev.gridx = 4;
-        gbc_btnPrev.gridy = 0;
-        scenarioPanel.add(btnPrev, gbc_btnPrev);
-        GridBagConstraints gbc_btnNext = new GridBagConstraints();
-        gbc_btnNext.insets = new Insets(0, 0, 5, 5);
-        gbc_btnNext.gridx = 5;
-        gbc_btnNext.gridy = 0;
-        scenarioPanel.add(btnNext, gbc_btnNext);
-
-        JButton btnSkip = new JButton("Skip");
-        btnSkip.addMouseListener(new MouseAdapter()
-        {
-            @Override
-            public void mouseClicked(MouseEvent e)
-            {
-                position++;
-                model.fireTableDataChanged();
-            }
-        });
-        GridBagConstraints gbc_btnSkip = new GridBagConstraints();
-        gbc_btnSkip.insets = new Insets(0, 0, 5, 5);
-        gbc_btnSkip.gridx = 6;
-        gbc_btnSkip.gridy = 0;
-        scenarioPanel.add(btnSkip, gbc_btnSkip);
-
-        JButton btnDel = new JButton("Del step");
-        btnDel.addActionListener(new ActionListener()
-        {
-            @Override
-            public void actionPerformed(ActionEvent e)
-            {
-                events.remove(table.getSelectedRow());
-                model.fireTableDataChanged();
-            }
-        });
-        GridBagConstraints gbc_btnDel = new GridBagConstraints();
-        gbc_btnDel.insets = new Insets(0, 0, 5, 5);
-        gbc_btnDel.gridx = 7;
-        gbc_btnDel.gridy = 0;
-        scenarioPanel.add(btnDel, gbc_btnDel);
-
-        JPanel panel = new JPanel();
-        GridBagConstraints gbc_panel = new GridBagConstraints();
-        gbc_panel.insets = new Insets(0, 0, 5, 0);
-        gbc_panel.fill = GridBagConstraints.BOTH;
-        gbc_panel.gridx = 8;
-        gbc_panel.gridy = 0;
-        scenarioPanel.add(panel, gbc_panel);
-        panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
-
-        JButton btnCheck = new JButton("Check");
-        panel.add(btnCheck);
-        btnCheck.addMouseListener(new MouseAdapter()
-        {
-            @Override
-            public void mouseClicked(MouseEvent e)
-            {
-                checkElement(table.getSelectedRow());
-            }
-        });
-
-        JButton btnPlay = new JButton("Play");
-        btnPlay.addMouseListener(new MouseAdapter()
-        {
-            @Override
-            public void mouseClicked(MouseEvent e)
-            {
-                playTheScenario();
-            }
-        });
-        panel.add(btnPlay);
-
-        JScrollPane scrollPane = new JScrollPane();
-        GridBagConstraints gbc_scrollPane = new GridBagConstraints();
-        gbc_scrollPane.insets = new Insets(0, 0, 5, 0);
-        gbc_scrollPane.fill = GridBagConstraints.BOTH;
-        gbc_scrollPane.gridwidth = 9;
-        gbc_scrollPane.gridx = 0;
-        gbc_scrollPane.gridy = 1;
-        scenarioPanel.add(scrollPane, gbc_scrollPane);
-
-        table = new JTable();
-        scrollPane.setViewportView(table);
-
-        table.getSelectionModel().addListSelectionListener(new ListSelectionListener()
-        {
-
-            @Override
-            public void valueChanged(ListSelectionEvent e)
-            {
-                int index = table.getSelectedRow();
-                if (index >= 0)
-                {
-                    eventContent.setText(events.get(index).toString(3));
-                }
-            }
-        });
-
-        JScrollPane scrollPane_2 = new JScrollPane();
-        GridBagConstraints gbc_scrollPane_2 = new GridBagConstraints();
-        gbc_scrollPane_2.insets = new Insets(0, 0, 5, 0);
-        gbc_scrollPane_2.fill = GridBagConstraints.BOTH;
-        gbc_scrollPane_2.gridwidth = 9;
-        gbc_scrollPane_2.gridx = 0;
-        gbc_scrollPane_2.gridy = 2;
-        scenarioPanel.add(scrollPane_2, gbc_scrollPane_2);
-
-        eventContent = new JTextArea();
-        scrollPane_2.setViewportView(eventContent);
-        eventContent.setLineWrap(true);
-        eventContent.setEditable(false);
-        eventContent.setWrapStyleWord(true);
+                                                                                                                        table.setModel(model);
+                                                                                                                        model.fireTableDataChanged();
+                                                                                                                    }
+                                                                                                                });
+                                                                                                                
+                                                                                                                        JScrollPane scrollPane = new JScrollPane();
+                                                                                                                        panel_4.add(scrollPane, BorderLayout.CENTER);
+                                                                                                                        
+                                                                                                                                table = new JTable();
+                                                                                                                                scrollPane.setViewportView(table);
+                                                                                                                                
+                                                                                                                                        table.getSelectionModel().addListSelectionListener(new ListSelectionListener()
+                                                                                                                                        {
+                                                                                                                                
+                                                                                                                                            @Override
+                                                                                                                                            public void valueChanged(ListSelectionEvent e)
+                                                                                                                                            {
+                                                                                                                                                int index = table.getSelectedRow();
+                                                                                                                                                if (index >= 0)
+                                                                                                                                                {
+                                                                                                                                                    eventContent.setText(events.get(index).toString(3));
+                                                                                                                                                }
+                                                                                                                                            }
+                                                                                                                                        });
+                                                                                                                                        
+                                                                                                                                        JSplitPane splitPane = new JSplitPane();
+                                                                                                                                        splitPane.setContinuousLayout(true);
+                                                                                                                                        splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
+                                                                                                                                        scenarioPanel.add(splitPane, BorderLayout.CENTER);
+                                                                                                                                        
+                                                                                                                                                JScrollPane scrollPane_2 = new JScrollPane();
+                                                                                                                                                splitPane.setLeftComponent(panel_4);
+                                                                                                                                                splitPane.setRightComponent(scrollPane_2);
+                                                                                                                                                
+                                                                                                                                                        eventContent = new JTextArea();
+                                                                                                                                                        eventContent.setRows(3);
+                                                                                                                                                        scrollPane_2.setViewportView(eventContent);
+                                                                                                                                                        eventContent.setLineWrap(true);
+                                                                                                                                                        eventContent.setEditable(false);
+                                                                                                                                                        eventContent.setWrapStyleWord(true);
+        
+        JPanel panel_6 = new JPanel();
+        panel_6.setBorder(null);
+        scenarioPanel.add(panel_6, BorderLayout.SOUTH);
+        GridBagLayout gbl_panel_6 = new GridBagLayout();
+        gbl_panel_6.columnWidths = new int[]{378, 0};
+        gbl_panel_6.rowHeights = new int[]{0, 0};
+        gbl_panel_6.columnWeights = new double[]{1.0, Double.MIN_VALUE};
+        gbl_panel_6.rowWeights = new double[]{0.0, Double.MIN_VALUE};
+        panel_6.setLayout(gbl_panel_6);
 
         JPanel panel_1 = new JPanel();
         GridBagConstraints gbc_panel_1 = new GridBagConstraints();
         gbc_panel_1.anchor = GridBagConstraints.SOUTH;
         gbc_panel_1.fill = GridBagConstraints.HORIZONTAL;
-        gbc_panel_1.gridx = 8;
-        gbc_panel_1.gridy = 3;
-        scenarioPanel.add(panel_1, gbc_panel_1);
+        gbc_panel_1.gridx = 0;
+        gbc_panel_1.gridy = 0;
+        panel_6.add(panel_1, gbc_panel_1);
         panel_1.setLayout(new BoxLayout(panel_1, BoxLayout.X_AXIS));
 
         JLabel lblEvents = new JLabel("Statistics");
@@ -930,6 +946,41 @@ public class MainFrame
         scriptArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_GROOVY);
         scriptArea.setCodeFoldingEnabled(true);
         scrollPane_3.setViewportView(scriptArea);
+        
+        JPanel webLookupPanel = new JPanel();
+        tabbedPane.addTab("Web lookup", null, webLookupPanel, null);
+        webLookupPanel.setLayout(new BorderLayout(0, 0));
+        
+        JToolBar toolBar_1 = new JToolBar();
+        webLookupPanel.add(toolBar_1, BorderLayout.NORTH);
+        
+        JLabel label_1 = new JLabel("Script");
+        toolBar_1.add(label_1);
+        
+        textField = new JTextField();
+        textField.setColumns(15);
+        toolBar_1.add(textField);
+        
+        JButton button = new JButton("Browse");
+        toolBar_1.add(button);
+        
+        JButton button_1 = new JButton("Load");
+        toolBar_1.add(button_1);
+        
+        JButton button_2 = new JButton("Save");
+        toolBar_1.add(button_2);
+        
+        JButton button_3 = new JButton("Reset");
+        toolBar_1.add(button_3);
+        
+        JButton button_4 = new JButton("Run");
+        toolBar_1.add(button_4);
+        
+        JScrollPane scrollPane_4 = new JScrollPane();
+        webLookupPanel.add(scrollPane_4, BorderLayout.CENTER);
+        
+        RSyntaxTextArea lookupScriptArea = new RSyntaxTextArea();
+        scrollPane_4.setViewportView(lookupScriptArea);
 
         JPanel optionsPanel = new JPanel();
         tabbedPane.addTab("Options", null, optionsPanel, null);
