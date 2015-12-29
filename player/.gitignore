@@ -3,3 +3,8 @@ phantomjs/
 shots/
 *.mpg
 /phantomjs/
+/test.jmx
+/ApacheJMeterTemporaryRootCA.crt
+/ApacheJMeterTemporaryRootCA.usr
+/out.avi
+/proxyserver.jks
