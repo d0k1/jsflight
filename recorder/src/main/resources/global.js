@@ -2,7 +2,7 @@
  * Global variables
  */
 // jsflight namespace 
-var jsflight = jsflight || {}
+var jsflight = jsflight || {};
 
 /** Global variables * */
 //periodically send tracked data timer variable
