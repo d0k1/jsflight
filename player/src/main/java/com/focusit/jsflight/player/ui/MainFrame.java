@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 
 import javax.swing.BoxLayout;
@@ -33,6 +34,8 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JToolBar;
 import javax.swing.SwingConstants;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.AbstractTableModel;
@@ -40,9 +43,9 @@ import javax.swing.table.AbstractTableModel;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rtextarea.RTextScrollPane;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.openqa.selenium.By;
-import org.openqa.selenium.Dimension;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.OutputType;
@@ -74,7 +77,6 @@ public class MainFrame
     private static final Logger log = LoggerFactory.getLogger(MainFrame.class);
     private List<JSONObject> events = new ArrayList<>();
     private int position = 0;
-    private WebDriver driver;
     private AbstractTableModel model;
     private List<Boolean> checks;
     private Events rawevents;
@@ -83,7 +85,6 @@ public class MainFrame
     private JTextField filenameField;
     private JTable table;
     private JTextArea contentPane;
-    private String lastUrl = "";
     private int lastx = -1;
     private int lasty = -1;
     private JTextArea eventContent;
@@ -104,10 +105,13 @@ public class MainFrame
     private JTextField pjsPath;
     private JMeterRecorder jmeter = new JMeterRecorder();
     private JTextField textField;
+    private JTextField checkPageJs;
 
-    // I will use it, probably, another day
-    // private Pattern urlPattern = Pattern.compile(
-    // "^((http[s]?|ftp):\\/)?\\/?([^:\\/\\s]+)((\\/\\w+)*\\/)([\\w\\-\\.]+[^#?\\s]+)(.*)?(#[\\w\\-]+)?$");
+    private HashMap<String, WebDriver> drivers = new HashMap<>();
+    private HashMap<String, String> lastUrls = new HashMap<>();
+    private HashMap<String, JSONObject> lastEvents = new HashMap<>();
+
+    private JTextField webDriverTag;
 
     /**
      * Create the application.
@@ -119,9 +123,217 @@ public class MainFrame
         jmeter.init();
     }
 
+    // I will use it, probably, another day
+    // private Pattern urlPattern = Pattern.compile(
+    // "^((http[s]?|ftp):\\/)?\\/?([^:\\/\\s]+)((\\/\\w+)*\\/)([\\w\\-\\.]+[^#?\\s]+)(.*)?(#[\\w\\-]+)?$");
+
+    public AbstractTableModel createEventTableModel()
+    {
+        return new AbstractTableModel()
+        {
+
+            private static final long serialVersionUID = 1L;
+
+            private String[] columns = { "#", "*", "eventId", "type", "url", "char", "button", "target", "timestamp",
+                    "status", "tag" };
+
+            @Override
+            public int getColumnCount()
+            {
+                return 11;
+            }
+
+            @Override
+            public String getColumnName(int column)
+            {
+                return columns[column];
+            }
+
+            @Override
+            public int getRowCount()
+            {
+                return events.size();
+            }
+
+            @Override
+            public Object getValueAt(int rowIndex, int columnIndex)
+            {
+                if (rowIndex == position && columnIndex == 1)
+                {
+                    return "*";
+                }
+                if (columnIndex == 9)
+                {
+                    return checks.get(rowIndex);
+                }
+
+                JSONObject event = events.get(rowIndex);
+
+                switch (columnIndex)
+                {
+                case 0:
+                    return rowIndex;
+                case 2:
+                    return event.get("eventId");
+                case 3:
+                    return event.get("type");
+                case 4:
+                    return event.get("url");
+                case 5:
+                {
+                    if (!event.has("charCode"))
+                    {
+                        return null;
+                    }
+                    int code = event.getInt("charCode");
+                    char[] key = new char[1];
+                    key[0] = (char)code;
+                    return String.format("%d ( %s )", code, new String(key));
+                }
+                case 6:
+                    return event.has("button") ? event.get("button") : null;
+                case 7:
+                    return getTargetForEvent(event);
+                case 8:
+                    return new Date(event.getBigDecimal("timestamp").longValue());
+                case 10:
+                    return getTagForEvent(event);
+                }
+                return null;
+            }
+        };
+    }
+
+    public WebDriver getDriverForEvent(JSONObject event)
+    {
+        String tag = getTagForEvent(event);
+
+        WebDriver driver = drivers.get(tag);
+
+        if (driver != null)
+        {
+            return driver;
+        }
+
+        FirefoxProfile profile = new FirefoxProfile();
+        DesiredCapabilities cap = new DesiredCapabilities();
+        if (proxyHost.getText().trim().length() > 0)
+        {
+            String host = proxyHost.getText();
+            if (proxyPort.getText().trim().length() > 0)
+            {
+                host += ":" + proxyPort.getText();
+            }
+            org.openqa.selenium.Proxy proxy = new org.openqa.selenium.Proxy();
+            proxy.setHttpProxy(host).setFtpProxy(host).setSslProxy(host);
+            cap.setCapability(CapabilityType.PROXY, proxy);
+        }
+        if (useFirefoxButton.isSelected())
+        {
+            if (ffPath.getText() != null && ffPath.getText().trim().length() > 0)
+            {
+                FirefoxBinary binary = new FirefoxBinary(new File(ffPath.getText()));
+                driver = new FirefoxDriver(binary, profile, cap);
+            }
+            else
+            {
+                driver = new FirefoxDriver(new FirefoxBinary(), profile, cap);
+            }
+        }
+        else if (usePhantomButton.isSelected())
+        {
+            if (pjsPath.getText() != null && pjsPath.getText().trim().length() > 0)
+            {
+                cap.setCapability("phantomjs.binary.path", pjsPath.getText());
+                driver = new PhantomJSDriver(cap);
+            }
+            else
+            {
+                driver = new PhantomJSDriver(cap);
+            }
+        }
+
+        drivers.put(tag, driver);
+        return driver;
+    }
+
     public JFrame getFrame()
     {
         return frmJsflightrecorderPlayer;
+    }
+
+    public String getLastUrl(JSONObject event)
+    {
+        String no_result = "";
+        String result = lastUrls.get(getTagForEvent(event));
+        if (result == null)
+        {
+            lastUrls.put(getTagForEvent(event), no_result);
+            result = no_result;
+        }
+
+        return result;
+    }
+
+    public JSONObject getPrevEvent(JSONObject event)
+    {
+        return lastEvents.get(getTagForEvent(event));
+    }
+
+    public String getTagForEvent(JSONObject event)
+    {
+        String tag = "null";
+        if (event.has(webDriverTag.getText()))
+        {
+            tag = event.getString(webDriverTag.getText());
+        }
+
+        return tag;
+    }
+
+    public String getTargetForEvent(JSONObject event)
+    {
+        JSONArray array = event.getJSONArray("target1");
+        String target = array.getJSONObject(0).getString("getxp");
+        return target;
+    }
+
+    public boolean isStepDuplicates(JSONObject event)
+    {
+        JSONObject prev = getPrevEvent(event);
+        if (prev == null)
+        {
+            return false;
+        }
+
+        if (prev.getString("type").equals(event.getString("type"))
+                && prev.getString("url").equals(event.getString("url"))
+                && getTargetForEvent(prev).equals(getTargetForEvent(event)))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    public void resetLastUrls()
+    {
+        lastUrls.clear();
+    }
+
+    public void setLastEvent(JSONObject event)
+    {
+        lastEvents.put(getTagForEvent(event), event);
+    }
+
+    public void updateLastUrl(JSONObject event, String url)
+    {
+        lastUrls.put(getTagForEvent(event), url);
+    }
+
+    public void updatePrevEvent(JSONObject event)
+    {
+        lastEvents.put(getTagForEvent(event), event);
     }
 
     protected void playTheScenario()
@@ -186,156 +398,161 @@ public class MainFrame
     private void applyStep(int position)
     {
         JSONObject event = events.get(position);
-        String eventType = event.getString("type");
-
-        if (eventType.equalsIgnoreCase("xhr"))
+        boolean error = false;
+        try
         {
-            return;
-        }
-        String event_url = event.getString("url");
-
-        if (eventType.equalsIgnoreCase("hashChange"))
-        {
-            String currentUrl = driver.getCurrentUrl().toLowerCase();
-            String eventUrlHash = event.getString("hash").toLowerCase();
-
-            if (!eventUrlHash.isEmpty() && currentUrl.contains(eventUrlHash))
+            if (isStepDuplicates(event))
             {
-                if (!lastUrl.equalsIgnoreCase(event_url))
-                {
-                    lastUrl = event_url;
-                    return;
-                }
+                return;
             }
-        }
-        if (!lastUrl.equalsIgnoreCase(event_url))
-        {
-            lastUrl = event_url;
+            String eventType = event.getString("type");
 
-            if (!driver.getCurrentUrl().equalsIgnoreCase(lastUrl))
+            if (eventType.equalsIgnoreCase("xhr") || eventType.equalsIgnoreCase("hashchange"))
             {
-                driver.get(lastUrl);
-                int maxDelay = Integer.parseInt(maxStepDelayField.getText());
+                return;
+            }
+            String event_url = event.getString("url");
+
+            if (!getLastUrl(event).equals(event_url))
+            {
+                getDriverForEvent(event).get(event_url);
+                int maxDelay = Integer.parseInt(maxStepDelayField.getText()) * 1000;
                 try
                 {
-                    Thread.sleep(maxDelay * 1000);
+                    int sleeps = 0;
+                    while (sleeps < maxDelay)
+                    {
+                        JavascriptExecutor js = (JavascriptExecutor)getDriverForEvent(event);
+                        Object result = js.executeScript(checkPageJs.getText());
+                        if (result != null && result.toString().toLowerCase().equals("ready"))
+                        {
+                            break;
+                        }
+                        Thread.sleep(1 * 1000);
+                        sleeps += 1000;
+                    }
+                    Thread.sleep(4 * 1000);
                 }
                 catch (InterruptedException e)
                 {
                     log.error(e.toString(), e);
                     throw new RuntimeException(e);
                 }
+                updateLastUrl(event, event_url);
             }
-        }
+            if (!event.has("target") || event.get("target") == null || event.get("target") == JSONObject.NULL)
+            {
+                return;
+            }
 
-        if (!event.has("target") || event.get("target") == null || event.get("target") == JSONObject.NULL)
-        {
-            return;
-        }
+            if (!eventType.equalsIgnoreCase("mousedown") && !eventType.equalsIgnoreCase("keypress")
+                    && !eventType.equalsIgnoreCase("keyup"))
+            {
+                return;
+            }
 
-        if (!eventType.equalsIgnoreCase("mousedown") && !eventType.equalsIgnoreCase("keypress")
-                && !eventType.equalsIgnoreCase("keyup"))
-        {
-            return;
-        }
+            WebElement element = null;
 
-        WebElement element = null;
-        try
-        {
-            element = driver.findElement(By.xpath(event.getString("target")));
-            //		((JavascriptExecutor) driver).executeScript("window.focus();");
+            String target = getTargetForEvent(event);
+            JavascriptExecutor js = (JavascriptExecutor)getDriverForEvent(event);
+            js.executeScript(String
+                    .format("var e = document.evaluate('%s' ,document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null ).singleNodeValue; if(e!== null) {e.style.visibility='visible';};",
+                            target));
+            element = getDriverForEvent(event).findElement(By.xpath(target));
             if (eventType.equalsIgnoreCase("mousedown"))
             {
                 if (event.getInt("button") == 2)
                 {
-                    new Actions(driver).contextClick(element).perform();
+                    new Actions(getDriverForEvent(event)).contextClick(element).perform();
                 }
                 else
                 {
                     element.click();
                 }
             }
-        }
-        catch (Exception e)
-        {
-            driver.manage().window()
-                    .setSize(new Dimension(event.getInt("window.width"), event.getInt("window.height")));
-
-            JavascriptExecutor js = (JavascriptExecutor)driver;
-            Object o = js.executeScript("document.elementFromPoint(" + event.getInt("pageX") + ", "
-                    + event.getInt("pageY") + ");");
-        }
-
-        if (eventType.equalsIgnoreCase("keypress"))
-        {
-            if (event.has("charCode"))
+            if (eventType.equalsIgnoreCase("keypress"))
             {
-                char ch = (char)event.getBigInteger(("charCode")).intValue();
-                char keys[] = new char[1];
-                keys[0] = ch;
-                element.sendKeys(new String(keys));
-            }
-        }
-
-        if (eventType.equalsIgnoreCase("keyup"))
-        {
-            if (event.has("charCode"))
-            {
-                int code = event.getBigInteger(("charCode")).intValue();
-
-                if (event.getBoolean("ctrlKey") == true)
+                if (event.has("charCode"))
                 {
-                    element.sendKeys(Keys.chord(Keys.CONTROL, new String(new byte[] { (byte)code })));
+                    char ch = (char)event.getBigInteger(("charCode")).intValue();
+                    char keys[] = new char[1];
+                    keys[0] = ch;
+                    element.sendKeys(new String(keys));
                 }
-                else
+            }
+
+            if (eventType.equalsIgnoreCase("keyup"))
+            {
+                if (event.has("charCode"))
                 {
-                    switch (code)
+                    int code = event.getBigInteger(("charCode")).intValue();
+
+                    if (event.getBoolean("ctrlKey") == true)
                     {
-                    case 8:
-                        element.sendKeys(Keys.BACK_SPACE);
-                        break;
-                    case 27:
-                        element.sendKeys(Keys.ESCAPE);
-                        break;
-                    case 127:
-                        element.sendKeys(Keys.DELETE);
-                        break;
-                    case 13:
-                        element.sendKeys(Keys.ENTER);
-                        break;
-                    case 37:
-                        element.sendKeys(Keys.ARROW_LEFT);
-                        break;
-                    case 38:
-                        element.sendKeys(Keys.ARROW_UP);
-                        break;
-                    case 39:
-                        element.sendKeys(Keys.ARROW_RIGHT);
-                        break;
-                    case 40:
-                        element.sendKeys(Keys.ARROW_DOWN);
-                        break;
+                        element.sendKeys(Keys.chord(Keys.CONTROL, new String(new byte[] { (byte)code })));
+                    }
+                    else
+                    {
+                        switch (code)
+                        {
+                        case 8:
+                            element.sendKeys(Keys.BACK_SPACE);
+                            break;
+                        case 27:
+                            element.sendKeys(Keys.ESCAPE);
+                            break;
+                        case 127:
+                            element.sendKeys(Keys.DELETE);
+                            break;
+                        case 13:
+                            element.sendKeys(Keys.ENTER);
+                            break;
+                        case 37:
+                            element.sendKeys(Keys.ARROW_LEFT);
+                            break;
+                        case 38:
+                            element.sendKeys(Keys.ARROW_UP);
+                            break;
+                        case 39:
+                            element.sendKeys(Keys.ARROW_RIGHT);
+                            break;
+                        case 40:
+                            element.sendKeys(Keys.ARROW_DOWN);
+                            break;
+                        }
                     }
                 }
             }
-        }
 
-        if (makeShots.isSelected())
-        {
-            TakesScreenshot shoter = (TakesScreenshot)driver;
-            byte[] shot = shoter.getScreenshotAs(OutputType.BYTES);
-            File dir = new File(screenDirTextField.getText() + File.separator
-                    + Paths.get(filenameField.getText()).getFileName().toString());
-            dir.mkdirs();
-
-            try (FileOutputStream fos = new FileOutputStream(new String(dir.getAbsolutePath() + File.separator
-                    + String.format("%05d", position) + ".png")))
+            if (makeShots.isSelected())
             {
-                fos.write(shot);
+                TakesScreenshot shoter = (TakesScreenshot)getDriverForEvent(event);
+                byte[] shot = shoter.getScreenshotAs(OutputType.BYTES);
+                File dir = new File(screenDirTextField.getText() + File.separator
+                        + Paths.get(filenameField.getText()).getFileName().toString());
+                dir.mkdirs();
+
+                try (FileOutputStream fos = new FileOutputStream(new String(dir.getAbsolutePath() + File.separator
+                        + String.format("%05d", position) + ".png")))
+                {
+                    fos.write(shot);
+                }
+                catch (IOException e)
+                {
+                    log.error(e.toString(), e);
+                }
             }
-            catch (IOException e)
+        }
+        catch (Exception e)
+        {
+            error = true;
+            throw e;
+        }
+        finally
+        {
+            if (!error)
             {
-                log.error(e.toString(), e);
+                updatePrevEvent(event);
             }
         }
     }
@@ -347,7 +564,7 @@ public class MainFrame
         {
             return;
         }
-        driver.findElement(By.xpath(event.getString("target")));
+        getDriverForEvent(event).findElement(By.xpath(event.getString("target")));
         checks.set(position, true);
         model.fireTableDataChanged();
     }
@@ -461,8 +678,6 @@ public class MainFrame
 
         contentPane = new JTextArea();
         scrollPane_1.setViewportView(contentPane);
-        contentPane.setWrapStyleWord(true);
-        contentPane.setEditable(false);
 
         JPanel scenarioPanel = new JPanel();
         tabbedPane.addTab("Scenario", null, scenarioPanel, null);
@@ -654,8 +869,8 @@ public class MainFrame
                 {
                     checks.set(i, false);
                 }
-                lastUrl = "";
                 position = 0;
+                resetLastUrls();
                 model.fireTableDataChanged();
             }
         });
@@ -664,10 +879,14 @@ public class MainFrame
             @Override
             public void mouseClicked(MouseEvent e)
             {
-                if (driver != null)
+                for (WebDriver driver : drivers.values())
                 {
-                    driver.close();
+                    if (driver != null)
+                    {
+                        driver.close();
+                    }
                 }
+                drivers.clear();
             }
         });
         btnOpenBrowser.addMouseListener(new MouseAdapter()
@@ -675,43 +894,6 @@ public class MainFrame
             @Override
             public void mouseClicked(MouseEvent e)
             {
-                FirefoxProfile profile = new FirefoxProfile();
-                DesiredCapabilities cap = new DesiredCapabilities();
-                if (proxyHost.getText().trim().length() > 0)
-                {
-                    String host = proxyHost.getText();
-                    if (proxyPort.getText().trim().length() > 0)
-                    {
-                        host += ":" + proxyPort.getText();
-                    }
-                    org.openqa.selenium.Proxy proxy = new org.openqa.selenium.Proxy();
-                    proxy.setHttpProxy(host).setFtpProxy(host).setSslProxy(host);
-                    cap.setCapability(CapabilityType.PROXY, proxy);
-                }
-                if (useFirefoxButton.isSelected())
-                {
-                    if (ffPath.getText() != null && ffPath.getText().trim().length() > 0)
-                    {
-                        FirefoxBinary binary = new FirefoxBinary(new File(ffPath.getText()));
-                        driver = new FirefoxDriver(binary, profile, cap);
-                    }
-                    else
-                    {
-                        driver = new FirefoxDriver(new FirefoxBinary(), profile, cap);
-                    }
-                }
-                else if (usePhantomButton.isSelected())
-                {
-                    if (pjsPath.getText() != null && pjsPath.getText().trim().length() > 0)
-                    {
-                        cap.setCapability("phantomjs.binary.path", pjsPath.getText());
-                        driver = new PhantomJSDriver(cap);
-                    }
-                    else
-                    {
-                        driver = new PhantomJSDriver(cap);
-                    }
-                }
             }
         });
         btnParse.addMouseListener(new MouseAdapter()
@@ -730,15 +912,6 @@ public class MainFrame
                     checks.add(new Boolean(false));
                 }
 
-                //                Collections.sort(events, new Comparator<JSONObject>()
-                //                {
-                //                    @Override
-                //                    public int compare(JSONObject o1, JSONObject o2)
-                //                    {
-                //                        return ((Long)o1.getLong("timestamp")).compareTo(o2.getLong("timestamp"));
-                //                    }
-                //                });
-                //
                 long secs = 0;
 
                 if (events.size() > 0)
@@ -747,77 +920,7 @@ public class MainFrame
                             - events.get(0).getBigDecimal("timestamp").longValue();
                 }
                 statisticsLabel.setText(String.format("Events %d, duration %f sec", events.size(), secs / 1000.0));
-                model = new AbstractTableModel()
-                {
-
-                    private static final long serialVersionUID = 1L;
-
-                    private String[] columns = { "#", "*", "tab", "type", "url", "char", "button", "target",
-                            "timestamp", "status" };
-
-                    @Override
-                    public int getColumnCount()
-                    {
-                        return 10;
-                    }
-
-                    @Override
-                    public String getColumnName(int column)
-                    {
-                        return columns[column];
-                    }
-
-                    @Override
-                    public int getRowCount()
-                    {
-                        return events.size();
-                    }
-
-                    @Override
-                    public Object getValueAt(int rowIndex, int columnIndex)
-                    {
-                        if (rowIndex == position && columnIndex == 1)
-                        {
-                            return "*";
-                        }
-                        if (columnIndex == 9)
-                        {
-                            return checks.get(rowIndex);
-                        }
-
-                        JSONObject event = events.get(rowIndex);
-
-                        switch (columnIndex)
-                        {
-                        case 0:
-                            return rowIndex;
-                        case 2:
-                            return event.get("eventId");
-                        case 3:
-                            return event.get("type");
-                        case 4:
-                            return event.get("url");
-                        case 5:
-                        {
-                            if (!event.has("charCode"))
-                            {
-                                return null;
-                            }
-                            int code = event.getInt("charCode");
-                            char[] key = new char[1];
-                            key[0] = (char)code;
-                            return String.format("%d ( %s )", code, new String(key));
-                        }
-                        case 6:
-                            return event.has("button") ? event.get("button") : null;
-                        case 7:
-                            return event.get("target");
-                        case 8:
-                            return new Date(event.getBigDecimal("timestamp").longValue());
-                        }
-                        return null;
-                    }
-                };
+                model = createEventTableModel();
 
                 table.setModel(model);
                 model.fireTableDataChanged();
@@ -857,8 +960,31 @@ public class MainFrame
         eventContent.setRows(3);
         scrollPane_2.setViewportView(eventContent);
         eventContent.setLineWrap(true);
-        eventContent.setEditable(false);
         eventContent.setWrapStyleWord(true);
+        eventContent.getDocument().addDocumentListener(new DocumentListener()
+        {
+
+            @Override
+            public void changedUpdate(DocumentEvent e)
+            {
+                List<JSONObject> events = rawevents.getEvents();
+                events.set(table.getSelectedRow(), new JSONObject(eventContent.getText()));
+            }
+
+            @Override
+            public void insertUpdate(DocumentEvent e)
+            {
+                List<JSONObject> events = rawevents.getEvents();
+                events.set(table.getSelectedRow(), new JSONObject(eventContent.getText()));
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e)
+            {
+                //                List<JSONObject> events = rawevents.getEvents();
+                //                events.set(position, new JSONObject(eventContent.getText()));
+            }
+        });
 
         JPanel panel_6 = new JPanel();
         panel_6.setBorder(null);
@@ -989,7 +1115,8 @@ public class MainFrame
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC, }));
+                        FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, }));
 
         JLabel lblFirefoxProxyHost = new JLabel("Proxy host");
         optionsPanel.add(lblFirefoxProxyHost, "2, 2, right, default");
@@ -1059,6 +1186,22 @@ public class MainFrame
         screenDirTextField.setText("shots");
         screenDirTextField.setColumns(10);
         optionsPanel.add(screenDirTextField, "4, 16, fill, default");
+
+        JLabel lblCheckPageReady = new JLabel("Check page ready");
+        optionsPanel.add(lblCheckPageReady, "2, 18, right, default");
+
+        checkPageJs = new JTextField();
+        checkPageJs.setText("return document.getElementById('state.context').getAttribute('value');");
+        checkPageJs.setColumns(10);
+        optionsPanel.add(checkPageJs, "4, 18, fill, default");
+
+        JLabel lblWebdriverTag = new JLabel("WebDriver tag");
+        optionsPanel.add(lblWebdriverTag, "2, 20, right, default");
+
+        webDriverTag = new JTextField();
+        webDriverTag.setText("uuid");
+        webDriverTag.setColumns(10);
+        optionsPanel.add(webDriverTag, "4, 20, fill, default");
 
         jmeterPanel = new JPanel();
         tabbedPane.addTab("JMeter", null, jmeterPanel, null);
