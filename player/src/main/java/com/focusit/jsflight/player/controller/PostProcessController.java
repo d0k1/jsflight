@@ -1,5 +1,13 @@
 package com.focusit.jsflight.player.controller;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.json.JSONObject;
+
+import com.focusit.jsflight.player.input.Events;
+import com.focusit.jsflight.player.script.Engine;
+
 public class PostProcessController extends UIController
 {
     private static final long serialVersionUID = 1L;
@@ -45,4 +53,14 @@ public class PostProcessController extends UIController
         return "postprocess";
     }
 
+    public Events processEvents(Events e){
+        Engine engine = new Engine(script);
+        List<JSONObject> events = new ArrayList<>();
+        if (e != null && e.getEvents() != null)
+        {
+            events = e.getEvents();
+        }
+        engine.testPostProcess(events);
+        return e;        
+    }
 }

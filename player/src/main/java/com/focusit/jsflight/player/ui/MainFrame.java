@@ -70,6 +70,8 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeEvent;
 
 public class MainFrame
 {
@@ -957,6 +959,10 @@ public class MainFrame
         splitPane.setRightComponent(scrollPane_2);
 
         eventContent = new JTextArea();
+        eventContent.addPropertyChangeListener(new PropertyChangeListener() {
+        	public void propertyChange(PropertyChangeEvent evt) {
+        	}
+        });
         eventContent.setRows(3);
         scrollPane_2.setViewportView(eventContent);
         eventContent.setLineWrap(true);

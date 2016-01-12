@@ -82,6 +82,15 @@ function Player() {
         return action;
     };
     
+    var evaluteAction = function(page, action, next){
+        if(action.type=='url'){
+            
+        }
+        if(action.type=='event'){
+            
+        }
+    };
+    
     var createChain = function(){
         var prevAction = null;
         
@@ -120,9 +129,15 @@ function Player() {
         console.log('Events: '+ records.length+' Actions: '+actionChain.length);
     };
     
+    var currentStep = 0;
+    
+    var playStep = function(){
+        
+    };
+    
     this.play = function(){
         
-    }
+    };
 }
 
 function isSDPageLoaded(page){

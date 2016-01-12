@@ -28,5 +28,4 @@ public class ScenarioController extends UIController
     {
         return "scenario";
     }
-
 }
