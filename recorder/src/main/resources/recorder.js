@@ -177,6 +177,7 @@ jsflight.stopTimers = function() {
 
 jsflight.take_a_screenshot = function() {
     var event = {};
+    // TODO : run dom_ready_check until it returns true, so dom is ready to be pictured
     html2canvas(document.body, {
         onrendered : function(canvas) {
             try {
@@ -197,6 +198,7 @@ jsflight.take_a_screenshot = function() {
 };
 
 jsflight.take_dom_snapshot = function() {
+    // TODO : run dom_ready_check until it returns true, so dom is ready to be dumped
     try {
         var tree = Xml.getElementHTML(document.body);
         var event = {};

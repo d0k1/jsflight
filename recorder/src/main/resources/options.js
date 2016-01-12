@@ -35,6 +35,9 @@ jsflight.options = {
     send_interval : -1,
     // control panel disabled by default
     cp_disabled : true,
+    dom_ready_check: function(){
+    	return true;
+    }
     propertyProvider : function(prop) {
     }
 };
@@ -79,6 +82,9 @@ jsflight.parseOptions = function(options) {
 
     if (options.propertyProvider)
         jsflight.options.propertyProvider = options.propertyProvider;
+
+    if (options.dom_ready_check)
+        jsflight.options.dom_ready_check = options.dom_ready_check;
 
     if (options.send_interval)
         jsflight.options.send_interval = options.send_interval;

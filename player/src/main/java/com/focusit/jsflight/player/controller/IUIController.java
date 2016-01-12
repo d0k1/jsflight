@@ -8,7 +8,7 @@ package com.focusit.jsflight.player.controller;
  */
 public interface IUIController
 {
-    final String defaultConfig = "settings";
+    final String defaultConfig = "params";
 
     /**
      * load controllers data

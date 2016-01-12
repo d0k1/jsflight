@@ -1,6 +1,7 @@
 package com.focusit.jsflight.player.ui;
 
 import java.awt.BorderLayout;
+import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -8,6 +9,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -34,14 +37,14 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JToolBar;
 import javax.swing.SwingConstants;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.AbstractTableModel;
 
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
+import org.fife.ui.rsyntaxtextarea.folding.FoldParserManager;
+import org.fife.ui.rsyntaxtextarea.folding.JsonFoldParser;
 import org.fife.ui.rtextarea.RTextScrollPane;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -63,6 +66,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.focusit.jmeter.JMeterRecorder;
+import com.focusit.jsflight.player.controller.IUIController;
+import com.focusit.jsflight.player.controller.InputController;
+import com.focusit.jsflight.player.controller.JMeterController;
+import com.focusit.jsflight.player.controller.OptionsController;
+import com.focusit.jsflight.player.controller.PostProcessController;
+import com.focusit.jsflight.player.controller.ScenarioController;
+import com.focusit.jsflight.player.controller.WebLookupController;
 import com.focusit.jsflight.player.input.Events;
 import com.focusit.jsflight.player.input.FileInput;
 import com.focusit.jsflight.player.script.Engine;
@@ -70,13 +80,14 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 public class MainFrame
 {
 
-    private static final Logger log = LoggerFactory.getLogger(MainFrame.class);
+    private static final String SET_ELEMENT_VISIBLE_JS = "var e = document.evaluate('%s' ,document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null ).singleNodeValue; if(e!== null) {e.style.visibility='visible';};";
+	private static final Logger log = LoggerFactory.getLogger(MainFrame.class);
     private List<JSONObject> events = new ArrayList<>();
     private int position = 0;
     private AbstractTableModel model;
@@ -87,9 +98,7 @@ public class MainFrame
     private JTextField filenameField;
     private JTable table;
     private JTextArea contentPane;
-    private int lastx = -1;
-    private int lasty = -1;
-    private JTextArea eventContent;
+    private RSyntaxTextArea eventContent;
     private JLabel statisticsLabel;
     private JTextField proxyHost;
     private JTextField proxyPort;
@@ -136,13 +145,12 @@ public class MainFrame
 
             private static final long serialVersionUID = 1L;
 
-            private String[] columns = { "#", "*", "eventId", "type", "url", "char", "button", "target", "timestamp",
-                    "status", "tag" };
+            private String[] columns = { "*", "#", "eventId", "url", "type", "key", "target", "timestamp", "tag" };
 
             @Override
             public int getColumnCount()
             {
-                return 11;
+                return 9;
             }
 
             @Override
@@ -160,27 +168,33 @@ public class MainFrame
             @Override
             public Object getValueAt(int rowIndex, int columnIndex)
             {
-                if (rowIndex == position && columnIndex == 1)
+                if (rowIndex == position && columnIndex == 0)
                 {
                     return "*";
-                }
-                if (columnIndex == 9)
-                {
-                    return checks.get(rowIndex);
                 }
 
                 JSONObject event = events.get(rowIndex);
 
                 switch (columnIndex)
                 {
-                case 0:
+                case 1:
                     return rowIndex;
                 case 2:
                     return event.get("eventId");
                 case 3:
-                    return event.get("type");
+                    return event.get("hash");
                 case 4:
-                    return event.get("url");
+                	String type = event.getString("type");
+                	if(type.equals("mousedown"))
+                		return "md";
+                	if(type.equals("keypress"))
+                		return "kp";
+                	if(type.equals("keyup"))
+                		return "ku";
+                	if(type.equals("hashchange"))
+                		return "hc";
+                	
+                	return type;
                 case 5:
                 {
                     if (!event.has("charCode"))
@@ -190,15 +204,13 @@ public class MainFrame
                     int code = event.getInt("charCode");
                     char[] key = new char[1];
                     key[0] = (char)code;
-                    return String.format("%d ( %s )", code, new String(key));
+                    return String.format("%d(%s)/%s", code, new String(key), event.has("button") ? event.get("button") : "null");
                 }
                 case 6:
-                    return event.has("button") ? event.get("button") : null;
-                case 7:
                     return getTargetForEvent(event);
-                case 8:
+                case 7:
                     return new Date(event.getBigDecimal("timestamp").longValue());
-                case 10:
+                case 8:
                     return getTagForEvent(event);
                 }
                 return null;
@@ -206,6 +218,17 @@ public class MainFrame
         };
     }
 
+    public void setColumnWidths(){
+    	table.getColumnModel().getColumn(0).setMaxWidth(10);
+    	table.getColumnModel().getColumn(1).setMaxWidth(30);
+    	table.getColumnModel().getColumn(2).setMaxWidth(30);
+    	table.getColumnModel().getColumn(4).setMaxWidth(45);
+    	table.getColumnModel().getColumn(5).setMaxWidth(60);
+    	table.getColumnModel().getColumn(6).setPreferredWidth(400);
+    	table.getColumnModel().getColumn(7).setPreferredWidth(170);
+    	table.getColumnModel().getColumn(7).setMaxWidth(170);
+    }
+    
     public WebDriver getDriverForEvent(JSONObject event)
     {
         String tag = getTagForEvent(event);
@@ -409,141 +432,24 @@ public class MainFrame
             }
             String eventType = event.getString("type");
 
-            if (eventType.equalsIgnoreCase("xhr") || eventType.equalsIgnoreCase("hashchange"))
-            {
-                return;
-            }
-            String event_url = event.getString("url");
-
-            if (!getLastUrl(event).equals(event_url))
-            {
-                getDriverForEvent(event).get(event_url);
-                int maxDelay = Integer.parseInt(maxStepDelayField.getText()) * 1000;
-                try
-                {
-                    int sleeps = 0;
-                    while (sleeps < maxDelay)
-                    {
-                        JavascriptExecutor js = (JavascriptExecutor)getDriverForEvent(event);
-                        Object result = js.executeScript(checkPageJs.getText());
-                        if (result != null && result.toString().toLowerCase().equals("ready"))
-                        {
-                            break;
-                        }
-                        Thread.sleep(1 * 1000);
-                        sleeps += 1000;
-                    }
-                    Thread.sleep(4 * 1000);
-                }
-                catch (InterruptedException e)
-                {
-                    log.error(e.toString(), e);
-                    throw new RuntimeException(e);
-                }
-                updateLastUrl(event, event_url);
-            }
-            if (!event.has("target") || event.get("target") == null || event.get("target") == JSONObject.NULL)
+            if (isEventIgnored(eventType) || isEventBad(event))
             {
                 return;
             }
 
-            if (!eventType.equalsIgnoreCase("mousedown") && !eventType.equalsIgnoreCase("keypress")
-                    && !eventType.equalsIgnoreCase("keyup"))
-            {
-                return;
-            }
-
+            openEventUrl(event);
+            
             WebElement element = null;
 
             String target = getTargetForEvent(event);
-            JavascriptExecutor js = (JavascriptExecutor)getDriverForEvent(event);
-            js.executeScript(String
-                    .format("var e = document.evaluate('%s' ,document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null ).singleNodeValue; if(e!== null) {e.style.visibility='visible';};",
-                            target));
-            element = getDriverForEvent(event).findElement(By.xpath(target));
-            if (eventType.equalsIgnoreCase("mousedown"))
-            {
-                if (event.getInt("button") == 2)
-                {
-                    new Actions(getDriverForEvent(event)).contextClick(element).perform();
-                }
-                else
-                {
-                    element.click();
-                }
-            }
-            if (eventType.equalsIgnoreCase("keypress"))
-            {
-                if (event.has("charCode"))
-                {
-                    char ch = (char)event.getBigInteger(("charCode")).intValue();
-                    char keys[] = new char[1];
-                    keys[0] = ch;
-                    element.sendKeys(new String(keys));
-                }
-            }
 
-            if (eventType.equalsIgnoreCase("keyup"))
-            {
-                if (event.has("charCode"))
-                {
-                    int code = event.getBigInteger(("charCode")).intValue();
+            element = findTargetWebElement(event, target);
+            
+            processMouseEvent(event, element);
 
-                    if (event.getBoolean("ctrlKey") == true)
-                    {
-                        element.sendKeys(Keys.chord(Keys.CONTROL, new String(new byte[] { (byte)code })));
-                    }
-                    else
-                    {
-                        switch (code)
-                        {
-                        case 8:
-                            element.sendKeys(Keys.BACK_SPACE);
-                            break;
-                        case 27:
-                            element.sendKeys(Keys.ESCAPE);
-                            break;
-                        case 127:
-                            element.sendKeys(Keys.DELETE);
-                            break;
-                        case 13:
-                            element.sendKeys(Keys.ENTER);
-                            break;
-                        case 37:
-                            element.sendKeys(Keys.ARROW_LEFT);
-                            break;
-                        case 38:
-                            element.sendKeys(Keys.ARROW_UP);
-                            break;
-                        case 39:
-                            element.sendKeys(Keys.ARROW_RIGHT);
-                            break;
-                        case 40:
-                            element.sendKeys(Keys.ARROW_DOWN);
-                            break;
-                        }
-                    }
-                }
-            }
+            processKeyboardEvent(event, element);
 
-            if (makeShots.isSelected())
-            {
-                TakesScreenshot shoter = (TakesScreenshot)getDriverForEvent(event);
-                byte[] shot = shoter.getScreenshotAs(OutputType.BYTES);
-                File dir = new File(screenDirTextField.getText() + File.separator
-                        + Paths.get(filenameField.getText()).getFileName().toString());
-                dir.mkdirs();
-
-                try (FileOutputStream fos = new FileOutputStream(new String(dir.getAbsolutePath() + File.separator
-                        + String.format("%05d", position) + ".png")))
-                {
-                    fos.write(shot);
-                }
-                catch (IOException e)
-                {
-                    log.error(e.toString(), e);
-                }
-            }
+            makeAShot(event);
         }
         catch (Exception e)
         {
@@ -558,6 +464,148 @@ public class MainFrame
             }
         }
     }
+
+	private void makeElementVisibleByJS(JSONObject event, String target) {
+		JavascriptExecutor js = (JavascriptExecutor)getDriverForEvent(event);
+		js.executeScript(String.format(SET_ELEMENT_VISIBLE_JS, target));
+	}
+
+	private boolean isEventBad(JSONObject event) {
+		return !event.has("target") || event.get("target") == null || event.get("target") == JSONObject.NULL;
+	}
+
+	private boolean isEventIgnored(String eventType) {
+		return eventType.equalsIgnoreCase("xhr") || eventType.equalsIgnoreCase("hashchange") || (!eventType.equalsIgnoreCase("mousedown") && !eventType.equalsIgnoreCase("keypress")
+                && !eventType.equalsIgnoreCase("keyup"));
+	}
+
+	private void makeAShot(JSONObject event) {
+		if (makeShots.isSelected())
+		{
+		    TakesScreenshot shoter = (TakesScreenshot)getDriverForEvent(event);
+		    byte[] shot = shoter.getScreenshotAs(OutputType.BYTES);
+		    File dir = new File(screenDirTextField.getText() + File.separator
+		            + Paths.get(filenameField.getText()).getFileName().toString());
+		    dir.mkdirs();
+
+		    try (FileOutputStream fos = new FileOutputStream(new String(dir.getAbsolutePath() + File.separator
+		            + String.format("%05d", position) + ".png")))
+		    {
+		        fos.write(shot);
+		    }
+		    catch (IOException e)
+		    {
+		        log.error(e.toString(), e);
+		    }
+		}
+	}
+
+	private void processKeyboardEvent(JSONObject event, WebElement element) {
+		if (event.getString("type").equalsIgnoreCase("keypress"))
+		{
+		    if (event.has("charCode"))
+		    {
+		        char ch = (char)event.getBigInteger(("charCode")).intValue();
+		        char keys[] = new char[1];
+		        keys[0] = ch;
+		        element.sendKeys(new String(keys));
+		    }
+		}
+
+		if (event.getString("type").equalsIgnoreCase("keyup"))
+		{
+		    if (event.has("charCode"))
+		    {
+		        int code = event.getBigInteger(("charCode")).intValue();
+
+		        if (event.getBoolean("ctrlKey") == true)
+		        {
+		            element.sendKeys(Keys.chord(Keys.CONTROL, new String(new byte[] { (byte)code })));
+		        }
+		        else
+		        {
+		            switch (code)
+		            {
+		            case 8:
+		                element.sendKeys(Keys.BACK_SPACE);
+		                break;
+		            case 27:
+		                element.sendKeys(Keys.ESCAPE);
+		                break;
+		            case 127:
+		                element.sendKeys(Keys.DELETE);
+		                break;
+		            case 13:
+		                element.sendKeys(Keys.ENTER);
+		                break;
+		            case 37:
+		                element.sendKeys(Keys.ARROW_LEFT);
+		                break;
+		            case 38:
+		                element.sendKeys(Keys.ARROW_UP);
+		                break;
+		            case 39:
+		                element.sendKeys(Keys.ARROW_RIGHT);
+		                break;
+		            case 40:
+		                element.sendKeys(Keys.ARROW_DOWN);
+		                break;
+		            }
+		        }
+		    }
+		}
+	}
+
+	private void processMouseEvent(JSONObject event, WebElement element) {
+		if (event.getString("type").equalsIgnoreCase("mousedown"))
+		{
+		    if (event.getInt("button") == 2)
+		    {
+		        new Actions(getDriverForEvent(event)).contextClick(element).perform();
+		    }
+		    else
+		    {
+		        element.click();
+		    }
+		}
+	}
+
+	private void openEventUrl(JSONObject event) {
+		String event_url = event.getString("url");
+
+		if (!getLastUrl(event).equals(event_url))
+		{
+		    getDriverForEvent(event).get(event_url);
+		    int maxDelay = Integer.parseInt(maxStepDelayField.getText()) * 1000;
+		    try
+		    {
+		        int sleeps = 0;
+		        while (sleeps < maxDelay)
+		        {
+		            JavascriptExecutor js = (JavascriptExecutor)getDriverForEvent(event);
+		            Object result = js.executeScript(checkPageJs.getText());
+		            if (result != null && result.toString().toLowerCase().equals("ready"))
+		            {
+		                break;
+		            }
+		            Thread.sleep(1 * 1000);
+		            sleeps += 1000;
+		        }
+		        Thread.sleep(4 * 1000);
+		    }
+		    catch (InterruptedException e)
+		    {
+		        log.error(e.toString(), e);
+		        throw new RuntimeException(e);
+		    }
+		    updateLastUrl(event, event_url);
+		}
+	}
+
+	private WebElement findTargetWebElement(JSONObject event, String target) {
+		makeElementVisibleByJS(event, target);
+		return getDriverForEvent(event).findElement(By.xpath(target));
+	}
 
     private void checkElement(int position)
     {
@@ -577,8 +625,18 @@ public class MainFrame
     private void initialize()
     {
         frmJsflightrecorderPlayer = new JFrame();
+        frmJsflightrecorderPlayer.addWindowListener(new WindowAdapter() {
+        	@Override
+        	public void windowClosing(WindowEvent e) {
+        		saveControlersOptions();
+        	}
+        	@Override
+        	public void windowDeactivated(WindowEvent e) {
+        		saveControlersOptions();
+        	}
+        });
         frmJsflightrecorderPlayer.setTitle("JSFlightRecorder Player");
-        frmJsflightrecorderPlayer.setBounds(100, 100, 1066, 650);
+        frmJsflightrecorderPlayer.setBounds(100, 100, 1110, 850);
         frmJsflightrecorderPlayer.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         JTabbedPane tabbedPane = new JTabbedPane(SwingConstants.TOP);
@@ -609,9 +667,7 @@ public class MainFrame
         gbc_filenameField.gridy = 0;
         inputPanel.add(filenameField, gbc_filenameField);
         filenameField.setColumns(10);
-        filenameField.setText("/tmp/1.json");
-        filenameField.setText("/tmp/2.json");
-        filenameField.setText("/tmp/3.json");
+        filenameField.setText(InputController.getInstance().getFilename());
 
         JButton btnLoad = new JButton("Load");
         btnLoad.addMouseListener(new MouseAdapter()
@@ -692,7 +748,7 @@ public class MainFrame
         JPanel panel_5 = new JPanel();
         panel_4.add(panel_5, BorderLayout.NORTH);
         GridBagLayout gbl_panel_5 = new GridBagLayout();
-        gbl_panel_5.columnWidths = new int[] { 237, 135, 136, 86, 65, 66, 64, 93, 144, 0 };
+        gbl_panel_5.columnWidths = new int[] { 149, 122, 136, 86, 65, 66, 64, 93, 144, 0 };
         gbl_panel_5.rowHeights = new int[] { 25, 0 };
         gbl_panel_5.columnWeights = new double[] { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE };
         gbl_panel_5.rowWeights = new double[] { 0.0, Double.MIN_VALUE };
@@ -735,7 +791,7 @@ public class MainFrame
         gbc_btnOpenBrowser.gridy = 0;
         panel_5.add(btnOpenBrowser, gbc_btnOpenBrowser);
 
-        JButton btnCloseBrowser = new JButton("Close browser");
+        JButton btnCloseBrowser = new JButton("Close browsers");
         GridBagConstraints gbc_btnCloseBrowser = new GridBagConstraints();
         gbc_btnCloseBrowser.insets = new Insets(0, 0, 0, 5);
         gbc_btnCloseBrowser.gridx = 2;
@@ -784,6 +840,14 @@ public class MainFrame
         gbc_panel.gridy = 0;
         panel_5.add(panel, gbc_panel);
         panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
+        
+        JButton CopyStepButton = new JButton("Copy step");
+        CopyStepButton.addActionListener(new ActionListener() {
+        	public void actionPerformed(ActionEvent e) {
+        		copyCurrentStep();
+        	}
+        });
+        panel.add(CopyStepButton);
 
         JButton btnCheck = new JButton("Check");
         panel.add(btnCheck);
@@ -926,6 +990,7 @@ public class MainFrame
 
                 table.setModel(model);
                 model.fireTableDataChanged();
+                setColumnWidths();
             }
         });
 
@@ -933,6 +998,7 @@ public class MainFrame
         panel_4.add(scrollPane, BorderLayout.CENTER);
 
         table = new JTable();
+        table.setFont(new Font("Hack", Font.PLAIN, 14));
         scrollPane.setViewportView(table);
 
         table.getSelectionModel().addListSelectionListener(new ListSelectionListener()
@@ -941,11 +1007,7 @@ public class MainFrame
             @Override
             public void valueChanged(ListSelectionEvent e)
             {
-                int index = table.getSelectedRow();
-                if (index >= 0)
-                {
-                    eventContent.setText(events.get(index).toString(3));
-                }
+                resetCurrentEvent();
             }
         });
 
@@ -958,7 +1020,12 @@ public class MainFrame
         splitPane.setLeftComponent(panel_4);
         splitPane.setRightComponent(scrollPane_2);
 
-        eventContent = new JTextArea();
+        FoldParserManager.get().addFoldParserMapping(org.fife.ui.rsyntaxtextarea.SyntaxConstants.SYNTAX_STYLE_JSON, new JsonFoldParser());
+
+        eventContent = new RSyntaxTextArea();
+        eventContent.setSyntaxEditingStyle(org.fife.ui.rsyntaxtextarea.SyntaxConstants.SYNTAX_STYLE_JSON);
+        eventContent.getFoldManager().setCodeFoldingEnabled(true);
+        eventContent.setFont(new Font("Hack", Font.PLAIN, 14));
         eventContent.addPropertyChangeListener(new PropertyChangeListener() {
         	public void propertyChange(PropertyChangeEvent evt) {
         	}
@@ -966,31 +1033,7 @@ public class MainFrame
         eventContent.setRows(3);
         scrollPane_2.setViewportView(eventContent);
         eventContent.setLineWrap(true);
-        eventContent.setWrapStyleWord(true);
-        eventContent.getDocument().addDocumentListener(new DocumentListener()
-        {
-
-            @Override
-            public void changedUpdate(DocumentEvent e)
-            {
-                List<JSONObject> events = rawevents.getEvents();
-                events.set(table.getSelectedRow(), new JSONObject(eventContent.getText()));
-            }
-
-            @Override
-            public void insertUpdate(DocumentEvent e)
-            {
-                List<JSONObject> events = rawevents.getEvents();
-                events.set(table.getSelectedRow(), new JSONObject(eventContent.getText()));
-            }
-
-            @Override
-            public void removeUpdate(DocumentEvent e)
-            {
-                //                List<JSONObject> events = rawevents.getEvents();
-                //                events.set(position, new JSONObject(eventContent.getText()));
-            }
-        });
+        eventContent.setWrapStyleWord(true);       
 
         JPanel panel_6 = new JPanel();
         panel_6.setBorder(null);
@@ -1010,6 +1053,22 @@ public class MainFrame
         gbc_panel_1.gridy = 0;
         panel_6.add(panel_1, gbc_panel_1);
         panel_1.setLayout(new BoxLayout(panel_1, BoxLayout.X_AXIS));
+        
+        JButton btnUpdate = new JButton("Update");
+        btnUpdate.addActionListener(new ActionListener() {
+        	public void actionPerformed(ActionEvent e) {
+        		updateCurrentEvent();
+        	}
+        });
+        panel_1.add(btnUpdate);
+        
+        JButton btnReset_1 = new JButton("Reset");
+        btnReset_1.addActionListener(new ActionListener() {
+        	public void actionPerformed(ActionEvent e) {
+        		resetCurrentEvent();
+        	}
+        });
+        panel_1.add(btnReset_1);
 
         JLabel lblEvents = new JLabel("Statistics");
         panel_1.add(lblEvents);
@@ -1158,7 +1217,7 @@ public class MainFrame
         optionsPanel.add(lblMaxDelayBetween, "2, 10, right, default");
 
         maxStepDelayField = new JTextField();
-        maxStepDelayField.setText("15");
+        maxStepDelayField.setText("30");
         optionsPanel.add(maxStepDelayField, "4, 10, fill, default");
         maxStepDelayField.setColumns(10);
 
@@ -1285,4 +1344,46 @@ public class MainFrame
         scenarioTextField.setColumns(10);
         jmeterPanel.add(scenarioTextField, "4, 4, fill, default");
     }
+
+	protected void saveControlersOptions() {
+        try
+        {
+        	updateInputController();
+        	
+            InputController.getInstance().store(IUIController.defaultConfig);
+            JMeterController.getInstance().store(IUIController.defaultConfig);
+            OptionsController.getInstance().store(IUIController.defaultConfig);
+            PostProcessController.getInstance().store(IUIController.defaultConfig);
+            ScenarioController.getInstance().store(IUIController.defaultConfig);
+            WebLookupController.getInstance().store(IUIController.defaultConfig);
+        }
+        catch (Exception e)
+        {
+            log.error(e.toString(), e);
+        }
+	}
+
+	private void updateInputController() {
+		InputController.getInstance().setFilename(filenameField.getText());
+	}
+
+	protected void resetCurrentEvent() {
+		int index = table.getSelectedRow();
+        if (index >= 0)
+        {
+            eventContent.setText(events.get(index).toString(3));
+        }
+	}
+
+	protected void updateCurrentEvent() {
+        List<JSONObject> events = rawevents.getEvents();
+        events.set(table.getSelectedRow(), new JSONObject(eventContent.getText()));
+	}
+
+	protected void copyCurrentStep() {
+		String event = rawevents.getEvents().get(table.getSelectedRow()).toString();
+		JSONObject clone = new JSONObject(event);
+		rawevents.getEvents().add(table.getSelectedRow(), clone);
+		model.fireTableRowsInserted(table.getSelectedRow(), table.getSelectedRow());
+	}
 }
