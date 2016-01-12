@@ -145,12 +145,12 @@ public class MainFrame
 
             private static final long serialVersionUID = 1L;
 
-            private String[] columns = { "*", "#", "eventId", "url", "type", "key", "target", "timestamp", "tag" };
+            private String[] columns = { "*", "#", "eventId", "url", "type", "key", "target", "timestamp", "tag", "comment" };
 
             @Override
             public int getColumnCount()
             {
-                return 9;
+                return 10;
             }
 
             @Override
@@ -212,6 +212,8 @@ public class MainFrame
                     return new Date(event.getBigDecimal("timestamp").longValue());
                 case 8:
                     return getTagForEvent(event);
+                case 9:
+                    return event.has("comment") ? event.getString("comment") : "no";
                 }
                 return null;
             }
@@ -227,6 +229,8 @@ public class MainFrame
     	table.getColumnModel().getColumn(6).setPreferredWidth(400);
     	table.getColumnModel().getColumn(7).setPreferredWidth(170);
     	table.getColumnModel().getColumn(7).setMaxWidth(170);
+    	table.getColumnModel().getColumn(8).setPreferredWidth(140);
+    	table.getColumnModel().getColumn(8).setMaxWidth(140);
     }
     
     public WebDriver getDriverForEvent(JSONObject event)
@@ -1016,13 +1020,16 @@ public class MainFrame
         splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
         scenarioPanel.add(splitPane, BorderLayout.CENTER);
 
-        JScrollPane scrollPane_2 = new JScrollPane();
+        eventContent = new RSyntaxTextArea();
+        RTextScrollPane scrollPane_2 = new RTextScrollPane(eventContent);
+        scrollPane_2.setLineNumbersEnabled(true);
+        scrollPane_2.setFoldIndicatorEnabled(true);
         splitPane.setLeftComponent(panel_4);
         splitPane.setRightComponent(scrollPane_2);
 
         FoldParserManager.get().addFoldParserMapping(org.fife.ui.rsyntaxtextarea.SyntaxConstants.SYNTAX_STYLE_JSON, new JsonFoldParser());
 
-        eventContent = new RSyntaxTextArea();
+        
         eventContent.setSyntaxEditingStyle(org.fife.ui.rsyntaxtextarea.SyntaxConstants.SYNTAX_STYLE_JSON);
         eventContent.getFoldManager().setCodeFoldingEnabled(true);
         eventContent.setFont(new Font("Hack", Font.PLAIN, 14));
@@ -1378,6 +1385,7 @@ public class MainFrame
 	protected void updateCurrentEvent() {
         List<JSONObject> events = rawevents.getEvents();
         events.set(table.getSelectedRow(), new JSONObject(eventContent.getText()));
+        model.fireTableRowsUpdated(table.getSelectedRow(), table.getSelectedRow());
 	}
 
 	protected void copyCurrentStep() {
