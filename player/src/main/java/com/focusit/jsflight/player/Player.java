@@ -21,13 +21,9 @@ import com.focusit.jsflight.player.ui.MainFrame;
 public class Player
 {
     private static final Logger log = LoggerFactory.getLogger(Player.class);
-    public static String firefoxPath = null;
-    public static boolean ignoreXhr = true;
 
     public static void main(String[] args) throws Exception
     {
-
-        firefoxPath = args[0];
         try
         {
             InputController.getInstance().load(IUIController.defaultConfig);

@@ -35,9 +35,10 @@ jsflight.options = {
     send_interval : -1,
     // control panel disabled by default
     cp_disabled : true,
+    // function that checks if dom ready to be dumped or pictured or not
     dom_ready_check: function(){
     	return true;
-    }
+    },
     propertyProvider : function(prop) {
     }
 };
