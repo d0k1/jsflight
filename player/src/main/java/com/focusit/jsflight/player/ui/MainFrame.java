@@ -898,6 +898,11 @@ public class MainFrame
             @Override
             public void mouseClicked(MouseEvent e)
             {
+                if (table.getSelectedRow() >= 0)
+                {
+                    JSONObject event = rawevents.getEvents().get(table.getSelectedRow());
+                    getDriverForEvent(event);
+                }
             }
         });
         btnParse.addMouseListener(new MouseAdapter()
