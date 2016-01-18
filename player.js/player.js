@@ -129,17 +129,17 @@ function Player() {
 
 	this.openPageUrl = function(event, page, url, onReady, pageReadyCheck){
 		var timerHandler = null;
-		var tried = 0;
+		var triy = 0;
 		var maxTries = 10;
 
 		function checkFunction() {
-			console.log('EvnetId '+event.eventId+' check ready url '+url);
-			tried++;
+			console.log('EvnetId '+event.eventId+' try '+triy+' check ready url '+url);
+			triy++;
 			var result = false;
-			if(tried<=maxTries) {
+			if(triy<=maxTries) {
 				result = pageReadyCheck(page);
 			}
-			var notReadyWaitLimitExceeded = (result===false && maxTries>maxTries);
+			var notReadyWaitLimitExceeded = (result===false && triy>maxTries);
 			if (result === true || notReadyWaitLimitExceeded) {
 				clearInterval(timerHandler);
 				if(notReadyWaitLimitExceeded!==true) {
