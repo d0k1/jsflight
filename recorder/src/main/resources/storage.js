@@ -19,8 +19,11 @@ jsflight.getEventInfo = function(mouseEvent) {
     result.tabuuid = jsflight.tabUuid;
     result.type = mouseEvent.type;
     result.url = window.location.href;
-    result.charCode = (mouseEvent.which || mouseEvent.keyCode || mouseEvent.charCode);
-
+    result.which = mouseEvent.which;
+    result.key = mouseEvent.key
+    result.keyCode = mouseEvent.keyCode;
+    result.charCode = mouseEvent.charCode;
+    
     if (mouseEvent.type === 'keyup') {
         if (!event.shiftKey) {
             result.charCode = String.fromCharCode(result.charCode)
@@ -59,6 +62,13 @@ jsflight.getEventInfo = function(mouseEvent) {
     result.image = mouseEvent.image;
     result.dom = mouseEvent.dom;
     result.eventId = mouseEvent.eventId;
+    
+    result.newUrl = mouseEvent.newURL;
+    result.oldUrl = mouseEvent.oldURL;
+    
+    result.deltaX = mouseEvent.deltaX;
+    result.deltaY = mouseEvent.deltaY;
+    result.deltaZ = mouseEvent.deltaZ;
 
     if (jsflight.options.propertyProvider) {
         jsflight.options.propertyProvider(result);

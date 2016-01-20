@@ -22,12 +22,16 @@ jsflight.startRecorder = function() {
     if (document.addEventListener) {
         document.addEventListener('mousedown', jsflight.TrackMouse);
         document.addEventListener('mousemove', jsflight.TrackMouse);
+        document.addEventListener('mousewheel', jsflight.TrackMouse);
+        document.addEventListener('scroll', jsflight.TrackMouse);
         document.addEventListener('keypress', jsflight.TrackKeyboard);
         document.addEventListener('keyup', jsflight.TrackKeyboard);
         window.addEventListener('hashchange', jsflight.TrackHash);
     } else {
         document.attachEvent('mousedown', jsflight.TrackMouse);
         document.attachEvent('mousemove', jsflight.TrackMouse);
+        document.attachEvent('mousewheel', jsflight.TrackMouse);
+        document.attachEvent('scroll', jsflight.TrackMouse);
         document.attachEvent('keypress', jsflight.TrackKeyboard);
         document.attachEvent('keyup', jsflight.TrackKeyboard);
         window.attachEvent('hashchange', jsflight.TrackHash);
@@ -60,12 +64,16 @@ jsflight.stopRecorder = function() {
     if (document.removeEventListener) {
         document.removeEventListener('mousedown', jsflight.TrackMouse);
         document.removeEventListener('mousemove', jsflight.TrackMouse);
+        document.removeEventListener('mousewheel', jsflight.TrackMouse);
+        document.removeEventListener('scroll', jsflight.TrackMouse);
         document.removeEventListener('keypress', jsflight.TrackKeyboard);
         document.removeEventListener('keyup', jsflight.TrackKeyboard);
         window.removeEventListener('hashchange', jsflight.TrackHash);
     } else {
         document.detachEvent('mousedown', jsflight.TrackMouse);
         document.detachEvent('mousemove', jsflight.TrackMouse);
+        document.detachEvent('mousewheel', jsflight.TrackMouse);
+        document.detachEvent('scroll', jsflight.TrackMouse);
         document.detachEvent('keypress', jsflight.TrackKeyboard);
         document.detachEvent('keyup', jsflight.TrackKeyboard);
         window.detachEvent('hashchange', jsflight.TrackHash);
