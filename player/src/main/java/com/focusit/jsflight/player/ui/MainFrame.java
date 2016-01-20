@@ -1005,6 +1005,7 @@ public class MainFrame
 
         table = new JTable();
         table.setFont(new Font("Hack", Font.PLAIN, 14));
+        table.setRowHeight(30);
         scrollPane.setViewportView(table);
 
         table.getSelectionModel().addListSelectionListener(new ListSelectionListener()
