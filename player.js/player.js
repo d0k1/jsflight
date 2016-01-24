@@ -241,6 +241,7 @@ function Player() {
 
 function isSDPageLoaded(page) {
 	return page.evaluate(function () {
+/*
 		var state = '';
 
 		if (document.getElementById('state.context') !== undefined) {
@@ -252,6 +253,8 @@ function isSDPageLoaded(page) {
 			return false;
 		}
 		return false;
+*/
+		return (document.getElementById('state.dispatch')===null || document.getElementById('state.dispatch').getAttribute('value')==0) && (document.getElementById('state.context')===null || document.getElementById('state.context').getAttribute('value')=='ready');
 	});
 }
 

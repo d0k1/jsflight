@@ -149,13 +149,13 @@ public class MainFrame
 
             private static final long serialVersionUID = 1L;
 
-            private String[] columns = { "*", "#", "eventId", "url", "type", "key", "target", "timestamp", "tag",
+            private String[] columns = { "*", "#", "eventId", "url", "type", "key", "target", "timestamp", "tag", "M", "S", "Pre", "Post",
                     "comment" };
 
             @Override
             public int getColumnCount()
             {
-                return 10;
+                return 14;
             }
 
             @Override
@@ -227,6 +227,14 @@ public class MainFrame
                 case 8:
                     return getTagForEvent(event);
                 case 9:
+                    return event.has("master") ? event.getString("master") : "no";
+                case 10:
+                    return event.has("slave") ? event.getString("slave") : "no";
+                case 11:
+                    return event.has("pre") ? event.getString("pre") : "no";
+                case 12:
+                    return event.has("post") ? event.getString("post") : "no";
+                case 13:
                     return event.has("comment") ? event.getString("comment") : "no";
                 }
                 return null;
