@@ -45,7 +45,6 @@ import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rsyntaxtextarea.folding.FoldParserManager;
 import org.fife.ui.rsyntaxtextarea.folding.JsonFoldParser;
 import org.fife.ui.rtextarea.RTextScrollPane;
-import org.json.JSONArray;
 import org.json.JSONObject;
 import org.openqa.selenium.WebDriver;
 import org.slf4j.Logger;
@@ -61,6 +60,7 @@ import com.focusit.jsflight.player.controller.ScenarioController;
 import com.focusit.jsflight.player.controller.WebLookupController;
 import com.focusit.jsflight.player.input.FileInput;
 import com.focusit.jsflight.player.scenario.UserScenario;
+import com.focusit.jsflight.player.webdriver.SeleniumDriver;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
@@ -105,7 +105,6 @@ public class MainFrame
 
     private HashMap<String, WebDriver> drivers = new HashMap<>();
     private HashMap<String, String> lastUrls = new HashMap<>();
-    private HashMap<String, JSONObject> lastEvents = new HashMap<>();
     private HashMap<String, String> tabsWindow = new HashMap<>();
 
     private JTextField webDriverTag;
@@ -132,8 +131,8 @@ public class MainFrame
 
             private static final long serialVersionUID = 1L;
 
-            private String[] columns = { "*", "#", "eventId", "url", "type", "key", "target", "timestamp", "tag",
-                    "Pre", "Post", "comment" };
+            private String[] columns = { "*", "#", "eventId", "url", "type", "key", "target", "timestamp", "tag", "Pre",
+                    "Post", "comment" };
 
             @Override
             public int getColumnCount()
@@ -150,13 +149,13 @@ public class MainFrame
             @Override
             public int getRowCount()
             {
-                return scenario.getStepsCount();
+                return UserScenario.getStepsCount();
             }
 
             @Override
             public Object getValueAt(int rowIndex, int columnIndex)
             {
-                if (rowIndex == scenario.getPosition() && columnIndex == 0)
+                if (rowIndex == UserScenario.getPosition() && columnIndex == 0)
                 {
                     return "*";
                 }
@@ -200,11 +199,11 @@ public class MainFrame
                     int code = event.getInt("charCode");
                     char[] key = new char[1];
                     key[0] = (char)code;
-                    return String.format("%d(%s)/%s", code, new String(key), event.has("button") ? event.get("button")
-                            : "null");
+                    return String.format("%d(%s)/%s", code, new String(key),
+                            event.has("button") ? event.get("button") : "null");
                 }
                 case 6:
-                    return getTargetForEvent(event);
+                    return scenario.getTargetForEvent(event);
                 case 7:
                     return new Date(event.getBigDecimal("timestamp").longValue());
                 case 8:
@@ -233,16 +232,16 @@ public class MainFrame
         public WebDriver getDriverForEvent(JSONObject event)
         {
             String tag = getTagForEvent(event);
-
+    
             WebDriver driver = drivers.get(tag);
-
+    
             try
             {
                 if (driver != null)
                 {
                     return driver;
                 }
-
+    
                 FirefoxProfile profile = new FirefoxProfile();
                 DesiredCapabilities cap = new DesiredCapabilities();
                 if (proxyHost.getText().trim().length() > 0)
@@ -280,7 +279,7 @@ public class MainFrame
                         driver = new PhantomJSDriver(cap);
                     }
                 }
-
+    
                 try
                 {
                     Thread.sleep(7000);
@@ -289,7 +288,7 @@ public class MainFrame
                 {
                     log.error(e.toString(), e);
                 }
-
+    
                 drivers.put(tag, driver);
                 return driver;
             }
@@ -331,11 +330,6 @@ public class MainFrame
         return result;
     }
 
-    public JSONObject getPrevEvent(JSONObject event)
-    {
-        return lastEvents.get(getTagForEvent(event));
-    }
-
     public String getTagForEvent(JSONObject event)
     {
         String tag = "null";
@@ -345,36 +339,6 @@ public class MainFrame
         }
 
         return tag;
-    }
-
-    public String getTargetForEvent(JSONObject event)
-    {
-        JSONArray array = event.getJSONArray("target1");
-        String target = array.getJSONObject(0).getString("getxp");
-        return target;
-    }
-
-    public boolean isStepDuplicates(JSONObject event)
-    {
-        JSONObject prev = getPrevEvent(event);
-        if (prev == null)
-        {
-            return false;
-        }
-
-        if (prev.getString("type").equals(event.getString("type"))
-                && prev.getString("url").equals(event.getString("url"))
-                && getTargetForEvent(prev).equals(getTargetForEvent(event)))
-        {
-            return true;
-        }
-
-        return false;
-    }
-
-    public void resetLastUrls()
-    {
-        lastUrls.clear();
     }
 
     public void setColumnWidths()
@@ -391,29 +355,14 @@ public class MainFrame
         table.getColumnModel().getColumn(8).setMaxWidth(140);
     }
 
-    public void setLastEvent(JSONObject event)
-    {
-        lastEvents.put(getTagForEvent(event), event);
-    }
-
     public void updateLastUrl(JSONObject event, String url)
     {
         lastUrls.put(getTagForEvent(event), url);
     }
 
-    public void updatePrevEvent(JSONObject event)
-    {
-        lastEvents.put(getTagForEvent(event), event);
-    }
-
     protected void copyCurrentStep()
     {
         scenario.copyStep(table.getSelectedRow());
-        /*
-        String event = rawevents.getEvents().get(table.getSelectedRow()).toString();
-        JSONObject clone = new JSONObject(event);
-        rawevents.getEvents().add(table.getSelectedRow(), clone);
-        */
         model.fireTableRowsInserted(table.getSelectedRow(), table.getSelectedRow());
     }
 
@@ -454,62 +403,6 @@ public class MainFrame
 
     protected void playTheScenario()
     {
-        /*
-        long begin = System.currentTimeMillis();
-
-        log.info("playing the scenario");
-
-        while (position < events.size())
-        {
-            if (position > 0)
-            {
-                JSONObject event = events.get(position - 1);
-                long prev = event.getBigDecimal("timestamp").longValue();
-                event = events.get(position);
-                long now = event.getBigDecimal("timestamp").longValue();
-
-                if ((now - prev) > 0)
-                {
-                    try
-                    {
-                        log.info("Emulate wait " + (now - prev) + "ms + 2000ms");
-                        long sleepTime = now - prev;
-                        int maxSleepTime = Integer.parseInt(maxStepDelayField.getText());
-                        if (sleepTime > maxSleepTime * 1000)
-                        {
-                            sleepTime = maxSleepTime;
-                        }
-                        // if (sleepTime < 1000)
-                        // {
-                        // sleepTime = 1000;
-                        // }
-                        Thread.sleep(sleepTime);
-                    }
-                    catch (InterruptedException e)
-                    {
-                        log.error("interrupted", e);
-                    }
-                }
-                log.info("Step " + position);
-            }
-            else
-            {
-                log.info("Step 0");
-            }
-            applyStep(position);
-            checks.set(position, true);
-            position++;
-            if (position == events.size())
-            {
-                for (int i = 0; i < position; i++)
-                {
-                    checks.set(i, false);
-                }
-            }
-        }
-        log.info(String.format("Done(%d):playing", System.currentTimeMillis() - begin));
-        position--;
-        */
         scenario.play();
         model.fireTableDataChanged();
     }
@@ -544,10 +437,6 @@ public class MainFrame
 
     protected void updateCurrentEvent()
     {
-        /*
-        List<JSONObject> events = rawevents.getEvents();
-        events.set(table.getSelectedRow(), new JSONObject(eventContent.getText()));
-        */
         scenario.updateStep(table.getSelectedRow(), new JSONObject(eventContent.getText()));
         model.fireTableRowsUpdated(table.getSelectedRow(), table.getSelectedRow());
     }
@@ -555,49 +444,6 @@ public class MainFrame
     private void applyStep(int position)
     {
         scenario.applyStep(position);
-        /*
-        JSONObject event = events.get(position);
-        boolean error = false;
-        try
-        {
-            if (isStepDuplicates(event))
-            {
-                return;
-            }
-            String eventType = event.getString("type");
-
-            if (isEventIgnored(eventType) || isEventBad(event))
-            {
-                return;
-            }
-
-            openEventUrl(event);
-
-            WebElement element = null;
-
-            String target = getTargetForEvent(event);
-
-            element = findTargetWebElement(event, target);
-
-            processMouseEvent(event, element);
-
-            processKeyboardEvent(event, element);
-
-            makeAShot(event);
-        }
-        catch (Exception e)
-        {
-            error = true;
-            throw e;
-        }
-        finally
-        {
-            if (!error)
-            {
-                updatePrevEvent(event);
-            }
-        }
-        */
     }
 
     private void checkElement(int position)
@@ -882,9 +728,6 @@ public class MainFrame
             public void actionPerformed(ActionEvent e)
             {
                 scenario.deleteStep(table.getSelectedRow());
-                /*
-                events.remove(table.getSelectedRow());
-                */
                 model.fireTableDataChanged();
             }
         });
@@ -893,7 +736,6 @@ public class MainFrame
             @Override
             public void mouseClicked(MouseEvent e)
             {
-                //position++;
                 scenario.skip();
                 model.fireTableDataChanged();
             }
@@ -903,19 +745,8 @@ public class MainFrame
             @Override
             public void mouseClicked(MouseEvent e)
             {
-                scenario.applyStep(scenario.getPosition());
+                scenario.applyStep(UserScenario.getPosition());
                 scenario.next();
-                /*
-                                position++;
-                                if (position == events.size())
-                                {
-                                    for (int i = 0; i < position; i++)
-                                    {
-                                        checks.set(i, false);
-                                    }
-                                    position = 0;
-                                }
-                 */
                 model.fireTableDataChanged();
             }
         });
@@ -925,12 +756,6 @@ public class MainFrame
             public void actionPerformed(ActionEvent e)
             {
                 scenario.prev();
-                /*
-                if (position > 0)
-                {
-                    position--;
-                }
-                */
             }
         });
         btnRewind.addMouseListener(new MouseAdapter()
@@ -939,14 +764,7 @@ public class MainFrame
             public void mouseClicked(MouseEvent e)
             {
                 scenario.rewind();
-                /*
-                for (int i = 0; i < events.size(); i++)
-                {
-                    checks.set(i, false);
-                }
-                position = 0;
-                */
-                resetLastUrls();
+                SeleniumDriver.resetLastUrls();
                 model.fireTableDataChanged();
             }
         });
@@ -982,29 +800,9 @@ public class MainFrame
             @Override
             public void mouseClicked(MouseEvent e)
             {
-                scenario.postProcessScenario();
-                /*
-                events = rawevents.getEvents();
-                if (!scriptArea.getText().isEmpty())
-                {
-                    new Engine(scriptArea.getText()).postProcess(events);
-                }
-                checks = new ArrayList<>(events.size());
-                for (int i = 0; i < events.size(); i++)
-                {
-                    checks.add(new Boolean(false));
-                }
-
-                long secs = 0;
-
-                if (events.size() > 0)
-                {
-                    secs = events.get(events.size() - 1).getBigDecimal("timestamp").longValue()
-                            - events.get(0).getBigDecimal("timestamp").longValue();
-                }
-                
-                statisticsLabel.setText(String.format("Events %d, duration %f sec", events.size(), secs / 1000.0));
-                */
+                long secs = scenario.postProcessScenario();
+                statisticsLabel.setText(
+                        String.format("Events %d, duration %f sec", UserScenario.getStepsCount(), secs / 1000.0));
                 model = createEventTableModel();
                 table.setModel(model);
                 model.fireTableDataChanged();
@@ -1141,15 +939,6 @@ public class MainFrame
             @Override
             public void actionPerformed(ActionEvent e)
             {
-                /*
-                Engine engine = new Engine(scriptArea.getText());
-                List<JSONObject> events = new ArrayList<>();
-                if (rawevents != null && rawevents.getEvents() != null)
-                {
-                    events = rawevents.getEvents();
-                }
-                engine.testPostProcess(events);
-                */
                 scenario.runPostProcessor(scriptArea.getText());
             }
         });
@@ -1200,16 +989,17 @@ public class MainFrame
 
         JPanel optionsPanel = new JPanel();
         tabbedPane.addTab("Options", null, optionsPanel, null);
-        optionsPanel.setLayout(new FormLayout(new ColumnSpec[] { FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC, FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"), },
-                new RowSpec[] { FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC,
+        optionsPanel.setLayout(new FormLayout(
+                new ColumnSpec[] { FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"), },
+                new RowSpec[] { FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, }));
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC, }));
 
         JLabel lblFirefoxProxyHost = new JLabel("Proxy host");
         optionsPanel.add(lblFirefoxProxyHost, "2, 2, right, default");
@@ -1298,14 +1088,15 @@ public class MainFrame
 
         jmeterPanel = new JPanel();
         tabbedPane.addTab("JMeter", null, jmeterPanel, null);
-        jmeterPanel.setLayout(new FormLayout(new ColumnSpec[] { FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC, FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"), },
-                new RowSpec[] { FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC,
+        jmeterPanel.setLayout(new FormLayout(
+                new ColumnSpec[] { FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"), },
+                new RowSpec[] { FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, }));
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC, }));
 
         JLabel lblJmeterRecorder_1 = new JLabel("JMeter recorder");
         jmeterPanel.add(lblJmeterRecorder_1, "2, 2");
@@ -1371,19 +1162,6 @@ public class MainFrame
         scenarioTextField.setText("test.jmx");
         scenarioTextField.setColumns(10);
         jmeterPanel.add(scenarioTextField, "4, 4, fill, default");
-    }
-
-    private boolean isEventBad(JSONObject event)
-    {
-        return !event.has("target") || event.get("target") == null || event.get("target") == JSONObject.NULL;
-    }
-
-    private boolean isEventIgnored(String eventType)
-    {
-        return eventType.equalsIgnoreCase("xhr")
-                || eventType.equalsIgnoreCase("hashchange")
-                || (!eventType.equalsIgnoreCase("mousedown") && !eventType.equalsIgnoreCase("keypress") && !eventType
-                        .equalsIgnoreCase("keyup"));
     }
 
     /**

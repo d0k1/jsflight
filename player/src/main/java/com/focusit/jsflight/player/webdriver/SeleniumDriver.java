@@ -1,18 +1,63 @@
 package com.focusit.jsflight.player.webdriver;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.HashMap;
+
 import org.json.JSONObject;
+import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
+import org.openqa.selenium.OutputType;
+import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.firefox.FirefoxBinary;
+import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.firefox.FirefoxProfile;
 import org.openqa.selenium.interactions.Actions;
+import org.openqa.selenium.phantomjs.PhantomJSDriver;
+import org.openqa.selenium.remote.CapabilityType;
+import org.openqa.selenium.remote.DesiredCapabilities;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.focusit.jsflight.player.scenario.UserScenario;
 
 public class SeleniumDriver
 {
+    public static String CHECK_PAGE_READY_JS = "return (document.getElementById('state.dispatch')==null || document.getElementById('state.dispatch').getAttribute('value')==0) &&  (document.getElementById('state.context')==null ||  document.getElementById('state.context').getAttribute('value')=='ready');";
+    private static final String SET_ELEMENT_VISIBLE_JS = "var e = document.evaluate('%s' ,document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null ).singleNodeValue; if(e!== null) {e.style.visibility='visible';};";
+
+    private static final Logger log = LoggerFactory.getLogger(SeleniumDriver.class);
+    private static boolean useFirefox = true;
+    private static boolean usePhantomJs = false;
+    private static String proxyHost = "";
+    private static String proxyPort = "";
+    private static String ffPath = "";
+    private static String pjsPath = "";
+    private static boolean makeShots = true;
+    private static String screenDir = "shots";
+    private static String maxDelayTime = "30";
+
+    private static HashMap<String, WebDriver> drivers = new HashMap<>();
+    private static HashMap<String, String> tabsWindow = new HashMap<>();
+
+    private static HashMap<String, String> lastUrls = new HashMap<>();
+
+    public static WebElement findTargetWebElement(JSONObject event, String target)
+    {
+        makeElementVisibleByJS(event, target);
+        return getDriverForEvent(event).findElement(By.xpath(target));
+    }
 
     public static WebDriver getDriverForEvent(JSONObject event)
     {
-        /*
-        String tag = getTagForEvent(event);
+
+        String tag = UserScenario.getTagForEvent(event);
 
         WebDriver driver = drivers.get(tag);
 
@@ -25,22 +70,22 @@ public class SeleniumDriver
 
             FirefoxProfile profile = new FirefoxProfile();
             DesiredCapabilities cap = new DesiredCapabilities();
-            if (proxyHost.getText().trim().length() > 0)
+            if (proxyHost.trim().length() > 0)
             {
-                String host = proxyHost.getText();
-                if (proxyPort.getText().trim().length() > 0)
+                String host = proxyHost;
+                if (proxyPort.trim().length() > 0)
                 {
-                    host += ":" + proxyPort.getText();
+                    host += ":" + proxyPort;
                 }
                 org.openqa.selenium.Proxy proxy = new org.openqa.selenium.Proxy();
                 proxy.setHttpProxy(host).setFtpProxy(host).setSslProxy(host);
                 cap.setCapability(CapabilityType.PROXY, proxy);
             }
-            if (useFirefoxButton.isSelected())
+            if (useFirefox)
             {
-                if (ffPath.getText() != null && ffPath.getText().trim().length() > 0)
+                if (ffPath != null && ffPath.trim().length() > 0)
                 {
-                    FirefoxBinary binary = new FirefoxBinary(new File(ffPath.getText()));
+                    FirefoxBinary binary = new FirefoxBinary(new File(ffPath));
                     driver = new FirefoxDriver(binary, profile, cap);
                 }
                 else
@@ -48,11 +93,11 @@ public class SeleniumDriver
                     driver = new FirefoxDriver(new FirefoxBinary(), profile, cap);
                 }
             }
-            else if (usePhantomButton.isSelected())
+            else if (usePhantomJs)
             {
-                if (pjsPath.getText() != null && pjsPath.getText().trim().length() > 0)
+                if (pjsPath != null && pjsPath.trim().length() > 0)
                 {
-                    cap.setCapability("phantomjs.binary.path", pjsPath.getText());
+                    cap.setCapability("phantomjs.binary.path", pjsPath);
                     driver = new PhantomJSDriver(cap);
                 }
                 else
@@ -91,32 +136,33 @@ public class SeleniumDriver
             }
             driver.switchTo().window(window);
         }
-        */
-        return null;
     }
 
-    private static WebElement findTargetWebElement(JSONObject event, String target)
+    public static String getLastUrl(JSONObject event)
     {
-        /*
-        makeElementVisibleByJS(event, target);
-        return getDriverForEvent(event).findElement(By.xpath(target));
-        */
-        return null;
+        String no_result = "";
+        String result = lastUrls.get(UserScenario.getTagForEvent(event));
+        if (result == null)
+        {
+            lastUrls.put(UserScenario.getTagForEvent(event), no_result);
+            result = no_result;
+        }
+
+        return result;
     }
 
-    private void makeAShot(JSONObject event)
+    public static void makeAShot(JSONObject event)
     {
-        /*
-        if (makeShots.isSelected())
+        if (makeShots)
         {
             TakesScreenshot shoter = (TakesScreenshot)getDriverForEvent(event);
             byte[] shot = shoter.getScreenshotAs(OutputType.BYTES);
-            File dir = new File(screenDirTextField.getText() + File.separator
-                    + Paths.get(filenameField.getText()).getFileName().toString());
+            File dir = new File(screenDir + File.separator
+                    + Paths.get(UserScenario.getScenarioFilename()).getFileName().toString());
             dir.mkdirs();
 
             try (FileOutputStream fos = new FileOutputStream(new String(dir.getAbsolutePath() + File.separator
-                    + String.format("%05d", position) + ".png")))
+                    + String.format("%05d", UserScenario.getPosition()) + ".png")))
             {
                 fos.write(shot);
             }
@@ -125,34 +171,25 @@ public class SeleniumDriver
                 log.error(e.toString(), e);
             }
         }
-        */
     }
 
-    private void makeElementVisibleByJS(JSONObject event, String target)
+    public static void openEventUrl(JSONObject event)
     {
-        /*
-        JavascriptExecutor js = (JavascriptExecutor)getDriverForEvent(event);
-        js.executeScript(String.format(SET_ELEMENT_VISIBLE_JS, target));
-        */
-    }
 
-    private void openEventUrl(JSONObject event)
-    {
-        /*
         String event_url = event.getString("url");
 
         if (!getLastUrl(event).equals(event_url))
         {
             getDriverForEvent(event).get(event_url);
-            int maxDelay = Integer.parseInt(maxStepDelayField.getText()) * 1000;
+            int maxDelay = Integer.parseInt(maxDelayTime) * 1000;
             try
             {
                 int sleeps = 0;
                 while (sleeps < maxDelay)
                 {
                     JavascriptExecutor js = (JavascriptExecutor)getDriverForEvent(event);
-                    Object result = js.executeScript(checkPageJs.getText());
-                    if (result != null && result.toString().toLowerCase().equals("ready"))
+                    Object result = js.executeScript(CHECK_PAGE_READY_JS);
+                    if (result != null && Boolean.parseBoolean(result.toString().toLowerCase()) == true)
                     {
                         break;
                     }
@@ -168,10 +205,9 @@ public class SeleniumDriver
             }
             updateLastUrl(event, event_url);
         }
-        */
     }
 
-    private void processKeyboardEvent(JSONObject event, WebElement element)
+    public static void processKeyboardEvent(JSONObject event, WebElement element)
     {
         if (event.getString("type").equalsIgnoreCase("keypress"))
         {
@@ -228,7 +264,7 @@ public class SeleniumDriver
         }
     }
 
-    private void processMouseEvent(JSONObject event, WebElement element)
+    public static void processMouseEvent(JSONObject event, WebElement element)
     {
         if (event.getString("type").equalsIgnoreCase("mousedown"))
         {
@@ -241,6 +277,22 @@ public class SeleniumDriver
                 element.click();
             }
         }
+    }
+
+    public static void resetLastUrls()
+    {
+        lastUrls.clear();
+    }
+
+    public static void updateLastUrl(JSONObject event, String url)
+    {
+        lastUrls.put(UserScenario.getTagForEvent(event), url);
+    }
+
+    private static void makeElementVisibleByJS(JSONObject event, String target)
+    {
+        JavascriptExecutor js = (JavascriptExecutor)getDriverForEvent(event);
+        js.executeScript(String.format(SET_ELEMENT_VISIBLE_JS, target));
     }
 
 }

@@ -21,7 +21,7 @@ public class Events
         return events;
     }
 
-    public void parse(List<String> content)
+    public List<JSONObject> parse(List<String> content)
     {
         JSONArray rawevents;
         Set<JSONObject> temp = new HashSet<>();
@@ -46,5 +46,7 @@ public class Events
                 return ((Long)o1.getLong(EVENT_ID)).compareTo(o2.getLong(EVENT_ID));
             }
         });
+
+        return events;
     }
 }
