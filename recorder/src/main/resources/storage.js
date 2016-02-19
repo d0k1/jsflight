@@ -49,14 +49,20 @@ jsflight.getEventInfo = function(mouseEvent) {
     result.pageX = mouseEvent.pageX;
     result.pageY = mouseEvent.pageY;
 
-    result.screen.width = screen.width;
-    result.screen.height = screen.height;
+    result.screen = {
+    		width : screen.width,
+    		height : screen.height
+    		};
 
-    result.window.width = window.outerWidth;
-    result.window.height = window.outerHeight;
+    result.window = {
+	    	    width : window.outerWidth,
+	    	    height : window.outerHeight
+    		};
 
-    result.page.width = window.innerWidth;
-    result.page.height = window.innerHeight;
+    result.page = {
+    			width : window.innerWidth,
+    			height : window.innerHeight
+    		};
 
     result.agent = navigator.userAgent;
     result.image = mouseEvent.image;

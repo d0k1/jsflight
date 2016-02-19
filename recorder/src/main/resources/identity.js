@@ -42,19 +42,23 @@ jsflight.getTargetId = function(event) {
     var paths = [];
     var target = event.target;
     
-    if(target===null)
+    if(target===null || target === undefined)
         return paths;
     
     var elt = target;
     do{
         paths.push(jsflight.getElementFullId(elt));
         elt = elt.parentNode;
-    }while(elt!==null && elt!=document);
+    }while(elt!==undefined && elt!==null && elt!=document);
     
     return paths;
 };
 
 jsflight.getElementFullId = function(target) {
+    if (target === undefined) {
+        return null;
+    }
+
     if (target === null) {
         return null;
     }

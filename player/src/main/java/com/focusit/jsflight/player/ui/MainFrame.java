@@ -73,12 +73,6 @@ public class MainFrame
     private static final Logger log = LoggerFactory.getLogger(MainFrame.class);
     private UserScenario scenario = new UserScenario();
     private AbstractTableModel model;
-    /*
-        private List<JSONObject> events = new ArrayList<>();
-        private int position = 0;
-        private List<Boolean> checks;
-        private Events rawevents;
-    */
     private JFrame frmJsflightrecorderPlayer;
     private JTextField filenameField;
     private JTable table;
@@ -169,7 +163,7 @@ public class MainFrame
                 case 2:
                     return event.get("eventId");
                 case 3:
-                    return event.get("hash");
+                    return event.has("hash") ? event.get("hash") : "";
                 case 4:
                     String type = event.getString("type");
                     if (type.equals("mousedown"))
@@ -228,90 +222,6 @@ public class MainFrame
         };
     }
 
-    /*
-        public WebDriver getDriverForEvent(JSONObject event)
-        {
-            String tag = getTagForEvent(event);
-    
-            WebDriver driver = drivers.get(tag);
-    
-            try
-            {
-                if (driver != null)
-                {
-                    return driver;
-                }
-    
-                FirefoxProfile profile = new FirefoxProfile();
-                DesiredCapabilities cap = new DesiredCapabilities();
-                if (proxyHost.getText().trim().length() > 0)
-                {
-                    String host = proxyHost.getText();
-                    if (proxyPort.getText().trim().length() > 0)
-                    {
-                        host += ":" + proxyPort.getText();
-                    }
-                    org.openqa.selenium.Proxy proxy = new org.openqa.selenium.Proxy();
-                    proxy.setHttpProxy(host).setFtpProxy(host).setSslProxy(host);
-                    cap.setCapability(CapabilityType.PROXY, proxy);
-                }
-                if (useFirefoxButton.isSelected())
-                {
-                    if (ffPath.getText() != null && ffPath.getText().trim().length() > 0)
-                    {
-                        FirefoxBinary binary = new FirefoxBinary(new File(ffPath.getText()));
-                        driver = new FirefoxDriver(binary, profile, cap);
-                    }
-                    else
-                    {
-                        driver = new FirefoxDriver(new FirefoxBinary(), profile, cap);
-                    }
-                }
-                else if (usePhantomButton.isSelected())
-                {
-                    if (pjsPath.getText() != null && pjsPath.getText().trim().length() > 0)
-                    {
-                        cap.setCapability("phantomjs.binary.path", pjsPath.getText());
-                        driver = new PhantomJSDriver(cap);
-                    }
-                    else
-                    {
-                        driver = new PhantomJSDriver(cap);
-                    }
-                }
-    
-                try
-                {
-                    Thread.sleep(7000);
-                }
-                catch (InterruptedException e)
-                {
-                    log.error(e.toString(), e);
-                }
-    
-                drivers.put(tag, driver);
-                return driver;
-            }
-            finally
-            {
-                String tabUuid = event.getString("tabuuid");
-                String window = tabsWindow.get(tabUuid);
-                if (window == null)
-                {
-                    ArrayList<String> tabs = new ArrayList<String>(driver.getWindowHandles());
-                    if (tabsWindow.values().contains(tabs.get(0)))
-                    {
-                        String newTabKey = Keys.chord(Keys.CONTROL, "n");
-                        driver.findElement(By.tagName("body")).sendKeys(newTabKey);
-                        tabs = new ArrayList<String>(driver.getWindowHandles());
-                    }
-                    window = tabs.get(tabs.size() - 1);
-                    tabsWindow.put(tabUuid, window);
-                }
-                driver.switchTo().window(window);
-            }
-        }
-    */
     public JFrame getFrame()
     {
         return frmJsflightrecorderPlayer;
@@ -448,26 +358,10 @@ public class MainFrame
 
     private void checkElement(int position)
     {
-        /*
-        JSONObject event = events.get(position);
-        if (!event.has("target") || event.getString("type").equalsIgnoreCase("xhr"))
-        {
-            return;
-        }
-        getDriverForEvent(event).findElement(By.xpath(event.getString("target")));
-        checks.set(position, true);
-        */
         scenario.checkStep(position);
         model.fireTableDataChanged();
     }
 
-    /*
-        private WebElement findTargetWebElement(JSONObject event, String target)
-        {
-            makeElementVisibleByJS(event, target);
-            return getDriverForEvent(event).findElement(By.xpath(target));
-        }
-    */
     /**
      * Initialize the contents of the frame.
      */
@@ -621,9 +515,6 @@ public class MainFrame
                 try
                 {
                     scenario.saveScenario("test.json");
-                    /*
-                                        FileInput.saveEvents(events, "test.json");
-                    */
                 }
                 catch (IOException e1)
                 {
@@ -1177,10 +1068,6 @@ public class MainFrame
         }
         try
         {
-            /*
-            rawevents = new Events();
-            rawevents.parse(FileInput.getContent(filename));
-            */
             scenario.parse(filename);
             contentPane.setText(FileInput.getContentInString(filename));
         }

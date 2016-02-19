@@ -56,7 +56,7 @@
 		};
 
 		CssSelectorGenerator.prototype.getTagSelector = function(element) {
-			if(element.tagName==null)
+			if(element===undefined || element===null || element.tagName===null)
 				return null;
 			
 			return element.tagName.toLowerCase();
@@ -172,6 +172,11 @@
 				a : null,
 				n : null
 			};
+			
+			if(element===undefined || element===null){
+				return result;
+			}
+			
 			if (indexOf.call(this.options.selectors, 'tag') >= 0) {
 				result.t = this.getTagSelector(element);
 			}

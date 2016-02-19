@@ -136,7 +136,16 @@ public class UserScenario
 
     public String getTargetForEvent(JSONObject event)
     {
+        if (!event.has("target1"))
+        {
+            return "";
+        }
         JSONArray array = event.getJSONArray("target1");
+        if (array.isNull(0))
+        {
+            return "";
+        }
+
         String target = array.getJSONObject(0).getString("getxp");
         return target;
     }
