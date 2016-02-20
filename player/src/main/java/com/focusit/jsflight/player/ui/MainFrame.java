@@ -69,7 +69,6 @@ import com.jgoodies.forms.layout.RowSpec;
 public class MainFrame
 {
 
-    private static final String SET_ELEMENT_VISIBLE_JS = "var e = document.evaluate('%s' ,document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null ).singleNodeValue; if(e!== null) {e.style.visibility='visible';};";
     private static final Logger log = LoggerFactory.getLogger(MainFrame.class);
     private UserScenario scenario = new UserScenario();
     private AbstractTableModel model;
@@ -295,21 +294,23 @@ public class MainFrame
         });
         table.getColumnModel().getColumn(6).setCellEditor(editor);
 
-        final DefaultCellEditor editor1 = new DefaultCellEditor(new JTextField());
-        editor1.addCellEditorListener(new CellEditorListener()
-        {
-            @Override
-            public void editingCanceled(ChangeEvent e)
-            {
-                ((JTextField)editor1.getComponent()).getText();
-            }
-
-            @Override
-            public void editingStopped(ChangeEvent e)
-            {
-            }
-        });
-        table.getColumnModel().getColumn(9).setCellEditor(editor1);
+        //
+        //        final DefaultCellEditor editor1 = new DefaultCellEditor(new JTextField());
+        //        editor1.addCellEditorListener(new CellEditorListener()
+        //        {
+        //            @Override
+        //            public void editingCanceled(ChangeEvent e)
+        //            {
+        //                ((JTextField)editor1.getComponent()).getText();
+        //            }
+        //
+        //            @Override
+        //            public void editingStopped(ChangeEvent e)
+        //            {
+        //            }
+        //        });
+        //        table.getColumnModel().getColumn(9).setCellEditor(editor1);
+        table.getColumnModel().getColumn(9).setCellEditor();
     }
 
     protected void playTheScenario()
@@ -336,7 +337,7 @@ public class MainFrame
             updateWebLookupController();
             updateOptionsController();
             updateJMeterController();
-            
+
             InputController.getInstance().store(IUIController.defaultConfig);
             JMeterController.getInstance().store(IUIController.defaultConfig);
             OptionsController.getInstance().store(IUIController.defaultConfig);
@@ -350,22 +351,7 @@ public class MainFrame
         }
     }
 
-    private void updateJMeterController() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	private void updateOptionsController() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	private void updateWebLookupController() {
-    	WebLookupController.getInstance().setFilename(lookupFilename.getText());
-    	WebLookupController.getInstance().setScript(lookupScriptArea.getText());
-	}
-
-	protected void updateCurrentEvent()
+    protected void updateCurrentEvent()
     {
         scenario.updateStep(table.getSelectedRow(), new JSONObject(eventContent.getText()));
         model.fireTableRowsUpdated(table.getSelectedRow(), table.getSelectedRow());
@@ -710,7 +696,7 @@ public class MainFrame
             @Override
             public void mouseClicked(MouseEvent e)
             {
-            	UserScenario.setPostProcessScenarioScript(scriptArea.getText());
+                UserScenario.setPostProcessScenarioScript(scriptArea.getText());
                 long secs = scenario.postProcessScenario();
                 statisticsLabel.setText(
                         String.format("Events %d, duration %f sec", UserScenario.getStepsCount(), secs / 1000.0));
@@ -895,7 +881,7 @@ public class MainFrame
         JScrollPane scrollPane_4 = new JScrollPane();
         webLookupPanel.add(scrollPane_4, BorderLayout.CENTER);
 
-        lookupScriptArea = new RSyntaxTextArea();        
+        lookupScriptArea = new RSyntaxTextArea();
         scrollPane_4.setViewportView(lookupScriptArea);
 
         JPanel optionsPanel = new JPanel();
@@ -1073,39 +1059,54 @@ public class MainFrame
         scenarioTextField.setText("test.jmx");
         scenarioTextField.setColumns(10);
         jmeterPanel.add(scenarioTextField, "4, 4, fill, default");
-        
+
         initUIFromControllers();
     }
 
-    private void initUIFromControllers() {
-    	initUIFromOptionsController();
-    	initUIFromJMeterController();
-    	initUIFromPostProcessorController();
-    	initUIFromWebLookupController();
-    	initUIFromInitController();
-	}
+    private void initUIFromControllers()
+    {
+        initUIFromOptionsController();
+        initUIFromJMeterController();
+        initUIFromPostProcessorController();
+        initUIFromWebLookupController();
+        initUIFromInitController();
+    }
 
-	private void initUIFromInitController() {
+    private void initUIFromInitController()
+    {
         filenameField.setText(InputController.getInstance().getFilename());
-	}
+    }
 
-	private void initUIFromWebLookupController() {
-        lookupFilename.setText(WebLookupController.getInstance().getFilename());
-        lookupScriptArea.setText(WebLookupController.getInstance().getScript());
-	}
+    private void initUIFromJMeterController()
+    {
+    }
 
-	private void initUIFromPostProcessorController() {
+    private void initUIFromOptionsController()
+    {
+        proxyHost.setText(OptionsController.getInstance().getProxyHost());
+        proxyPort.setText(OptionsController.getInstance().getProxyPort());
+        ffPath.setText(OptionsController.getInstance().getFfPath());
+        pjsPath.setText(OptionsController.getInstance().getPjsPath());
+        maxStepDelayField.setText(OptionsController.getInstance().getMaxStepDelay());
+        makeShots.setSelected(OptionsController.getInstance().getMakeShots().equalsIgnoreCase("true"));
+        screenDirTextField.setText(OptionsController.getInstance().getScreenDir());
+        checkPageJs.setText(OptionsController.getInstance().getCheckPageJs());
+        webDriverTag.setText(OptionsController.getInstance().getWebDriverTag());
+    }
+
+    private void initUIFromPostProcessorController()
+    {
         scriptFilename.setText(PostProcessController.getInstance().getFilename());
         scriptArea.setText(PostProcessController.getInstance().getScript());
-	}
+    }
 
-	private void initUIFromJMeterController() {
-	}
+    private void initUIFromWebLookupController()
+    {
+        lookupFilename.setText(WebLookupController.getInstance().getFilename());
+        lookupScriptArea.setText(WebLookupController.getInstance().getScript());
+    }
 
-	private void initUIFromOptionsController() {
-	}
-
-	/**
+    /**
      * @throws IOException 
      * 
      */
@@ -1132,9 +1133,35 @@ public class MainFrame
     {
         InputController.getInstance().setFilename(filenameField.getText());
     }
-    
-    private void updatePostProcessController(){
-    	PostProcessController.getInstance().setFilename(scriptFilename.getText());
-    	PostProcessController.getInstance().setScript(scriptArea.getText());
+
+    private void updateJMeterController()
+    {
+        // TODO Auto-generated method stub
+
+    }
+
+    private void updateOptionsController()
+    {
+        OptionsController.getInstance().setProxyHost(proxyHost.getText());
+        OptionsController.getInstance().setProxyPort(proxyPort.getText());
+        OptionsController.getInstance().setFfPath(ffPath.getText());
+        OptionsController.getInstance().setPjsPath(pjsPath.getText());
+        OptionsController.getInstance().setMaxStepDelay(maxStepDelayField.getText());
+        OptionsController.getInstance().setMakeShots("" + makeShots.isSelected());
+        OptionsController.getInstance().setScreenDir(screenDirTextField.getText());
+        OptionsController.getInstance().setCheckPageJs(checkPageJs.getText());
+        OptionsController.getInstance().setWebDriverTag(webDriverTag.getText());
+    }
+
+    private void updatePostProcessController()
+    {
+        PostProcessController.getInstance().setFilename(scriptFilename.getText());
+        PostProcessController.getInstance().setScript(scriptArea.getText());
+    }
+
+    private void updateWebLookupController()
+    {
+        WebLookupController.getInstance().setFilename(lookupFilename.getText());
+        WebLookupController.getInstance().setScript(lookupScriptArea.getText());
     }
 }
