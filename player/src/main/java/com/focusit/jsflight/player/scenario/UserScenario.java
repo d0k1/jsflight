@@ -23,7 +23,15 @@ public class UserScenario
 
     private static String postProcessScenarioScript = "";
 
-    private static List<Boolean> checks = new ArrayList<>();
+    public static String getPostProcessScenarioScript() {
+		return postProcessScenarioScript;
+	}
+
+	public static void setPostProcessScenarioScript(String postProcessScenarioScript) {
+		UserScenario.postProcessScenarioScript = postProcessScenarioScript;
+	}
+
+	private static List<Boolean> checks = new ArrayList<>();
     private static HashMap<String, JSONObject> lastEvents = new HashMap<>();
 
     public static int getPosition()

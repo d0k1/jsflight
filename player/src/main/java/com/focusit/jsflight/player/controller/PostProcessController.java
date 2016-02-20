@@ -1,5 +1,8 @@
 package com.focusit.jsflight.player.controller;
 
+import java.io.ObjectInputStream;
+import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,6 +22,7 @@ public class PostProcessController extends UIController
         return instance;
     }
 
+    private String filename = "";
     private String script;
 
     private PostProcessController()
@@ -33,7 +37,9 @@ public class PostProcessController extends UIController
     @Override
     public void load(String file) throws Exception
     {
-        script = (String)getInputStream(file).readObject();
+    	ObjectInputStream stream = getInputStream(file);
+        script = (String)stream.readObject();
+        filename = (String)stream.readObject();
     }
 
     public void setScript(String script)
@@ -44,7 +50,9 @@ public class PostProcessController extends UIController
     @Override
     public void store(String file) throws Exception
     {
-        getOutputStream(file).writeObject(script);
+    	ObjectOutputStream stream = getOutputStream(file);
+        stream.writeObject(script);
+        stream.writeObject(filename);
     }
 
     @Override
@@ -63,4 +71,12 @@ public class PostProcessController extends UIController
         engine.testPostProcess(events);
         return e;        
     }
+
+	public String getFilename() {
+		return filename;
+	}
+
+	public void setFilename(String filename) {
+		this.filename = filename;
+	}
 }

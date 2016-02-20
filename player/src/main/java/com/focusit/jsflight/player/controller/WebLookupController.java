@@ -1,5 +1,8 @@
 package com.focusit.jsflight.player.controller;
 
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+
 public class WebLookupController extends UIController
 {
     private static final long serialVersionUID = 1L;
@@ -10,6 +13,7 @@ public class WebLookupController extends UIController
         return instance;
     }
 
+    private String filename = "";
     private String script;
 
     private WebLookupController()
@@ -24,7 +28,9 @@ public class WebLookupController extends UIController
     @Override
     public void load(String file) throws Exception
     {
-        script = (String)getInputStream(file).readObject();
+    	ObjectInputStream stream = getInputStream(file);
+        script = (String)stream.readObject();
+        setFilename((String)stream.readObject());
     }
 
     public void setScript(String script)
@@ -35,7 +41,9 @@ public class WebLookupController extends UIController
     @Override
     public void store(String file) throws Exception
     {
-        getOutputStream(file).writeObject(script);
+    	ObjectOutputStream stream = getOutputStream(file);
+        stream.writeObject(script);
+        stream.writeObject(getFilename());
     }
 
     @Override
@@ -43,5 +51,13 @@ public class WebLookupController extends UIController
     {
         return "weblookup";
     }
+
+	public String getFilename() {
+		return filename;
+	}
+
+	public void setFilename(String filename) {
+		this.filename = filename;
+	}
 
 }

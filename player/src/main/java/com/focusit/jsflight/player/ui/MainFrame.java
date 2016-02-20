@@ -82,7 +82,7 @@ public class MainFrame
     private JTextField proxyHost;
     private JTextField proxyPort;
     private JTextField ffPath;
-    private JTextField textField_1;
+    private JTextField scriptFilename;
     private JTextField maxStepDelayField;
     private RSyntaxTextArea scriptArea;
     private JRadioButton usePhantomButton;
@@ -94,7 +94,7 @@ public class MainFrame
     private JTextField scenarioTextField;
     private JTextField pjsPath;
     private JMeterRecorder jmeter = new JMeterRecorder();
-    private JTextField textField;
+    private JTextField lookupFilename;
     private JTextField checkPageJs;
 
     private HashMap<String, WebDriver> drivers = new HashMap<>();
@@ -102,6 +102,7 @@ public class MainFrame
     private HashMap<String, String> tabsWindow = new HashMap<>();
 
     private JTextField webDriverTag;
+    private RSyntaxTextArea lookupScriptArea;
 
     /**
      * Create the application.
@@ -331,7 +332,11 @@ public class MainFrame
         try
         {
             updateInputController();
-
+            updatePostProcessController();
+            updateWebLookupController();
+            updateOptionsController();
+            updateJMeterController();
+            
             InputController.getInstance().store(IUIController.defaultConfig);
             JMeterController.getInstance().store(IUIController.defaultConfig);
             OptionsController.getInstance().store(IUIController.defaultConfig);
@@ -345,7 +350,22 @@ public class MainFrame
         }
     }
 
-    protected void updateCurrentEvent()
+    private void updateJMeterController() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	private void updateOptionsController() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	private void updateWebLookupController() {
+    	WebLookupController.getInstance().setFilename(lookupFilename.getText());
+    	WebLookupController.getInstance().setScript(lookupScriptArea.getText());
+	}
+
+	protected void updateCurrentEvent()
     {
         scenario.updateStep(table.getSelectedRow(), new JSONObject(eventContent.getText()));
         model.fireTableRowsUpdated(table.getSelectedRow(), table.getSelectedRow());
@@ -414,7 +434,6 @@ public class MainFrame
         gbc_filenameField.gridy = 0;
         inputPanel.add(filenameField, gbc_filenameField);
         filenameField.setColumns(10);
-        filenameField.setText(InputController.getInstance().getFilename());
 
         JButton btnLoad = new JButton("Load");
         btnLoad.addMouseListener(new MouseAdapter()
@@ -691,6 +710,7 @@ public class MainFrame
             @Override
             public void mouseClicked(MouseEvent e)
             {
+            	UserScenario.setPostProcessScenarioScript(scriptArea.getText());
                 long secs = scenario.postProcessScenario();
                 statisticsLabel.setText(
                         String.format("Events %d, duration %f sec", UserScenario.getStepsCount(), secs / 1000.0));
@@ -801,9 +821,9 @@ public class MainFrame
         JLabel lblScript = new JLabel("Script");
         toolBar.add(lblScript);
 
-        textField_1 = new JTextField();
-        toolBar.add(textField_1);
-        textField_1.setColumns(15);
+        scriptFilename = new JTextField();
+        toolBar.add(scriptFilename);
+        scriptFilename.setColumns(15);
 
         JButton btnBrowse_1 = new JButton("Browse");
         toolBar.add(btnBrowse_1);
@@ -853,9 +873,9 @@ public class MainFrame
         JLabel label_1 = new JLabel("Script");
         toolBar_1.add(label_1);
 
-        textField = new JTextField();
-        textField.setColumns(15);
-        toolBar_1.add(textField);
+        lookupFilename = new JTextField();
+        lookupFilename.setColumns(15);
+        toolBar_1.add(lookupFilename);
 
         JButton button = new JButton("Browse");
         toolBar_1.add(button);
@@ -875,7 +895,7 @@ public class MainFrame
         JScrollPane scrollPane_4 = new JScrollPane();
         webLookupPanel.add(scrollPane_4, BorderLayout.CENTER);
 
-        RSyntaxTextArea lookupScriptArea = new RSyntaxTextArea();
+        lookupScriptArea = new RSyntaxTextArea();        
         scrollPane_4.setViewportView(lookupScriptArea);
 
         JPanel optionsPanel = new JPanel();
@@ -1053,9 +1073,39 @@ public class MainFrame
         scenarioTextField.setText("test.jmx");
         scenarioTextField.setColumns(10);
         jmeterPanel.add(scenarioTextField, "4, 4, fill, default");
+        
+        initUIFromControllers();
     }
 
-    /**
+    private void initUIFromControllers() {
+    	initUIFromOptionsController();
+    	initUIFromJMeterController();
+    	initUIFromPostProcessorController();
+    	initUIFromWebLookupController();
+    	initUIFromInitController();
+	}
+
+	private void initUIFromInitController() {
+        filenameField.setText(InputController.getInstance().getFilename());
+	}
+
+	private void initUIFromWebLookupController() {
+        lookupFilename.setText(WebLookupController.getInstance().getFilename());
+        lookupScriptArea.setText(WebLookupController.getInstance().getScript());
+	}
+
+	private void initUIFromPostProcessorController() {
+        scriptFilename.setText(PostProcessController.getInstance().getFilename());
+        scriptArea.setText(PostProcessController.getInstance().getScript());
+	}
+
+	private void initUIFromJMeterController() {
+	}
+
+	private void initUIFromOptionsController() {
+	}
+
+	/**
      * @throws IOException 
      * 
      */
@@ -1081,5 +1131,10 @@ public class MainFrame
     private void updateInputController()
     {
         InputController.getInstance().setFilename(filenameField.getText());
+    }
+    
+    private void updatePostProcessController(){
+    	PostProcessController.getInstance().setFilename(scriptFilename.getText());
+    	PostProcessController.getInstance().setScript(scriptArea.getText());
     }
 }
