@@ -6,41 +6,46 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.AbstractCellEditor;
+import javax.swing.DefaultCellEditor;
 import javax.swing.JButton;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 import javax.swing.table.TableCellEditor;
 
-public class StepScriptEditorDialog extends AbstractCellEditor implements TableCellEditor, ActionListener
+import org.json.JSONObject;
+
+import com.focusit.jsflight.player.scenario.UserScenario;
+
+public class StepScriptEditorDialog extends DefaultCellEditor implements TableCellEditor
 {
     private static final long serialVersionUID = 1L;
 
     static final String EDIT = "edit";
     String newInput;
     String oldValue;
-    JButton button;
+    ScriptDialog dialog;
+    private JButton editorComponent;
+    UserScenario scenario;
+    private boolean pre = true;
 
-    public StepScriptEditorDialog()
+    public StepScriptEditorDialog(UserScenario scenario, boolean pre)
     {
-        button = new JButton();
-        button.setBackground(Color.WHITE);
-        button.setActionCommand(EDIT);
-        button.addActionListener(this);
-        button.setBorderPainted(false);
-    }
+    	super(new JTextField());
+    	setClickCountToStart(1);
+    	this.scenario = scenario;
+    	this.pre = pre;
+    	
+    	editorComponent = new JButton();
+        editorComponent.setBackground(Color.white);
+        editorComponent.setBorderPainted(false);
+        editorComponent.setContentAreaFilled( false );
 
-    @Override
-    public void actionPerformed(ActionEvent e)
-    {
-        if (EDIT.equals(e.getActionCommand()))
-        {
-            newInput = JOptionPane.showInputDialog("Edit", oldValue);
-            if (newInput == null)
-            {
-                newInput = oldValue;
-            }
-            fireEditingStopped();
-        }
+        // Make sure focus goes back to the table when the dialog is closed
+        editorComponent.setFocusable( false );
+
+    	dialog = new ScriptDialog();
     }
 
     public void cancelEdit()
@@ -62,9 +67,21 @@ public class StepScriptEditorDialog extends AbstractCellEditor implements TableC
     @Override
     public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column)
     {
-        newInput = (String)value;
-        oldValue = (String)value;
-        return button;
+    	oldValue = (String) table.getModel().getValueAt(row, column);
+    	newInput = (String) table.getModel().getValueAt(row, column);
+    	
+    	final StepScriptEditorDialog editor = this;
+    	
+    	SwingUtilities.invokeLater(new Runnable()
+        {
+            public void run()
+            {
+            	dialog.setEditor(editor);
+            	dialog.show();
+            }
+        });
+    	
+    	return editorComponent;
     }
 
 }

@@ -310,7 +310,8 @@ public class MainFrame
         //            }
         //        });
         //        table.getColumnModel().getColumn(9).setCellEditor(editor1);
-        table.getColumnModel().getColumn(9).setCellEditor();
+        table.getColumnModel().getColumn(9).setCellEditor(new StepScriptEditorDialog(scenario, true));
+        table.getColumnModel().getColumn(10).setCellEditor(new StepScriptEditorDialog(scenario, false));
     }
 
     protected void playTheScenario()
@@ -1088,7 +1089,7 @@ public class MainFrame
         ffPath.setText(OptionsController.getInstance().getFfPath());
         pjsPath.setText(OptionsController.getInstance().getPjsPath());
         maxStepDelayField.setText(OptionsController.getInstance().getMaxStepDelay());
-        makeShots.setSelected(OptionsController.getInstance().getMakeShots().equalsIgnoreCase("true"));
+        makeShots.setSelected(OptionsController.getInstance().getMakeShots()!=null ? OptionsController.getInstance().getMakeShots().equalsIgnoreCase("true"):false);
         screenDirTextField.setText(OptionsController.getInstance().getScreenDir());
         checkPageJs.setText(OptionsController.getInstance().getCheckPageJs());
         webDriverTag.setText(OptionsController.getInstance().getWebDriverTag());
