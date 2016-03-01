@@ -98,7 +98,6 @@ public class MainFrame
 
     private HashMap<String, WebDriver> drivers = new HashMap<>();
     private HashMap<String, String> lastUrls = new HashMap<>();
-    private HashMap<String, String> tabsWindow = new HashMap<>();
 
     private JTextField webDriverTag;
     private RSyntaxTextArea lookupScriptArea;
@@ -1089,7 +1088,8 @@ public class MainFrame
         ffPath.setText(OptionsController.getInstance().getFfPath());
         pjsPath.setText(OptionsController.getInstance().getPjsPath());
         maxStepDelayField.setText(OptionsController.getInstance().getMaxStepDelay());
-        makeShots.setSelected(OptionsController.getInstance().getMakeShots()!=null ? OptionsController.getInstance().getMakeShots().equalsIgnoreCase("true"):false);
+        makeShots.setSelected(OptionsController.getInstance().getMakeShots() != null
+                ? OptionsController.getInstance().getMakeShots().equalsIgnoreCase("true") : false);
         screenDirTextField.setText(OptionsController.getInstance().getScreenDir());
         checkPageJs.setText(OptionsController.getInstance().getCheckPageJs());
         webDriverTag.setText(OptionsController.getInstance().getWebDriverTag());
