@@ -9,17 +9,16 @@ import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
+
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rtextarea.RTextScrollPane;
 
 public class ScriptDialog extends JDialog
 {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	private final JPanel contentPanel = new JPanel();
+    private final JPanel contentPanel = new JPanel();
 
     private StepScriptEditorDialog editor;
     private RSyntaxTextArea scriptArea;
@@ -38,12 +37,12 @@ public class ScriptDialog extends JDialog
         getContentPane().add(contentPanel, BorderLayout.CENTER);
         contentPanel.setLayout(new BorderLayout(0, 0));
         {
-        	scrollPane = new RTextScrollPane();
-        	contentPanel.add(scrollPane, BorderLayout.CENTER);
+            scrollPane = new RTextScrollPane();
+            contentPanel.add(scrollPane, BorderLayout.CENTER);
         }
         {
-        	scriptArea = new RSyntaxTextArea();
-        	scriptArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_GROOVY);
+            scriptArea = new RSyntaxTextArea();
+            scriptArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_GROOVY);
             scriptArea.setCodeFoldingEnabled(true);
             scrollPane.setViewportView(scriptArea);
         }
@@ -81,6 +80,26 @@ public class ScriptDialog extends JDialog
         }
     }
 
+    public StepScriptEditorDialog getEditor()
+    {
+        return editor;
+    }
+
+    public String getNewValue()
+    {
+        return this.scriptArea.getText();
+    }
+
+    public void setEditor(StepScriptEditorDialog editor)
+    {
+        this.editor = editor;
+    }
+
+    public void setOldValue(String value)
+    {
+        this.scriptArea.setText(value);
+    }
+
     private void applyEditor()
     {
         getEditor().endEdit();
@@ -92,12 +111,4 @@ public class ScriptDialog extends JDialog
         getEditor().cancelEdit();
         dispose();
     }
-
-	public StepScriptEditorDialog getEditor() {
-		return editor;
-	}
-
-	public void setEditor(StepScriptEditorDialog editor) {
-		this.editor = editor;
-	}
 }

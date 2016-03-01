@@ -3,59 +3,116 @@ package com.focusit.jsflight.player.script;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+
 import org.json.JSONObject;
+
+import com.focusit.jsflight.player.context.PlayerContext;
+import com.focusit.jsflight.player.scenario.UserScenario;
+
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
 import groovy.lang.Script;
 
-public class Engine {
-	
-	private static final ConcurrentHashMap<Object, Object> context = new ConcurrentHashMap<>();
-	private static final ConcurrentHashMap<String, Script> scripts = new ConcurrentHashMap<>();
+public class Engine
+{
 
-	private static final GroovyShell shell = new GroovyShell();
-	
-	private final String script; 
-	
-	public Engine(String script) {
-		super();
-		this.script = script;
-		if(script!=null && !script.trim().isEmpty()){
-			if(scripts.get(script)==null){
-				scripts.put(script, shell.parse(script));
-			}
-		}
-	}
+    private static final ConcurrentHashMap<Object, Object> context = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, Script> scripts = new ConcurrentHashMap<>();
+    private static final GroovyShell shell = new GroovyShell();
+    private final String script;
 
-	/**
-	 * Modifies existing array of events.
-	 * Modification defined by script
-	 * @param events
-	 */
-	public void postProcess(List<JSONObject> events){
-		Binding binding = new Binding();
-		binding.setVariable("context", context);
-		binding.setVariable("events", events);
-		Script s = scripts.get(script); 
-		s.setBinding(binding);
-		s.run();
-	}
-	
-	/**
-	 * Test of events modification script.
-	 * Doesn't modify real loaded events. just use it's clone, modify and println every event to stdout
-	 * @param events
-	 */
-	public void testPostProcess(List<JSONObject> events){
-		Binding binding = new Binding();
-		binding.setVariable("context", context);
-		binding.setVariable("events", new ArrayList<>(events));
-		Script s = scripts.get(script); 
-		s.setBinding(binding);
-		s.run();
-	}
+    public Engine()
+    {
+        this.script = null;
+    }
 
-	public String getScript() {
-		return script;
-	}
+    public Engine(String script)
+    {
+        super();
+        this.script = script;
+        compileScript(script);
+    }
+
+    public String getScript()
+    {
+        return script;
+    }
+
+    /**
+     * Modifies existing array of events.
+     * Modification defined by script
+     * @param events
+     */
+    public void postProcess(List<JSONObject> events)
+    {
+        Binding binding = new Binding();
+        binding.setVariable("context", context);
+        binding.setVariable("events", events);
+        Script s = scripts.get(script);
+        s.setBinding(binding);
+        s.run();
+    }
+
+    public void runStepScript(UserScenario scenario, int step, boolean pre)
+    {
+        String stepScript = "";
+        JSONObject event = scenario.getStepAt(step);
+
+        if (pre)
+        {
+            stepScript = event.has("pre") ? event.getString("pre") : "";
+        }
+        else
+        {
+            stepScript = event.has("post") ? event.getString("post") : "";
+        }
+
+        if (stepScript.trim().length() == 0)
+        {
+            return;
+        }
+
+        compileScript(stepScript);
+        Binding binding = new Binding();
+        binding.setVariable("context", PlayerContext.getInstance());
+        binding.setVariable("scenario", scenario);
+        binding.setVariable("step", step);
+        binding.setVariable("pre", pre);
+        binding.setVariable("post", !pre);
+        Script s = scripts.get(stepScript);
+        s.setBinding(binding);
+        s.run();
+    }
+
+    public void runStepTemplating(UserScenario scenario, int step, boolean pre)
+    {
+
+    }
+
+    /**
+     * Test of events modification script.
+     * Doesn't modify real loaded events. just use it's clone, modify and println every event to stdout
+     * @param events
+     */
+    public void testPostProcess(List<JSONObject> events)
+    {
+        Binding binding = new Binding();
+        binding.setVariable("context", context);
+        binding.setVariable("events", new ArrayList<>(events));
+        Script s = scripts.get(script);
+        s.setBinding(binding);
+        s.run();
+    }
+
+    private void compileScript(String script)
+    {
+        if (script != null && !script.trim().isEmpty())
+        {
+            if (scripts.get(script) == null)
+            {
+                scripts.put(script, shell.parse(script));
+            }
+        }
+
+    }
 }

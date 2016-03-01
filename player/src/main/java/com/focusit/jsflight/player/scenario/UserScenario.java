@@ -9,6 +9,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.openqa.selenium.WebElement;
 
+import com.focusit.jsflight.player.context.PlayerContext;
 import com.focusit.jsflight.player.input.Events;
 import com.focusit.jsflight.player.input.FileInput;
 import com.focusit.jsflight.player.script.Engine;
@@ -23,20 +24,18 @@ public class UserScenario
 
     private static String postProcessScenarioScript = "";
 
-    public static String getPostProcessScenarioScript() {
-		return postProcessScenarioScript;
-	}
+    private static List<Boolean> checks = new ArrayList<>();
 
-	public static void setPostProcessScenarioScript(String postProcessScenarioScript) {
-		UserScenario.postProcessScenarioScript = postProcessScenarioScript;
-	}
-
-	private static List<Boolean> checks = new ArrayList<>();
     private static HashMap<String, JSONObject> lastEvents = new HashMap<>();
 
     public static int getPosition()
     {
         return position;
+    }
+
+    public static String getPostProcessScenarioScript()
+    {
+        return postProcessScenarioScript;
     }
 
     public static String getScenarioFilename()
@@ -60,6 +59,11 @@ public class UserScenario
         return tag;
     }
 
+    public static void setPostProcessScenarioScript(String postProcessScenarioScript)
+    {
+        UserScenario.postProcessScenarioScript = postProcessScenarioScript;
+    }
+
     public static void updatePrevEvent(JSONObject event)
     {
         lastEvents.put(getTagForEvent(event), event);
@@ -67,6 +71,7 @@ public class UserScenario
 
     public void applyStep(int position)
     {
+        new Engine().runStepScript(this, position, true);
         JSONObject event = events.get(position);
         boolean error = false;
         try
@@ -106,6 +111,7 @@ public class UserScenario
             if (!error)
             {
                 updatePrevEvent(event);
+                new Engine().runStepScript(this, position, false);
             }
         }
     }
@@ -193,6 +199,7 @@ public class UserScenario
     {
         events.clear();
         events.addAll(new Events().parse(FileInput.getContent(filename)));
+        PlayerContext.getInstance().reset();
     }
 
     public void play()
@@ -301,6 +308,7 @@ public class UserScenario
         checks.stream().forEach(it -> {
             it = Boolean.FALSE;
         });
+        PlayerContext.getInstance().reset();
         position = 0;
     }
 

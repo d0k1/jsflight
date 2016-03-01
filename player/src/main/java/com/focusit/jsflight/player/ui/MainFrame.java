@@ -212,7 +212,7 @@ public class MainFrame
             @Override
             public boolean isCellEditable(int rowIndex, int columnIndex)
             {
-                if (columnIndex == 6 || columnIndex == 9)
+                if (columnIndex == 6 || columnIndex == 9 || columnIndex == 10)
                 {
                     return true;
                 }
@@ -293,22 +293,6 @@ public class MainFrame
         });
         table.getColumnModel().getColumn(6).setCellEditor(editor);
 
-        //
-        //        final DefaultCellEditor editor1 = new DefaultCellEditor(new JTextField());
-        //        editor1.addCellEditorListener(new CellEditorListener()
-        //        {
-        //            @Override
-        //            public void editingCanceled(ChangeEvent e)
-        //            {
-        //                ((JTextField)editor1.getComponent()).getText();
-        //            }
-        //
-        //            @Override
-        //            public void editingStopped(ChangeEvent e)
-        //            {
-        //            }
-        //        });
-        //        table.getColumnModel().getColumn(9).setCellEditor(editor1);
         table.getColumnModel().getColumn(9).setCellEditor(new StepScriptEditorDialog(scenario, true));
         table.getColumnModel().getColumn(10).setCellEditor(new StepScriptEditorDialog(scenario, false));
     }
