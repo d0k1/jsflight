@@ -84,9 +84,9 @@ public class Engine
         s.run();
     }
 
-    public void runStepTemplating(UserScenario scenario, int step, boolean pre)
+    public JSONObject runStepTemplating(UserScenario scenario, int step, boolean pre)
     {
-
+        return null;
     }
 
     /**
