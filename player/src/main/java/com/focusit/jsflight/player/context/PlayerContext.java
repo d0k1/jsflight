@@ -1,6 +1,7 @@
 package com.focusit.jsflight.player.context;
 
 import java.util.concurrent.ConcurrentHashMap;
+import groovy.lang.Binding;
 
 public class PlayerContext
 {
@@ -27,5 +28,10 @@ public class PlayerContext
         context.keySet().forEach(it -> {
             context.remove(it);
         });
+    }
+    
+    public Binding asBindings(){
+    	Binding binding = new Binding(context);
+    	return binding;
     }
 }

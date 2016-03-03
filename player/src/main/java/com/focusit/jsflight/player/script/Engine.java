@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.focusit.jsflight.player.context.PlayerContext;
 import com.focusit.jsflight.player.scenario.UserScenario;
@@ -12,10 +14,17 @@ import com.focusit.jsflight.player.scenario.UserScenario;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
 import groovy.lang.Script;
+import groovy.text.SimpleTemplateEngine;
 
+/**
+ * Engine that runs groovy scripts or GString templates
+ * 
+ * @author Denis V. Kirpichenkov
+ *
+ */
 public class Engine
 {
-
+	private static final Logger LOG = LoggerFactory.getLogger(Engine.class);
     private static final ConcurrentHashMap<Object, Object> context = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<String, Script> scripts = new ConcurrentHashMap<>();
     private static final GroovyShell shell = new GroovyShell();
@@ -43,7 +52,7 @@ public class Engine
      * Modification defined by script
      * @param events
      */
-    public void postProcess(List<JSONObject> events)
+    public void postProcessScenario(List<JSONObject> events)
     {
         Binding binding = new Binding();
         binding.setVariable("context", context);
@@ -53,7 +62,7 @@ public class Engine
         s.run();
     }
 
-    public void runStepScript(UserScenario scenario, int step, boolean pre)
+    public void runStepPrePostScript(UserScenario scenario, int step, boolean pre)
     {
         String stepScript = "";
         JSONObject event = scenario.getStepAt(step);
@@ -84,9 +93,22 @@ public class Engine
         s.run();
     }
 
-    public JSONObject runStepTemplating(UserScenario scenario, int step, boolean pre)
+    public JSONObject runStepTemplating(JSONObject step)
     {
-        return null;
+    	SimpleTemplateEngine templateEngine = new SimpleTemplateEngine();
+		Binding binding = PlayerContext.getInstance().asBindings();
+    	JSONObject result = new JSONObject(step.toString());
+    	result.keySet().forEach(key->{
+    		if(result.get(key) instanceof String){
+    			try {
+					String parsed = templateEngine.createTemplate(result.getString(key)).make(binding.getVariables()).toString();
+					result.put(key, parsed);
+				} catch (Exception e) {
+					LOG.error(e.toString(), e);
+				}
+    		}
+    	});
+        return result;
     }
 
     /**

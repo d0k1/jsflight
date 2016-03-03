@@ -11,6 +11,12 @@ import org.apache.commons.io.FileUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+/**
+ * File read / write
+ * 
+ * @author Denis V. Kirpichenkov
+ *
+ */
 public class FileInput
 {
 

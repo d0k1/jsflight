@@ -10,10 +10,15 @@ import java.util.Set;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+/**
+ * Sorted list of recorded events
+ * 
+ * @author Denis V. Kirpichenkov
+ *
+ */
 public class Events
 {
     private static final String EVENT_ID = "eventId";
-    private static final String TIMESTAMP = "timestamp";
     private List<JSONObject> events = new ArrayList<>();
 
     public List<JSONObject> getEvents()

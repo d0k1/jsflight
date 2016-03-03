@@ -15,6 +15,12 @@ import com.focusit.jsflight.player.input.FileInput;
 import com.focusit.jsflight.player.script.Engine;
 import com.focusit.jsflight.player.webdriver.SeleniumDriver;
 
+/**
+ * Recorded scenario encapsulation: parses file, plays the scenario by step, modifies the scenario, saves to a disk
+ * 
+ * @author Denis V. Kirpichenkov
+ *
+ */
 public class UserScenario
 {
     private static String TAG_FIELD = "uuid";
@@ -71,8 +77,9 @@ public class UserScenario
 
     public void applyStep(int position)
     {
-        new Engine().runStepScript(this, position, true);
+        new Engine().runStepPrePostScript(this, position, true);
         JSONObject event = events.get(position);
+        event = new Engine().runStepTemplating(event);
         boolean error = false;
         try
         {
@@ -111,7 +118,7 @@ public class UserScenario
             if (!error)
             {
                 updatePrevEvent(event);
-                new Engine().runStepScript(this, position, false);
+                new Engine().runStepPrePostScript(this, position, false);
             }
         }
     }
@@ -266,7 +273,7 @@ public class UserScenario
     {
         if (!postProcessScenarioScript.isEmpty())
         {
-            new Engine(postProcessScenarioScript).postProcess(events);
+            new Engine(postProcessScenarioScript).postProcessScenario(events);
         }
         checks = new ArrayList<>(events.size());
         for (int i = 0; i < events.size(); i++)

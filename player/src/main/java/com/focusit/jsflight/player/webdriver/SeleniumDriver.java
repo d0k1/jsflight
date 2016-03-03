@@ -27,6 +27,12 @@ import org.slf4j.LoggerFactory;
 
 import com.focusit.jsflight.player.scenario.UserScenario;
 
+/**
+ * Selenium webdriver helper: runs a browser, sends events, make screenshots
+ * 
+ * @author Denis V. Kirpichenkov
+ *
+ */
 public class SeleniumDriver
 {
     public static String CHECK_PAGE_READY_JS = "return (document.getElementById('state.dispatch')==null || document.getElementById('state.dispatch').getAttribute('value')==0) &&  (document.getElementById('state.context')==null ||  document.getElementById('state.context').getAttribute('value')=='ready');";
