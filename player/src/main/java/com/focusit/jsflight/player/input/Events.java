@@ -43,6 +43,30 @@ public class Events
             }
         }
         events.addAll(temp);
+        sortEvents();
+        return events;
+    }
+
+    public List<JSONObject> parse(String content)
+    {
+        JSONArray rawevents;
+        Set<JSONObject> temp = new HashSet<>();
+        rawevents = new JSONArray(content);
+        for (int i = 0; i < rawevents.length(); i++)
+        {
+            String event = rawevents.get(i).toString();
+            if (!event.contains("flight-cp"))
+            {
+                temp.add(new JSONObject(event));
+            }
+        }
+        events.addAll(temp);
+        sortEvents();
+        return events;
+    }
+
+    private void sortEvents()
+    {
         Collections.sort(events, new Comparator<JSONObject>()
         {
             @Override
@@ -51,7 +75,5 @@ public class Events
                 return ((Long)o1.getLong(EVENT_ID)).compareTo(o2.getLong(EVENT_ID));
             }
         });
-
-        return events;
     }
 }

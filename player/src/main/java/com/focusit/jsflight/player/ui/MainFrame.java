@@ -61,6 +61,7 @@ import com.focusit.jsflight.player.controller.WebLookupController;
 import com.focusit.jsflight.player.input.FileInput;
 import com.focusit.jsflight.player.scenario.UserScenario;
 import com.focusit.jsflight.player.webdriver.SeleniumDriver;
+import com.focusit.jsflight.player.webdriver.SeleniumDriverConfig;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
@@ -82,7 +83,7 @@ public class MainFrame
     private JTextField proxyPort;
     private JTextField ffPath;
     private JTextField scriptFilename;
-    private JTextField maxStepDelayField;
+    private JTextField pageReadyTimeoutField;
     private RSyntaxTextArea scriptArea;
     private JRadioButton usePhantomButton;
     private JRadioButton useFirefoxButton;
@@ -255,7 +256,7 @@ public class MainFrame
         table.getColumnModel().getColumn(0).setMaxWidth(10);
         table.getColumnModel().getColumn(1).setMaxWidth(30);
         table.getColumnModel().getColumn(2).setMaxWidth(30);
-        table.getColumnModel().getColumn(4).setMaxWidth(45);
+        table.getColumnModel().getColumn(4).setMaxWidth(1000);
         table.getColumnModel().getColumn(5).setMaxWidth(60);
         table.getColumnModel().getColumn(6).setPreferredWidth(400);
         table.getColumnModel().getColumn(7).setPreferredWidth(180);
@@ -513,7 +514,7 @@ public class MainFrame
         });
         panel_2.add(btnSave_1);
 
-        JButton btnOpenBrowser = new JButton("Open browser");
+        JButton btnOpenBrowser = new JButton("Apply step");
         GridBagConstraints gbc_btnOpenBrowser = new GridBagConstraints();
         gbc_btnOpenBrowser.insets = new Insets(0, 0, 0, 5);
         gbc_btnOpenBrowser.gridx = 1;
@@ -653,14 +654,7 @@ public class MainFrame
             @Override
             public void mouseClicked(MouseEvent e)
             {
-                for (WebDriver driver : drivers.values())
-                {
-                    if (driver != null)
-                    {
-                        driver.close();
-                    }
-                }
-                drivers.clear();
+                SeleniumDriver.closeWebDrivers();
             }
         });
         btnOpenBrowser.addMouseListener(new MouseAdapter()
@@ -668,11 +662,7 @@ public class MainFrame
             @Override
             public void mouseClicked(MouseEvent e)
             {
-                //                if (table.getSelectedRow() >= 0)
-                //                {
-                //                    JSONObject event = rawevents.getEvents().get(table.getSelectedRow());
-                //                    getDriverForEvent(event);
-                //                }
+                scenario.applyStep(table.getSelectedRow());
             }
         });
         btnParse.addMouseListener(new MouseAdapter()
@@ -912,13 +902,13 @@ public class MainFrame
         pjsPath.setColumns(10);
         optionsPanel.add(pjsPath, "4, 8, fill, default");
 
-        JLabel lblMaxDelayBetween = new JLabel("Max delay between steps, sec");
-        optionsPanel.add(lblMaxDelayBetween, "2, 10, right, default");
+        JLabel lblPageReadyTimeout = new JLabel("Page ready timeout, sec");
+        optionsPanel.add(lblPageReadyTimeout, "2, 10, right, default");
 
-        maxStepDelayField = new JTextField();
-        maxStepDelayField.setText("30");
-        optionsPanel.add(maxStepDelayField, "4, 10, fill, default");
-        maxStepDelayField.setColumns(10);
+        pageReadyTimeoutField = new JTextField();
+        pageReadyTimeoutField.setText("30");
+        optionsPanel.add(pageReadyTimeoutField, "4, 10, fill, default");
+        pageReadyTimeoutField.setColumns(10);
 
         JLabel lblBrowser = new JLabel("Browser");
         optionsPanel.add(lblBrowser, "2, 12, right, default");
@@ -1071,12 +1061,14 @@ public class MainFrame
         proxyPort.setText(OptionsController.getInstance().getProxyPort());
         ffPath.setText(OptionsController.getInstance().getFfPath());
         pjsPath.setText(OptionsController.getInstance().getPjsPath());
-        maxStepDelayField.setText(OptionsController.getInstance().getMaxStepDelay());
+        pageReadyTimeoutField.setText(OptionsController.getInstance().getPageReadyTimeout());
         makeShots.setSelected(OptionsController.getInstance().getMakeShots() != null
                 ? OptionsController.getInstance().getMakeShots().equalsIgnoreCase("true") : false);
         screenDirTextField.setText(OptionsController.getInstance().getScreenDir());
         checkPageJs.setText(OptionsController.getInstance().getCheckPageJs());
         webDriverTag.setText(OptionsController.getInstance().getWebDriverTag());
+
+        SeleniumDriverConfig.get().updateByOptions(OptionsController.getInstance());
     }
 
     private void initUIFromPostProcessorController()
@@ -1131,11 +1123,15 @@ public class MainFrame
         OptionsController.getInstance().setProxyPort(proxyPort.getText());
         OptionsController.getInstance().setFfPath(ffPath.getText());
         OptionsController.getInstance().setPjsPath(pjsPath.getText());
-        OptionsController.getInstance().setMaxStepDelay(maxStepDelayField.getText());
+        OptionsController.getInstance().setPageReadyTimeout(pageReadyTimeoutField.getText());
         OptionsController.getInstance().setMakeShots("" + makeShots.isSelected());
         OptionsController.getInstance().setScreenDir(screenDirTextField.getText());
         OptionsController.getInstance().setCheckPageJs(checkPageJs.getText());
         OptionsController.getInstance().setWebDriverTag(webDriverTag.getText());
+        OptionsController.getInstance().setUseFirefox(useFirefoxButton.isSelected());
+        OptionsController.getInstance().setUsePhantomJs(usePhantomButton.isSelected());
+
+        SeleniumDriverConfig.get().updateByOptions(OptionsController.getInstance());
     }
 
     private void updatePostProcessController()
