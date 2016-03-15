@@ -144,6 +144,11 @@ public class SeleniumDriver
             drivers.put(tag, driver);
             return driver;
         }
+        catch (Exception ex)
+        {
+            log.error(ex.toString(), ex);
+            throw ex;
+        }
         finally
         {
             String tabUuid = event.getString("tabuuid");

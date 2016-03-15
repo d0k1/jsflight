@@ -114,10 +114,6 @@ public class MainFrame
         jmeter.init();
     }
 
-    // I will use it, probably, another day
-    // private Pattern urlPattern = Pattern.compile(
-    // "^((http[s]?|ftp):\\/)?\\/?([^:\\/\\s]+)((\\/\\w+)*\\/)([\\w\\-\\.]+[^#?\\s]+)(.*)?(#[\\w\\-]+)?$");
-
     public AbstractTableModel createEventTableModel()
     {
         return new AbstractTableModel()
@@ -310,6 +306,7 @@ public class MainFrame
         if (index >= 0)
         {
             eventContent.setText(scenario.getStepAt(index).toString(3));
+            eventContent.setCaretPosition(0);
         }
     }
 
@@ -608,7 +605,10 @@ public class MainFrame
             @Override
             public void actionPerformed(ActionEvent e)
             {
-                scenario.deleteStep(table.getSelectedRow());
+                for (int row : table.getSelectedRows())
+                {
+                    scenario.deleteStep(row);
+                }
                 model.fireTableDataChanged();
             }
         });

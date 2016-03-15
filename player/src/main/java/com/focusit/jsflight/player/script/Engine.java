@@ -3,6 +3,8 @@ package com.focusit.jsflight.player.script;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -24,7 +26,7 @@ import groovy.text.SimpleTemplateEngine;
  */
 public class Engine
 {
-	private static final Logger LOG = LoggerFactory.getLogger(Engine.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Engine.class);
     private static final ConcurrentHashMap<Object, Object> context = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<String, Script> scripts = new ConcurrentHashMap<>();
     private static final GroovyShell shell = new GroovyShell();
@@ -95,19 +97,34 @@ public class Engine
 
     public JSONObject runStepTemplating(JSONObject step)
     {
-    	SimpleTemplateEngine templateEngine = new SimpleTemplateEngine();
-		Binding binding = PlayerContext.getInstance().asBindings();
-    	JSONObject result = new JSONObject(step.toString());
-    	result.keySet().forEach(key->{
-    		if(result.get(key) instanceof String){
-    			try {
-					String parsed = templateEngine.createTemplate(result.getString(key)).make(binding.getVariables()).toString();
-					result.put(key, parsed);
-				} catch (Exception e) {
-					LOG.error(e.toString(), e);
-				}
-    		}
-    	});
+        SimpleTemplateEngine templateEngine = new SimpleTemplateEngine();
+        Binding binding = PlayerContext.getInstance().asBindings();
+        JSONObject result = new JSONObject(step.toString());
+        result.keySet().forEach(key -> {
+            if (result.get(key) instanceof String)
+            {
+                try
+                {
+                    String source = result.getString(key);
+
+                    String pattern = "(\\$)(\\d+)";
+                    Pattern r = Pattern.compile(pattern);
+                    Matcher m = r.matcher(source);
+                    if (m.find())
+                    {
+                        int start = m.start(0);
+                        source = source.substring(0, start) + "\\$" + source.substring(start + 1, source.length());
+                    }
+
+                    String parsed = templateEngine.createTemplate(source).make(binding.getVariables()).toString();
+                    result.put(key, parsed);
+                }
+                catch (Exception e)
+                {
+                    LOG.error(e.toString(), e);
+                }
+            }
+        });
         return result;
     }
 
