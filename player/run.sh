@@ -1,1 +1,1 @@
-mvn exec:java -Dexec.mainClass=com.focusit.jsflight.player.Player -Dexec.args="/usr/bin/firefox"
+mvn exec:java -Dexec.mainClass=com.focusit.jsflight.player.Player -Dexec.args=""
