@@ -95,9 +95,13 @@
 			<artifactId>rstaui</artifactId>
 			<version>2.5.7</version>
 		</dependency>
-
+        <dependency>
+            <groupId>com.beust</groupId>
+            <artifactId>jcommander</artifactId>
+            <version>1.48</version>
+        </dependency>
 	</dependencies>
-
+    
 	<repositories>
 		<repository>
 			<id>spring-snapshots</id>

@@ -18,11 +18,13 @@ public class OptionsController extends UIController
     private String proxyHost;
     private String ffPath;
     private String pjsPath;
-    private String maxStepDelay;
+    private String pageReadyTimout;
     private String makeShots;
     private String screenDir;
     private String checkPageJs;
     private String webDriverTag;
+    private boolean useFirefox;
+    private boolean usePhantomJs;
 
     private OptionsController()
     {
@@ -43,9 +45,9 @@ public class OptionsController extends UIController
         return makeShots;
     }
 
-    public String getMaxStepDelay()
+    public String getPageReadyTimeout()
     {
-        return maxStepDelay;
+        return pageReadyTimout;
     }
 
     public String getPjsPath()
@@ -73,6 +75,16 @@ public class OptionsController extends UIController
         return webDriverTag;
     }
 
+    public boolean isUseFirefox()
+    {
+        return useFirefox;
+    }
+
+    public boolean isUsePhantomJs()
+    {
+        return usePhantomJs;
+    }
+
     @Override
     public void load(String file) throws Exception
     {
@@ -81,7 +93,7 @@ public class OptionsController extends UIController
         proxyPort = (String)stream.readObject();
         ffPath = (String)stream.readObject();
         pjsPath = (String)stream.readObject();
-        maxStepDelay = (String)stream.readObject();
+        pageReadyTimout = (String)stream.readObject();
         makeShots = (String)stream.readObject();
         screenDir = (String)stream.readObject();
         checkPageJs = (String)stream.readObject();
@@ -103,9 +115,9 @@ public class OptionsController extends UIController
         this.makeShots = makeShots;
     }
 
-    public void setMaxStepDelay(String maxStepDelay)
+    public void setPageReadyTimeout(String pageReadyTimeout)
     {
-        this.maxStepDelay = maxStepDelay;
+        this.pageReadyTimout = pageReadyTimeout;
     }
 
     public void setPjsPath(String pjsPath)
@@ -128,6 +140,16 @@ public class OptionsController extends UIController
         this.screenDir = screenDir;
     }
 
+    public void setUseFirefox(boolean useFirefox)
+    {
+        this.useFirefox = useFirefox;
+    }
+
+    public void setUsePhantomJs(boolean usePhantomJs)
+    {
+        this.usePhantomJs = usePhantomJs;
+    }
+
     public void setWebDriverTag(String webDriverTag)
     {
         this.webDriverTag = webDriverTag;
@@ -141,7 +163,7 @@ public class OptionsController extends UIController
         stream.writeObject(proxyPort);
         stream.writeObject(ffPath);
         stream.writeObject(pjsPath);
-        stream.writeObject(maxStepDelay);
+        stream.writeObject(pageReadyTimout);
         stream.writeObject(makeShots);
         stream.writeObject(screenDir);
         stream.writeObject(checkPageJs);

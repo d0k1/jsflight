@@ -6,11 +6,14 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
+import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
@@ -25,6 +28,7 @@ import org.openqa.selenium.remote.DesiredCapabilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.focusit.jsflight.player.constants.EventType;
 import com.focusit.jsflight.player.scenario.UserScenario;
 
 /**
@@ -39,25 +43,35 @@ public class SeleniumDriver
     private static final String SET_ELEMENT_VISIBLE_JS = "var e = document.evaluate('%s' ,document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null ).singleNodeValue; if(e!== null) {e.style.visibility='visible';};";
 
     private static final Logger log = LoggerFactory.getLogger(SeleniumDriver.class);
-    private static boolean useFirefox = true;
-    private static boolean usePhantomJs = false;
-    private static String proxyHost = "";
-    private static String proxyPort = "";
-    private static String ffPath = "";
-    private static String pjsPath = "";
-    private static boolean makeShots = true;
-    private static String screenDir = "shots";
-    private static String maxDelayTime = "30";
+
+    private static final SeleniumDriverConfig CONFIG = SeleniumDriverConfig.get();
 
     private static HashMap<String, WebDriver> drivers = new HashMap<>();
     private static HashMap<String, String> tabsWindow = new HashMap<>();
 
     private static HashMap<String, String> lastUrls = new HashMap<>();
 
+    public static void closeWebDrivers()
+    {
+        drivers.values().stream().forEach(v -> {
+            v.close();
+        });
+        drivers.clear();
+        lastUrls.clear();
+    }
+
     public static WebElement findTargetWebElement(JSONObject event, String target)
     {
-        makeElementVisibleByJS(event, target);
-        return getDriverForEvent(event).findElement(By.xpath(target));
+        //makeElementVisibleByJS(event, target);
+        WebDriver wd = getDriverForEvent(event);
+        try
+        {
+            return wd.findElement(By.xpath(target));
+        }
+        catch (org.openqa.selenium.NoSuchElementException e)
+        {
+            return wd.findElement(By.cssSelector(getCSSSelector(event)));
+        }
     }
 
     public static WebDriver getDriverForEvent(JSONObject event)
@@ -76,9 +90,11 @@ public class SeleniumDriver
 
             FirefoxProfile profile = new FirefoxProfile();
             DesiredCapabilities cap = new DesiredCapabilities();
+            String proxyHost = CONFIG.getProxyHost();
             if (proxyHost.trim().length() > 0)
             {
                 String host = proxyHost;
+                String proxyPort = CONFIG.getProxyPort();
                 if (proxyPort.trim().length() > 0)
                 {
                     host += ":" + proxyPort;
@@ -87,8 +103,11 @@ public class SeleniumDriver
                 proxy.setHttpProxy(host).setFtpProxy(host).setSslProxy(host);
                 cap.setCapability(CapabilityType.PROXY, proxy);
             }
+            boolean useFirefox = CONFIG.isUseFirefox();
+            boolean usePhantomJs = CONFIG.isUsePhantomJs();
             if (useFirefox)
             {
+                String ffPath = CONFIG.getFfPath();
                 if (ffPath != null && ffPath.trim().length() > 0)
                 {
                     FirefoxBinary binary = new FirefoxBinary(new File(ffPath));
@@ -101,6 +120,7 @@ public class SeleniumDriver
             }
             else if (usePhantomJs)
             {
+                String pjsPath = CONFIG.getPjsPath();
                 if (pjsPath != null && pjsPath.trim().length() > 0)
                 {
                     cap.setCapability("phantomjs.binary.path", pjsPath);
@@ -114,7 +134,7 @@ public class SeleniumDriver
 
             try
             {
-                Thread.sleep(7000);
+                Thread.sleep(3000);
             }
             catch (InterruptedException e)
             {
@@ -140,7 +160,10 @@ public class SeleniumDriver
                 window = tabs.get(tabs.size() - 1);
                 tabsWindow.put(tabUuid, window);
             }
-            driver.switchTo().window(window);
+            if (!driver.getWindowHandle().equals(window))
+            {
+                driver.switchTo().window(window);
+            }
         }
     }
 
@@ -159,11 +182,11 @@ public class SeleniumDriver
 
     public static void makeAShot(JSONObject event)
     {
-        if (makeShots)
+        if (CONFIG.isMakeShots())
         {
             TakesScreenshot shoter = (TakesScreenshot)getDriverForEvent(event);
             byte[] shot = shoter.getScreenshotAs(OutputType.BYTES);
-            File dir = new File(screenDir + File.separator
+            File dir = new File(CONFIG.getScreenDir() + File.separator
                     + Paths.get(UserScenario.getScenarioFilename()).getFileName().toString());
             dir.mkdirs();
 
@@ -183,50 +206,42 @@ public class SeleniumDriver
     {
 
         String event_url = event.getString("url");
-
-        if (!getLastUrl(event).equals(event_url))
+        WebDriver wd = getDriverForEvent(event);
+        if (wd.getCurrentUrl().equals("about:blank") || !getLastUrl(event).equals(event_url))
         {
-            getDriverForEvent(event).get(event_url);
-            int maxDelay = Integer.parseInt(maxDelayTime) * 1000;
-            try
-            {
-                int sleeps = 0;
-                while (sleeps < maxDelay)
-                {
-                    JavascriptExecutor js = (JavascriptExecutor)getDriverForEvent(event);
-                    Object result = js.executeScript(CHECK_PAGE_READY_JS);
-                    if (result != null && Boolean.parseBoolean(result.toString().toLowerCase()) == true)
-                    {
-                        break;
-                    }
-                    Thread.sleep(1 * 1000);
-                    sleeps += 1000;
-                }
-                Thread.sleep(2 * 1000);
-            }
-            catch (InterruptedException e)
-            {
-                log.error(e.toString(), e);
-                throw new RuntimeException(e);
-            }
+            wd.get(event_url);
+            waitUiShow(wd);
+            waitPageReady(event);
             updateLastUrl(event, event_url);
         }
     }
 
     public static void processKeyboardEvent(JSONObject event, WebElement element)
     {
-        if (event.getString("type").equalsIgnoreCase("keypress"))
+        if (event.getString("type").equalsIgnoreCase(EventType.KEY_PRESS))
         {
             if (event.has("charCode"))
             {
-                char ch = (char)event.getBigInteger(("charCode")).intValue();
-                char keys[] = new char[1];
-                keys[0] = ch;
-                element.sendKeys(new String(keys));
+                if (!element.getTagName().contains("iframe"))
+                {
+                    char ch = (char)event.getBigInteger(("charCode")).intValue();
+                    char keys[] = new char[1];
+                    keys[0] = ch;
+                    //element.sendKeys(new String(keys));
+                    element.sendKeys("UI Recording" + System.currentTimeMillis());
+                }
+                else
+                {
+                    WebDriver wd = getDriverForEvent(event);
+                    WebDriver frame = wd.switchTo().frame(element);
+                    WebElement editor = frame.findElement(By.tagName("body"));
+                    editor.sendKeys("UI Recording" + System.currentTimeMillis());
+                    wd.switchTo().defaultContent();
+                }
             }
         }
 
-        if (event.getString("type").equalsIgnoreCase("keyup"))
+        if (event.getString("type").equalsIgnoreCase(EventType.KEY_UP))
         {
             if (event.has("charCode"))
             {
@@ -272,7 +287,7 @@ public class SeleniumDriver
 
     public static void processMouseEvent(JSONObject event, WebElement element)
     {
-        if (event.getString("type").equalsIgnoreCase("mousedown"))
+        if (element.isDisplayed())
         {
             if (event.getInt("button") == 2)
             {
@@ -283,6 +298,32 @@ public class SeleniumDriver
                 element.click();
             }
         }
+        else
+        {
+            log.warn("Element is not visible : " + element.toString());
+        }
+    }
+
+    public static void processScroll(JSONObject event, String target)
+    {
+        WebDriver wd = getDriverForEvent(event);
+        long timeout = System.currentTimeMillis() + 20000l;
+        if (checkElementPresent(wd, target))
+        {
+            return;
+        }
+        do
+        {
+            waitPageReady(event);
+            WebElement el = getMax(wd);
+            scroll((JavascriptExecutor)wd, el);
+            if (checkElementPresent(wd, target))
+            {
+                return;
+            }
+        }
+        while (System.currentTimeMillis() < timeout);
+        throw new RuntimeException("Element was not found during scroll");
     }
 
     public static void resetLastUrls()
@@ -295,10 +336,106 @@ public class SeleniumDriver
         lastUrls.put(UserScenario.getTagForEvent(event), url);
     }
 
+    public static void waitPageReady(JSONObject event)
+    {
+        int timeout = Integer.parseInt(CONFIG.getPageReadyTimeout()) * 1000;
+        try
+        {
+            int sleeps = 0;
+            JavascriptExecutor js = (JavascriptExecutor)getDriverForEvent(event);
+            while (sleeps < timeout)
+            {
+                Object result = js.executeScript(CHECK_PAGE_READY_JS);
+                if (result != null && Boolean.parseBoolean(result.toString().toLowerCase()) == true)
+                {
+                    break;
+                }
+                Thread.sleep(1 * 1000);
+                sleeps += 1000;
+            }
+            Thread.sleep(2 * 1000);
+        }
+        catch (InterruptedException e)
+        {
+            log.error(e.toString(), e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static boolean checkElementPresent(WebDriver wd, String target)
+    {
+        try
+        {
+            wd.findElement(By.xpath(target));
+            return true;
+        }
+        catch (Exception e)
+        {
+            return false;
+        }
+
+    }
+
+    private static String getCSSSelector(JSONObject event)
+    {
+        if (!event.has("target1"))
+        {
+            return "";
+        }
+        JSONArray array = event.getJSONArray("target1");
+        if (array.isNull(0))
+        {
+            return "";
+        }
+
+        String target = array.getJSONObject(0).getString("gecp");
+        return target;
+    }
+
+    private static WebElement getMax(WebDriver wd)
+    {
+        List<WebElement> els = wd.findElements(By.xpath("//div[@id='gwt-debug-PopupListSelect']//div[@__idx]"));
+        els.sort((WebElement el1, WebElement el2) -> Integer.valueOf(el1.getAttribute("__idx"))
+                .compareTo(Integer.valueOf(el2.getAttribute("__idx"))));
+        return els.get(els.size() - 1);
+    }
+
     private static void makeElementVisibleByJS(JSONObject event, String target)
     {
         JavascriptExecutor js = (JavascriptExecutor)getDriverForEvent(event);
         js.executeScript(String.format(SET_ELEMENT_VISIBLE_JS, target));
     }
 
+    private static void scroll(JavascriptExecutor js, WebElement element)
+    {
+        js.executeScript("arguments[0].scrollIntoView(true)", element);
+    }
+
+    private static void waitUiShow(WebDriver wd)
+    {
+        long timeout = System.currentTimeMillis() + 20000l;
+        while (System.currentTimeMillis() < timeout)
+        {
+            try
+            {
+                wd.findElement(By.xpath("//*[@id='gwt-debug-editProfile']"));
+                log.debug("Yeeepeee UI showed up!");
+                return;
+            }
+            catch (NoSuchElementException e)
+            {
+                try
+                {
+                    Thread.sleep(500);
+                }
+                catch (InterruptedException e1)
+                {
+                    //Should never happen
+                    e1.printStackTrace();
+                }
+                continue;
+            }
+        }
+        throw new RuntimeException("UI didn`t show up. =(");
+    }
 }

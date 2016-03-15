@@ -8,6 +8,9 @@ import javax.swing.UIManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.beust.jcommander.JCommander;
+import com.focusit.jsflight.player.cli.CliConfig;
+import com.focusit.jsflight.player.cli.CliPlayer;
 import com.focusit.jsflight.player.controller.IUIController;
 import com.focusit.jsflight.player.controller.InputController;
 import com.focusit.jsflight.player.controller.JMeterController;
@@ -17,6 +20,7 @@ import com.focusit.jsflight.player.controller.ScenarioController;
 import com.focusit.jsflight.player.controller.WebLookupController;
 import com.focusit.jsflight.player.ui.ExceptionDialog;
 import com.focusit.jsflight.player.ui.MainFrame;
+import com.focusit.jsflight.player.webdriver.SeleniumDriver;
 
 public class Player
 {
@@ -37,7 +41,39 @@ public class Player
         {
             log.error(e.toString(), e);
         }
+        CliConfig config = new CliConfig();
+        JCommander jc = new JCommander(config, args);
+        jc.setProgramName(Player.class.getSimpleName());
+        if (config.showHelp())
+        {
+            jc.usage();
+            System.exit(0);
+        }
+        if (config.isHeadLess())
+        {
+            try
+            {
+                new CliPlayer(config).play();
+            }
+            catch (Exception e)
+            {
+                log.error(e.toString(), e);
+                System.exit(1);
+            }
+            finally
+            {
+                SeleniumDriver.closeWebDrivers();
+                System.exit(0);
+            }
+        }
+        else
+        {
+            startWithUI();
+        }
+    }
 
+    private static void startWithUI()
+    {
         Thread.setDefaultUncaughtExceptionHandler(new UncaughtExceptionHandler()
         {
 

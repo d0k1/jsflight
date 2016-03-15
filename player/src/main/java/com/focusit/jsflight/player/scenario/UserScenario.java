@@ -8,7 +8,10 @@ import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.openqa.selenium.WebElement;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.focusit.jsflight.player.constants.EventType;
 import com.focusit.jsflight.player.context.PlayerContext;
 import com.focusit.jsflight.player.input.Events;
 import com.focusit.jsflight.player.input.FileInput;
@@ -25,6 +28,8 @@ public class UserScenario
 {
     private static String TAG_FIELD = "uuid";
     private static volatile int position = 0;
+
+    private static final Logger log = LoggerFactory.getLogger(UserScenario.class);
 
     private static List<JSONObject> events = new ArrayList<>();
 
@@ -100,11 +105,33 @@ public class UserScenario
 
             String target = getTargetForEvent(event);
 
-            element = SeleniumDriver.findTargetWebElement(event, target);
+            String type = event.getString("type");
 
-            SeleniumDriver.processMouseEvent(event, element);
+            SeleniumDriver.waitPageReady(event);
 
-            SeleniumDriver.processKeyboardEvent(event, element);
+            switch (type)
+            {
+            case EventType.SCROLL_EMULATION:
+                SeleniumDriver.processScroll(event, target);
+                break;
+
+            case EventType.MOUSEDOWN:
+                element = SeleniumDriver.findTargetWebElement(event, target);
+                SeleniumDriver.processMouseEvent(event, element);
+                SeleniumDriver.waitPageReady(event);
+                break;
+
+            case EventType.KEY_UP:
+            case EventType.KEY_PRESS:
+                element = SeleniumDriver.findTargetWebElement(event, target);
+
+                SeleniumDriver.processKeyboardEvent(event, element);
+
+                SeleniumDriver.waitPageReady(event);
+                break;
+            default:
+                break;
+            }
 
             SeleniumDriver.makeAShot(event);
         }
@@ -211,42 +238,15 @@ public class UserScenario
 
     public void play()
     {
-        /*
         long begin = System.currentTimeMillis();
-        
+
         log.info("playing the scenario");
-        
+
         while (position < events.size())
         {
             if (position > 0)
             {
-                JSONObject event = events.get(position - 1);
-                long prev = event.getBigDecimal("timestamp").longValue();
-                event = events.get(position);
-                long now = event.getBigDecimal("timestamp").longValue();
-        
-                if ((now - prev) > 0)
-                {
-                    try
-                    {
-                        log.info("Emulate wait " + (now - prev) + "ms + 2000ms");
-                        long sleepTime = now - prev;
-                        int maxSleepTime = Integer.parseInt(maxStepDelayField.getText());
-                        if (sleepTime > maxSleepTime * 1000)
-                        {
-                            sleepTime = maxSleepTime;
-                        }
-                        // if (sleepTime < 1000)
-                        // {
-                        // sleepTime = 1000;
-                        // }
-                        Thread.sleep(sleepTime);
-                    }
-                    catch (InterruptedException e)
-                    {
-                        log.error("interrupted", e);
-                    }
-                }
+                SeleniumDriver.waitPageReady(events.get(position));
                 log.info("Step " + position);
             }
             else
@@ -266,7 +266,6 @@ public class UserScenario
         }
         log.info(String.format("Done(%d):playing", System.currentTimeMillis() - begin));
         position--;
-        */
     }
 
     public long postProcessScenario()
@@ -366,8 +365,9 @@ public class UserScenario
 
     private boolean isEventIgnored(String eventType)
     {
-        return eventType.equalsIgnoreCase("xhr") || eventType.equalsIgnoreCase("hashchange")
-                || (!eventType.equalsIgnoreCase("mousedown") && !eventType.equalsIgnoreCase("keypress")
-                        && !eventType.equalsIgnoreCase("keyup"));
+        return eventType.equalsIgnoreCase(EventType.XHR) || eventType.equalsIgnoreCase(EventType.HASH_CHANGE)
+                || (!eventType.equalsIgnoreCase(EventType.MOUSEDOWN) && !eventType.equalsIgnoreCase(EventType.KEY_PRESS)
+                        && !eventType.equalsIgnoreCase(EventType.KEY_UP))
+                        && !eventType.equalsIgnoreCase(EventType.SCROLL_EMULATION);
     }
 }
