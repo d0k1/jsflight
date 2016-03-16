@@ -258,7 +258,7 @@ public class JMeterProxy extends Thread {
              * We don't want to store any cookies in the generated test plan
              */
             if (headers != null) {
-                headers.removeHeaderNamed(HTTPConstants.HEADER_COOKIE);// Always remove cookies
+                ///////headers.removeHeaderNamed(HTTPConstants.HEADER_COOKIE);// Always remove cookies
                 // See https://issues.apache.org/bugzilla/show_bug.cgi?id=25430
                 // HEADER_AUTHORIZATION won't be removed, it will be used
                 // for creating Authorization Manager

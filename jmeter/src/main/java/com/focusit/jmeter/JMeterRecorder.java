@@ -7,10 +7,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-import org.apache.jmeter.protocol.http.control.HeaderManager;
 import org.apache.jmeter.protocol.http.control.RecordingController;
 import org.apache.jmeter.protocol.http.proxy.JMeterProxyControl;
 import org.apache.jmeter.save.SaveService;
+import org.apache.jmeter.testelement.AbstractTestElement;
 import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.testelement.TestElementTraverser;
 import org.apache.jmeter.testelement.property.JMeterProperty;
@@ -69,7 +69,6 @@ public class JMeterRecorder {
 		TestElement sample = target.next();
 
 		while(sample!=null){
-			final TestElement sample1 = sample;
 			final List<TestElement> childs = new ArrayList<>();
 			final List<JMeterProperty> keys = new ArrayList<>();
 			sample.traverse(new TestElementTraverser() {
@@ -88,7 +87,7 @@ public class JMeterRecorder {
 				
 				@Override
 				public void endProperty(JMeterProperty key) {
-					if(key.getObjectValue() instanceof HeaderManager){
+					if(key.getObjectValue() instanceof AbstractTestElement){
 						childs.add((TestElement)key.getObjectValue());
 						keys.add(key);
 					}
@@ -99,9 +98,9 @@ public class JMeterRecorder {
 				sample.removeProperty(key.getName());
 			}
 			
-			HashTree parent = recPlace.add(sample, sample); 
+			HashTree parent = recPlace.add(sample); 
 			for(TestElement child:childs){
-				parent.add(child, child);
+				parent.add(child);
 			}
 			
 			sample = target.next();
