@@ -134,7 +134,7 @@ public class SeleniumDriverConfig
         setProxyHost(options.getProxyHost());
         setProxyPort(options.getProxyPort());
         setPageReadyTimeout(options.getPageReadyTimeout());
-        setUseFirefox(options.isUseFirefox());
-        setUsePhantomJs(options.isUsePhantomJs());
+        setUseFirefox(Boolean.valueOf(options.isUseFirefox()));
+        setUsePhantomJs(Boolean.valueOf(options.isUsePhantomJs()));
     }
 }

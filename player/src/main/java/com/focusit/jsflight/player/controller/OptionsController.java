@@ -23,8 +23,8 @@ public class OptionsController extends UIController
     private String screenDir;
     private String checkPageJs;
     private String webDriverTag;
-    private boolean useFirefox;
-    private boolean usePhantomJs;
+    private String useFirefox;
+    private String usePhantomJs;
 
     private OptionsController()
     {
@@ -75,12 +75,12 @@ public class OptionsController extends UIController
         return webDriverTag;
     }
 
-    public boolean isUseFirefox()
+    public String isUseFirefox()
     {
         return useFirefox;
     }
 
-    public boolean isUsePhantomJs()
+    public String isUsePhantomJs()
     {
         return usePhantomJs;
     }
@@ -98,6 +98,8 @@ public class OptionsController extends UIController
         screenDir = (String)stream.readObject();
         checkPageJs = (String)stream.readObject();
         webDriverTag = (String)stream.readObject();
+        useFirefox = (String)stream.readObject();
+        usePhantomJs = (String)stream.readObject();
     }
 
     public void setCheckPageJs(String checkPageJs)
@@ -140,12 +142,12 @@ public class OptionsController extends UIController
         this.screenDir = screenDir;
     }
 
-    public void setUseFirefox(boolean useFirefox)
+    public void setUseFirefox(String useFirefox)
     {
         this.useFirefox = useFirefox;
     }
 
-    public void setUsePhantomJs(boolean usePhantomJs)
+    public void setUsePhantomJs(String usePhantomJs)
     {
         this.usePhantomJs = usePhantomJs;
     }
@@ -168,6 +170,8 @@ public class OptionsController extends UIController
         stream.writeObject(screenDir);
         stream.writeObject(checkPageJs);
         stream.writeObject(webDriverTag);
+        stream.writeObject(useFirefox);
+        stream.writeObject(usePhantomJs);
     }
 
     @Override
