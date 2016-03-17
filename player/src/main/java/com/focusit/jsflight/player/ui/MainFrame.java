@@ -339,11 +339,6 @@ public class MainFrame
         model.fireTableRowsUpdated(table.getSelectedRow(), table.getSelectedRow());
     }
 
-    private void applyStep(int position)
-    {
-        scenario.applyStep(position);
-    }
-
     private void checkElement(int position)
     {
         scenario.checkStep(position);

@@ -26,7 +26,7 @@ import com.focusit.jsflight.player.webdriver.SeleniumDriver;
  */
 public class UserScenario
 {
-    private static String TAG_FIELD = "uuid";
+    public static String TAG_FIELD = "uuid";
     private static volatile int position = 0;
 
     private static final Logger log = LoggerFactory.getLogger(UserScenario.class);
@@ -124,9 +124,7 @@ public class UserScenario
             case EventType.KEY_UP:
             case EventType.KEY_PRESS:
                 element = SeleniumDriver.findTargetWebElement(event, target);
-
                 SeleniumDriver.processKeyboardEvent(event, element);
-
                 SeleniumDriver.waitPageReady(event);
                 break;
             default:

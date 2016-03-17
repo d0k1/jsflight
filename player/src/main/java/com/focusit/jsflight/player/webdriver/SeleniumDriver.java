@@ -3,6 +3,8 @@ package com.focusit.jsflight.player.webdriver;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -11,7 +13,7 @@ import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.openqa.selenium.By;
-import org.openqa.selenium.Cookie;
+import org.openqa.selenium.Cookie.Builder;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
@@ -52,6 +54,25 @@ public class SeleniumDriver
     private static HashMap<String, String> tabsWindow = new HashMap<>();
 
     private static HashMap<String, String> lastUrls = new HashMap<>();
+
+    public static void addTagCookie(JSONObject event, WebDriver wd)
+    {
+        String event_url = event.getString("url");
+
+        //Adding cookie        
+        Builder b = new Builder("employee", event.getString(UserScenario.TAG_FIELD));
+        try
+        {
+            b.domain(getDomain(event_url));
+            b.path("/");
+        }
+        catch (MalformedURLException e)
+        {
+            log.error(e.toString(), e);
+        }
+
+        wd.manage().addCookie(b.build());
+    }
 
     public static void closeWebDrivers()
     {
@@ -133,8 +154,6 @@ public class SeleniumDriver
                     driver = new PhantomJSDriver(cap);
                 }
             }
-            //Adding cookie
-            driver.manage().addCookie(new Cookie("employee", event.getString("uuid")));
             try
             {
                 Thread.sleep(3000);
@@ -147,7 +166,7 @@ public class SeleniumDriver
             drivers.put(tag, driver);
             return driver;
         }
-        catch (Exception ex)
+        catch (Throwable ex)
         {
             log.error(ex.toString(), ex);
             throw ex;
@@ -212,13 +231,16 @@ public class SeleniumDriver
 
     public static void openEventUrl(JSONObject event)
     {
-
         String event_url = event.getString("url");
         WebDriver wd = getDriverForEvent(event);
-        //resizeForEvent(wd, event);
+
+        resizeForEvent(wd, event);
         if (wd.getCurrentUrl().equals("about:blank") || !getLastUrl(event).equals(event_url))
         {
             wd.get(event_url);
+
+            addTagCookie(event, wd);
+
             waitUiShow(wd);
             waitPageReady(event);
             updateLastUrl(event, event_url);
@@ -356,6 +378,7 @@ public class SeleniumDriver
             JavascriptExecutor js = (JavascriptExecutor)getDriverForEvent(event);
             while (sleeps < timeout)
             {
+                Thread.sleep(2000);
                 Object result = js.executeScript(CHECK_PAGE_READY_JS);
                 if (result != null && Boolean.parseBoolean(result.toString().toLowerCase()) == true)
                 {
@@ -414,6 +437,42 @@ public class SeleniumDriver
 
         String target = array.getJSONObject(0).getString("gecp");
         return target;
+    }
+
+    private static String getDomain(String url) throws MalformedURLException
+    {
+        URL aURL = new URL(url);
+        return aURL.getHost() + ":" + aURL.getPort();
+        /*
+        URL aURL = new URL("http://example.com:80/docs/books/tutorial" + "/index.html?name=networking#DOWNLOADING");
+        
+        System.out.println("protocol = " + aURL.getProtocol()); //http
+        System.out.println("authority = " + aURL.getAuthority()); //example.com:80
+        System.out.println("host = " + aURL.getHost()); //example.com
+        System.out.println("port = " + aURL.getPort()); //80
+        System.out.println("path = " + aURL.getPath()); //  /docs/books/tutorial/index.html
+        System.out.println("query = " + aURL.getQuery()); //name=networking
+        System.out.println("filename = " + aURL.getFile()); ///docs/books/tutorial/index.html?name=networking
+        System.out.println("ref = " + aURL.getRef()); //DOWNLOADING
+        */
+    }
+
+    private static String getDomainPath(String url) throws MalformedURLException
+    {
+        URL aURL = new URL(url);
+        return aURL.getPath();
+        /*
+        URL aURL = new URL("http://example.com:80/docs/books/tutorial" + "/index.html?name=networking#DOWNLOADING");
+        
+        System.out.println("protocol = " + aURL.getProtocol()); //http
+        System.out.println("authority = " + aURL.getAuthority()); //example.com:80
+        System.out.println("host = " + aURL.getHost()); //example.com
+        System.out.println("port = " + aURL.getPort()); //80
+        System.out.println("path = " + aURL.getPath()); //  /docs/books/tutorial/index.html
+        System.out.println("query = " + aURL.getQuery()); //name=networking
+        System.out.println("filename = " + aURL.getFile()); ///docs/books/tutorial/index.html?name=networking
+        System.out.println("ref = " + aURL.getRef()); //DOWNLOADING
+        */
     }
 
     private static WebElement getMax(WebDriver wd)

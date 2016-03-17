@@ -107,13 +107,18 @@ public class Engine
                 {
                     String source = result.getString(key);
 
-                    String pattern = "(\\$)(\\d+)";
+                    String pattern = "[^\\\\](\\$)(.)";
                     Pattern r = Pattern.compile(pattern);
                     Matcher m = r.matcher(source);
-                    if (m.find())
+                    while (m.find())
                     {
-                        int start = m.start(0);
-                        source = source.substring(0, start) + "\\$" + source.substring(start + 1, source.length());
+                        if (!m.group(1).equalsIgnoreCase("{"))
+                        {
+                            int start = m.start(0);
+                            source = source.substring(0, start + 1) + "\\$"
+                                    + source.substring(start + 2, source.length());
+                        }
+                        m = r.matcher(source);
                     }
 
                     String parsed = templateEngine.createTemplate(source).make(binding.getVariables()).toString();

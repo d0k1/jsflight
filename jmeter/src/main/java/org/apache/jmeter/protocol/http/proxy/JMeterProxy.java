@@ -18,6 +18,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.LongAdder;
 
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
@@ -276,6 +278,9 @@ public class JMeterProxy extends Thread {
                 if(samplerCreator != null) {
                     children.addAll(samplerCreator.createChildren(sampler, result));
                 } 
+                
+                String name = JMeterProxyCounter.getInstance().counter.incrementAndGet()+". "+sampler.getName();
+                sampler.setName(name);
                 target.deliverSampler(sampler,
                         children.isEmpty() ? null : (TestElement[]) children
                                 .toArray(new TestElement[children.size()]),
