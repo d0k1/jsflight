@@ -1128,8 +1128,8 @@ public class MainFrame
         OptionsController.getInstance().setScreenDir(screenDirTextField.getText());
         OptionsController.getInstance().setCheckPageJs(checkPageJs.getText());
         OptionsController.getInstance().setWebDriverTag(webDriverTag.getText());
-        OptionsController.getInstance().setUseFirefox(useFirefoxButton.isSelected());
-        OptionsController.getInstance().setUsePhantomJs(usePhantomButton.isSelected());
+        OptionsController.getInstance().setUseFirefox(String.valueOf(useFirefoxButton.isSelected()));
+        OptionsController.getInstance().setUsePhantomJs(String.valueOf(usePhantomButton.isSelected()));
 
         SeleniumDriverConfig.get().updateByOptions(OptionsController.getInstance());
     }

@@ -11,6 +11,8 @@ import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.openqa.selenium.By;
+import org.openqa.selenium.Cookie;
+import org.openqa.selenium.Dimension;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.NoSuchElementException;
@@ -131,7 +133,8 @@ public class SeleniumDriver
                     driver = new PhantomJSDriver(cap);
                 }
             }
-
+            //Adding cookie
+            driver.manage().addCookie(new Cookie("employee", event.getString("uuid")));
             try
             {
                 Thread.sleep(3000);
@@ -212,6 +215,7 @@ public class SeleniumDriver
 
         String event_url = event.getString("url");
         WebDriver wd = getDriverForEvent(event);
+        //resizeForEvent(wd, event);
         if (wd.getCurrentUrl().equals("about:blank") || !getLastUrl(event).equals(event_url))
         {
             wd.get(event_url);
@@ -292,11 +296,13 @@ public class SeleniumDriver
 
     public static void processMouseEvent(JSONObject event, WebElement element)
     {
+        WebDriver wd = getDriverForEvent(event);
+        ensureElementInWindow(wd, element);
         if (element.isDisplayed())
         {
             if (event.getInt("button") == 2)
             {
-                new Actions(getDriverForEvent(event)).contextClick(element).perform();
+                new Actions(wd).contextClick(element).perform();
             }
             else
             {
@@ -381,6 +387,19 @@ public class SeleniumDriver
 
     }
 
+    private static void ensureElementInWindow(WebDriver wd, WebElement element)
+    {
+        int windowHeight = wd.manage().window().getSize().getHeight();
+        int elementYCoord = element.getLocation().getY();
+        if (elementYCoord > windowHeight)
+        {
+            //Using division of the Y coordinate by 2 ensures target element visibility in the browser view
+            //anyway TODO think of not using hardcoded constants in scrolling
+            String scrollScript = "window.scrollTo(0, " + elementYCoord / 2 + ");";
+            ((JavascriptExecutor)wd).executeScript(scrollScript);
+        }
+    }
+
     private static String getCSSSelector(JSONObject event)
     {
         if (!event.has("target1"))
@@ -409,6 +428,11 @@ public class SeleniumDriver
     {
         JavascriptExecutor js = (JavascriptExecutor)getDriverForEvent(event);
         js.executeScript(String.format(SET_ELEMENT_VISIBLE_JS, target));
+    }
+
+    private static void resizeForEvent(WebDriver wd, JSONObject event)
+    {
+        wd.manage().window().setSize(new Dimension(event.getInt("window.width"), event.getInt("window.height")));
     }
 
     private static void scroll(JavascriptExecutor js, WebElement element)
