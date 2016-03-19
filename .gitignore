@@ -12,3 +12,10 @@
 hs_err_pid*
 
 external/
+
+proxyserver.jks
+ApacheJMeterTemporaryRootCA.crt
+ApacheJMeterTemporaryRootCA.usr
+player/params/
+player/test.json
+player/test.json.pretty
