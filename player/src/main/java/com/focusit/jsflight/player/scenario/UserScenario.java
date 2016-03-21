@@ -11,6 +11,7 @@ import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.focusit.jmeter.JMeterJSFlightBridge;
 import com.focusit.jsflight.player.constants.EventType;
 import com.focusit.jsflight.player.context.PlayerContext;
 import com.focusit.jsflight.player.input.Events;
@@ -26,7 +27,6 @@ import com.focusit.jsflight.player.webdriver.SeleniumDriver;
  */
 public class UserScenario
 {
-    public static String TAG_FIELD = "uuid";
     private static volatile int position = 0;
 
     private static final Logger log = LoggerFactory.getLogger(UserScenario.class);
@@ -62,9 +62,9 @@ public class UserScenario
     public static String getTagForEvent(JSONObject event)
     {
         String tag = "null";
-        if (event.has(TAG_FIELD))
+        if (event.has(JMeterJSFlightBridge.TAG_FIELD))
         {
-            tag = event.getString(TAG_FIELD);
+            tag = event.getString(JMeterJSFlightBridge.TAG_FIELD);
         }
 
         return tag;
@@ -82,6 +82,8 @@ public class UserScenario
 
     public void applyStep(int position)
     {
+        PlayerContext.getInstance().setCurrentScenarioStep(getStepAt(position));
+
         new Engine().runStepPrePostScript(this, position, true);
         JSONObject event = events.get(position);
         event = new Engine().runStepTemplating(event);
@@ -116,24 +118,30 @@ public class UserScenario
                 break;
 
             case EventType.MOUSEDOWN:
-            	try{
-	                element = SeleniumDriver.findTargetWebElement(event, target);
-	                SeleniumDriver.processMouseEvent(event, element);
-	                SeleniumDriver.waitPageReady(event);
-            	} catch (Exception ex) {
-            		log.error("Failed to proceed step "+position, ex);
-            	}
+                try
+                {
+                    element = SeleniumDriver.findTargetWebElement(event, target);
+                    SeleniumDriver.processMouseEvent(event, element);
+                    SeleniumDriver.waitPageReady(event);
+                }
+                catch (Exception ex)
+                {
+                    log.error("Failed to proceed step " + position, ex);
+                }
                 break;
 
             case EventType.KEY_UP:
             case EventType.KEY_PRESS:
-            	try{
-	                element = SeleniumDriver.findTargetWebElement(event, target);
-	                SeleniumDriver.processKeyboardEvent(event, element);
-	                SeleniumDriver.waitPageReady(event);
-	        	} catch (Exception ex) {
-	        		log.error("Failed to proceed step "+position, ex);
-	        	}
+                try
+                {
+                    element = SeleniumDriver.findTargetWebElement(event, target);
+                    SeleniumDriver.processKeyboardEvent(event, element);
+                    SeleniumDriver.waitPageReady(event);
+                }
+                catch (Exception ex)
+                {
+                    log.error("Failed to proceed step " + position, ex);
+                }
                 break;
             default:
                 break;

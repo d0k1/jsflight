@@ -1,4 +1,4 @@
-package org.apache.jmeter.protocol.http.proxy;
+package com.focusit.jmeter;
 
 import java.util.concurrent.atomic.AtomicInteger;
 

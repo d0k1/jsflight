@@ -33,6 +33,7 @@ import org.openqa.selenium.remote.DesiredCapabilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.focusit.jmeter.JMeterJSFlightBridge;
 import com.focusit.jsflight.player.constants.EventType;
 import com.focusit.jsflight.player.scenario.UserScenario;
 
@@ -61,7 +62,7 @@ public class SeleniumDriver
         String event_url = event.getString("url");
 
         //Adding cookie        
-        Builder b = new Builder("employee", event.getString(UserScenario.TAG_FIELD));
+        Builder b = new Builder("employee", event.getString(JMeterJSFlightBridge.TAG_FIELD));
         try
         {
             b.domain(getDomain(event_url));

@@ -13,7 +13,6 @@ import org.apache.jmeter.config.Argument;
 import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.protocol.http.control.Cookie;
 import org.apache.jmeter.protocol.http.control.CookieManager;
-import org.apache.jmeter.protocol.http.control.Header;
 import org.apache.jmeter.protocol.http.control.HeaderManager;
 import org.apache.jmeter.protocol.http.control.RecordingController;
 import org.apache.jmeter.protocol.http.proxy.JMeterProxyControl;
@@ -25,6 +24,8 @@ import org.apache.jmeter.testelement.property.JMeterProperty;
 import org.apache.jmeter.util.JMeterUtils;
 import org.apache.jorphan.collections.HashTree;
 import org.apache.jorphan.collections.HashTreeTraverser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Interface to control jmeter proxy recorder
@@ -35,11 +36,13 @@ public class JMeterRecorder
 {
     private static final String DEFAULT_TEMPLATE_NAME = "template.jmx";
 
+    private static final Logger log = LoggerFactory.getLogger(JMeterRecorder.class);
     private HashTree hashTree;
     JMeterProxyControl ctrl;
     RecordingController recCtrl = null;
     HashTree recCtrlPlace = null;
     Arguments vars = null;
+
     HashTree varsPlace = null;
 
     public void init() throws Exception
@@ -156,15 +159,42 @@ public class JMeterRecorder
 
             for (TestElement child : childs)
             {
+                /*
                 for (int i = 0; i < ((HeaderManager)child).getHeaders().size(); i++)
                 {
                     JMeterProperty prop = ((HeaderManager)child).getHeaders().get(i);
                     if (prop.getName().equalsIgnoreCase("cookie"))
                     {
                         Header val = (Header)prop.getObjectValue();
-
+                
                         // TODO groovy script should parse cookies and do something great                        
                         String cooks = val.getValue().toString();
+                
+                        String pattern = "employee=(\\w+)\\$(\\w+)";
+                        Pattern r = Pattern.compile(pattern);
+                        Matcher m = r.matcher(cooks);
+                        if (m.find())
+                        {
+                            String name = "jsid_" + m.group(1) + "_" + m.group(2);
+                            cookies.add(new Cookie("JSESSIONID", "${" + name + "}",
+                                    sample.getPropertyAsString(HTTPSamplerBase.DOMAIN), "/", false, 0L));
+                
+                            if (!vars.getArgumentsAsMap().containsKey(name))
+                            {
+                                vars.addArgument(new Argument(name, "empty_session"));
+                            }
+                        }
+                        ((HeaderManager)child).remove(i);
+                    }
+                }                
+                */
+
+                if (child instanceof HTTPSamplerBase)
+                {
+                    if (JMeterJSFlightBridge.getInstace().getSourceEvent((HTTPSamplerBase)child) != null)
+                    {
+                        String cooks = "employee=" + JMeterJSFlightBridge.getInstace()
+                                .getSourceEvent((HTTPSamplerBase)child).getString(JMeterJSFlightBridge.TAG_FIELD);
 
                         String pattern = "employee=(\\w+)\\$(\\w+)";
                         Pattern r = Pattern.compile(pattern);
@@ -180,7 +210,10 @@ public class JMeterRecorder
                                 vars.addArgument(new Argument(name, "empty_session"));
                             }
                         }
-                        ((HeaderManager)child).remove(i);
+                    }
+                    else
+                    {
+                        log.warn("No tag found for sampler " + child.getName());
                     }
                 }
                 parent.add(child);

@@ -32,11 +32,46 @@
       <hashTree>
         <RecordingController guiclass="RecordController" testclass="RecordingController" testname="Recording Controller" enabled="true"/>
         <hashTree>
-          <JSR223Sampler guiclass="TestBeanGUI" testclass="JSR223Sampler" testname="JSR223 Sampler" enabled="true">
+          <JSR223Sampler guiclass="TestBeanGUI" testclass="JSR223Sampler" testname="CookieGrabber" enabled="true">
             <stringProp name="cacheKey">94a737da-c62b-46fb-a905-4eed4c6bb437</stringProp>
             <stringProp name="filename"></stringProp>
             <stringProp name="parameters"></stringProp>
-            <stringProp name="script">/* script prepare UDV (fills sessionIds) */</stringProp>
+            <stringProp name="script">/* script prepare UDV (fills sessionIds) */
+
+/* 
+script prepare UDV (fills sessionIds) */
+/*
+http://192.168.225.142:8080/sd/operator?accessKey=90fd0247-b5a6-4e93-a0b5-bdb6745ee8e2
+*/
+
+/**
+ * Make an http request and rob desired cookie
+ * returns cookieName cookie&apos;s value
+ */
+def getCookieValue(def url, def cookieName){
+	def http = new groovyx.net.http.HTTPBuilder(url);
+	
+	http.client.setRedirectStrategy(new org.apache.http.impl.client.LaxRedirectStrategy());
+	
+	http.request( url, groovyx.net.http.Method.GET, groovyx.net.http.ContentType.TEXT ) { req -&gt;
+	  headers.&apos;User-Agent&apos; = &quot;Mozilla/5.0 Firefox/3.0.4&quot;
+	}
+
+	def result = null;
+	
+	http.client.cookieStore.getCookies().each({
+			if (it.name.toLowerCase().equals(cookieName.toLowerCase())) {
+				result = it.value;
+			}
+		})
+	return result;	
+}
+
+// Usage example. 
+// Requests http://1.2.3.4:80 and tries to get jsessionid cookie value to inject session into test&apos;s thread context
+// ctx.variables.put(&quot;jsid_111_222&quot;, getCookieValue(&apos;http://1.2.3.4:80&apos;, &quot;jsessionid&quot;));
+
+</stringProp>
             <stringProp name="scriptLanguage">groovy</stringProp>
           </JSR223Sampler>
           <hashTree/>

@@ -13,7 +13,7 @@
 		<!-- <relativePath>../sample-multi-module-parent</relativePath> -->
 	</parent>
 
-	<dependencies>
+	<dependencies>	
 		<dependency>
 			<groupId>org.codehaus.groovy</groupId>
 			<artifactId>groovy-all</artifactId>
