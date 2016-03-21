@@ -116,16 +116,24 @@ public class UserScenario
                 break;
 
             case EventType.MOUSEDOWN:
-                element = SeleniumDriver.findTargetWebElement(event, target);
-                SeleniumDriver.processMouseEvent(event, element);
-                SeleniumDriver.waitPageReady(event);
+            	try{
+	                element = SeleniumDriver.findTargetWebElement(event, target);
+	                SeleniumDriver.processMouseEvent(event, element);
+	                SeleniumDriver.waitPageReady(event);
+            	} catch (Exception ex) {
+            		log.error("Failed to proceed step "+position, ex);
+            	}
                 break;
 
             case EventType.KEY_UP:
             case EventType.KEY_PRESS:
-                element = SeleniumDriver.findTargetWebElement(event, target);
-                SeleniumDriver.processKeyboardEvent(event, element);
-                SeleniumDriver.waitPageReady(event);
+            	try{
+	                element = SeleniumDriver.findTargetWebElement(event, target);
+	                SeleniumDriver.processKeyboardEvent(event, element);
+	                SeleniumDriver.waitPageReady(event);
+	        	} catch (Exception ex) {
+	        		log.error("Failed to proceed step "+position, ex);
+	        	}
                 break;
             default:
                 break;

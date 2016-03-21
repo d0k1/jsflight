@@ -21,6 +21,7 @@ import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.firefox.FirefoxBinary;
 import org.openqa.selenium.firefox.FirefoxDriver;
@@ -89,10 +90,12 @@ public class SeleniumDriver
         WebDriver wd = getDriverForEvent(event);
         try
         {
+        	log.info("looking for " + target);
             return wd.findElement(By.xpath(target));
         }
         catch (org.openqa.selenium.NoSuchElementException e)
         {
+        	log.info("failed looking for " + getCSSSelector(event));
             return wd.findElement(By.cssSelector(getCSSSelector(event)));
         }
     }
@@ -328,7 +331,19 @@ public class SeleniumDriver
             }
             else
             {
-                element.click();
+            	try{
+            		element.click();
+            	} catch(Exception ex){
+            		log.warn(ex.toString(), ex);
+            		
+            		try{
+	            		JavascriptExecutor executor = (JavascriptExecutor)wd;
+	            		executor.executeScript("arguments[0].click();", element);
+            		} catch(Exception ex1) {
+            			log.error(ex1.toString(), ex1);
+            			throw new WebDriverException(ex1);
+            		}
+            	}
             }
         }
         else
