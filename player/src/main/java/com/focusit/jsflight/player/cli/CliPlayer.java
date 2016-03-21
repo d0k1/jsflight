@@ -20,7 +20,17 @@ public class CliPlayer
     public CliPlayer(CliConfig config) throws Exception
     {
         this.config = config;
-        jmeter.init();
+        String templatePath = config.getJmxTemplatePath();
+        if (templatePath.trim().isEmpty())
+        {
+            LOG.info("Initializing Jmeter with default jmx template: template.jmx");
+            jmeter.init();
+        }
+        else
+        {
+            LOG.info("Initializing Jmeter with jmx template: {}", templatePath);
+            jmeter.init(templatePath);
+        }
     }
 
     public void play() throws IOException

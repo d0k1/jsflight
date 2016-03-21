@@ -18,6 +18,9 @@ public class CliConfig
     @Parameter(names = { "-pp", "--proxyport" }, description = "Selenium proxy port")
     private String proxyPort = "";
 
+    @Parameter(names = { "-tp", "--templatepath" }, description = "Path to jmx template to generate scenario")
+    private String jmxTemplatePath = "";
+
     @Parameter(names = { "-r", "--recording" }, description = "Record browser interactions with Jmeter")
     private boolean enableRecording = false;
 
@@ -56,6 +59,11 @@ public class CliConfig
     public String getJmeterRecordingName()
     {
         return jmeterRecordingName;
+    }
+
+    public String getJmxTemplatePath()
+    {
+        return jmxTemplatePath;
     }
 
     public boolean getMakeShots()

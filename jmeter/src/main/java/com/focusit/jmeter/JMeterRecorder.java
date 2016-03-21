@@ -33,6 +33,8 @@ import org.apache.jorphan.collections.HashTreeTraverser;
  */
 public class JMeterRecorder
 {
+    private static final String DEFAULT_TEMPLATE_NAME = "template.jmx";
+
     private HashTree hashTree;
     JMeterProxyControl ctrl;
     RecordingController recCtrl = null;
@@ -42,6 +44,11 @@ public class JMeterRecorder
 
     public void init() throws Exception
     {
+        init(DEFAULT_TEMPLATE_NAME);
+    }
+
+    public void init(String pathToTemplate) throws Exception
+    {
         JMeterUtils.setJMeterHome(new File("").getAbsolutePath());
         JMeterUtils.loadJMeterProperties(new File("jmeter.properties").getAbsolutePath());
         JMeterUtils.setProperty("saveservice_properties", File.separator + "saveservice.properties");
@@ -50,7 +57,7 @@ public class JMeterRecorder
         JMeterUtils.setLocale(Locale.ENGLISH);
 
         JMeterUtils.setProperty("proxy.cert.directory", new File("").getAbsolutePath());
-        hashTree = SaveService.loadTree(new File("template.jmx"));
+        hashTree = SaveService.loadTree(new File(pathToTemplate));
         ctrl = new JMeterProxyControl();
 
         hashTree.traverse(new HashTreeTraverser()
@@ -155,20 +162,22 @@ public class JMeterRecorder
                     if (prop.getName().equalsIgnoreCase("cookie"))
                     {
                         Header val = (Header)prop.getObjectValue();
-                        
+
                         // TODO groovy script should parse cookies and do something great                        
                         String cooks = val.getValue().toString();
-                        
+
                         String pattern = "employee=(\\w+)\\$(\\w+)";
                         Pattern r = Pattern.compile(pattern);
                         Matcher m = r.matcher(cooks);
-                        if(m.find()){
-                        	String name = "jsid_"+m.group(1)+"_"+m.group(2);
-                            cookies.add(new Cookie("JSESSIONID", "${"+name+"}", sample.getPropertyAsString(HTTPSamplerBase.DOMAIN), "/",
-                                    false, 0L));
-                            
-                            if(!vars.getArgumentsAsMap().containsKey(name)) {
-                            	vars.addArgument(new Argument(name, "empty_session"));
+                        if (m.find())
+                        {
+                            String name = "jsid_" + m.group(1) + "_" + m.group(2);
+                            cookies.add(new Cookie("JSESSIONID", "${" + name + "}",
+                                    sample.getPropertyAsString(HTTPSamplerBase.DOMAIN), "/", false, 0L));
+
+                            if (!vars.getArgumentsAsMap().containsKey(name))
+                            {
+                                vars.addArgument(new Argument(name, "empty_session"));
                             }
                         }
                         ((HeaderManager)child).remove(i);
@@ -179,7 +188,7 @@ public class JMeterRecorder
 
             sample = recCtrl.next();
         }
-        
+
         SaveService.saveTree(hashTree, new FileOutputStream(new File(filename)));
     }
 
