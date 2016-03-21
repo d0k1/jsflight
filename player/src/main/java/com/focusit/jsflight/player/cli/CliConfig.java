@@ -9,6 +9,12 @@ public class CliConfig
     @Parameter(names = { "-hl", "--headless" }, description = "Launching in headless mode")
     private boolean headless = false;
 
+    @Parameter(names = { "-ss", "--startStep" }, description = "Skip steps before start")
+    private String startStep = "0";
+
+    @Parameter(names = { "-fs", "--finishStep" }, description = "Events to process")
+    private String finishStep = "0";
+
     @Parameter(names = { "-p", "--path" }, description = "Path to recording json")
     private String pathToRecording = "";
 
@@ -125,4 +131,20 @@ public class CliConfig
     {
         return help;
     }
+
+	public String getStartStep() {
+		return startStep;
+	}
+
+	public void setStartStep(String startStep) {
+		this.startStep = startStep;
+	}
+
+	public String getFinishStep() {
+		return finishStep;
+	}
+
+	public void setFinishStep(String finishStep) {
+		this.finishStep = finishStep;
+	}
 }

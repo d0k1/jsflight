@@ -47,7 +47,7 @@ public class CliPlayer
             jmeter.startRecording();
             try
             {
-                scenario.play();
+                scenario.play(Integer.parseInt(config.getStartStep()), Integer.parseInt(config.getFinishStep()));
             }
             finally
             {

@@ -40,7 +40,14 @@ public class JMeterJSFlightBridge
 
     public JSONObject getSourceEvent(HTTPSamplerBase sampler)
     {
-        return samplersEvents.get(sampler);
+    	JSONObject result = samplersEvents.get(sampler);
+    	
+    	if(result==null)
+    	{
+    		result = namesEvents.get(sampler.getName());
+    	}
+        
+    	return result;
     }
 
     public void setCurrentScenarioStep(JSONObject currentScenarioStep)
