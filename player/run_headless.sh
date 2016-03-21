@@ -1,1 +1,1 @@
-mvn exec:java -Dexec.mainClass=com.focusit.jsflight.player.Player -Dexec.args="-hl -p /tmp/test.scroll.json -pp 8080 -ph 127.0.0.1 -jrn try.jmx -r"
+mvn exec:java -Dexec.mainClass=com.focusit.jsflight.player.Player -Dexec.args="-hl -p /tmp/test.scroll.json -pp 8080 -ph 127.0.0.1 -tp template.jmx -jrn try.jmx -r" | tee run.log
