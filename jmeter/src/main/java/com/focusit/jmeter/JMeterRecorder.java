@@ -110,8 +110,19 @@ public class JMeterRecorder
     public void saveScenario(String filename) throws IOException
     {
         TestElement sample = recCtrl.next();
+        
         while (sample != null)
         {
+            // skip unknown nasty requests
+            if(sample instanceof HTTPSamplerBase){
+            	HTTPSamplerBase http = (HTTPSamplerBase) sample;
+            	if(http.getArguments().getArgumentCount()>0 && http.getArguments().getArgument(0).getValue().startsWith("0Q0O0M0K0I0"))
+            	{
+            		sample = recCtrl.next();
+            		continue;
+            	}
+            }
+            
             final List<TestElement> childs = new ArrayList<>();
             final List<JMeterProperty> keys = new ArrayList<>();
             sample.traverse(new TestElementTraverser()
@@ -150,72 +161,57 @@ public class JMeterRecorder
 
             HashTree parent = recCtrlPlace.add(sample);
 
-            CookieManager cookies = new CookieManager();
-            cookies.setName("HTTP Cookie Manager");
-            cookies.setEnabled(true);
-            cookies.setProperty(TestElement.GUI_CLASS, "CookiePanel");
-            cookies.setProperty(TestElement.TEST_CLASS, "CookieManager");
-            parent.add(cookies);
+            // TODO Groovy script should decide whether add cookie manager or not
+            if(sample instanceof HTTPSamplerBase){ 
+            	HTTPSamplerBase http = (HTTPSamplerBase) sample;
+
+            	boolean accesKeyFound = false;
+            	
+            	for(String key : http.getArguments().getArgumentsAsMap().keySet()) {
+            		if(key.equalsIgnoreCase("accessKey")){
+            			accesKeyFound = true;
+            			break;
+            		}
+            	}
+            	
+            	if(!accesKeyFound) {
+		            CookieManager cookies = new CookieManager();
+		            cookies.setName("HTTP Cookie Manager");
+		            cookies.setEnabled(true);
+		            cookies.setProperty(TestElement.GUI_CLASS, "CookiePanel");
+		            cookies.setProperty(TestElement.TEST_CLASS, "CookieManager");
+		            parent.add(cookies);
+		
+		            // TODO groovy script should decide what cookies might be added to manager
+		            if (JMeterJSFlightBridge.getInstace().getSourceEvent((HTTPSamplerBase)sample) != null)
+		            {
+		                String cooks = "employee=" + JMeterJSFlightBridge.getInstace()
+		                        .getSourceEvent((HTTPSamplerBase)sample).getString(JMeterJSFlightBridge.TAG_FIELD);
+		
+		                String pattern = "employee=(\\w+)\\$(\\w+)";
+		                Pattern r = Pattern.compile(pattern);
+		                Matcher m = r.matcher(cooks);
+		                if (m.find())
+		                {
+		                    String name = "jsid_" + m.group(1) + "_" + m.group(2);
+		                    cookies.add(new Cookie("JSESSIONID", "${" + name + "}",
+		                            sample.getPropertyAsString(HTTPSamplerBase.DOMAIN), "/", false, 0L));
+		
+		                    if (!vars.getArgumentsAsMap().containsKey(name))
+		                    {
+		                        vars.addArgument(new Argument(name, "empty_session"));
+		                    }
+		                }
+		            }
+		            else
+		            {
+		                log.warn("No tag found for sampler " + sample.getName());
+		            }
+            	}
+            }
 
             for (TestElement child : childs)
             {
-                /*
-                for (int i = 0; i < ((HeaderManager)child).getHeaders().size(); i++)
-                {
-                    JMeterProperty prop = ((HeaderManager)child).getHeaders().get(i);
-                    if (prop.getName().equalsIgnoreCase("cookie"))
-                    {
-                        Header val = (Header)prop.getObjectValue();
-                
-                        // TODO groovy script should parse cookies and do something great                        
-                        String cooks = val.getValue().toString();
-                
-                        String pattern = "employee=(\\w+)\\$(\\w+)";
-                        Pattern r = Pattern.compile(pattern);
-                        Matcher m = r.matcher(cooks);
-                        if (m.find())
-                        {
-                            String name = "jsid_" + m.group(1) + "_" + m.group(2);
-                            cookies.add(new Cookie("JSESSIONID", "${" + name + "}",
-                                    sample.getPropertyAsString(HTTPSamplerBase.DOMAIN), "/", false, 0L));
-                
-                            if (!vars.getArgumentsAsMap().containsKey(name))
-                            {
-                                vars.addArgument(new Argument(name, "empty_session"));
-                            }
-                        }
-                        ((HeaderManager)child).remove(i);
-                    }
-                }                
-                */
-
-                if (child instanceof HTTPSamplerBase)
-                {
-                    if (JMeterJSFlightBridge.getInstace().getSourceEvent((HTTPSamplerBase)child) != null)
-                    {
-                        String cooks = "employee=" + JMeterJSFlightBridge.getInstace()
-                                .getSourceEvent((HTTPSamplerBase)child).getString(JMeterJSFlightBridge.TAG_FIELD);
-
-                        String pattern = "employee=(\\w+)\\$(\\w+)";
-                        Pattern r = Pattern.compile(pattern);
-                        Matcher m = r.matcher(cooks);
-                        if (m.find())
-                        {
-                            String name = "jsid_" + m.group(1) + "_" + m.group(2);
-                            cookies.add(new Cookie("JSESSIONID", "${" + name + "}",
-                                    sample.getPropertyAsString(HTTPSamplerBase.DOMAIN), "/", false, 0L));
-
-                            if (!vars.getArgumentsAsMap().containsKey(name))
-                            {
-                                vars.addArgument(new Argument(name, "empty_session"));
-                            }
-                        }
-                    }
-                    else
-                    {
-                        log.warn("No tag found for sampler " + child.getName());
-                    }
-                }
                 parent.add(child);
             }
 
