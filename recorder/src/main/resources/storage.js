@@ -40,8 +40,9 @@ jsflight.getEventInfo = function(mouseEvent) {
 
     result.target = jsflight.getElementXPath(mouseEvent.target);
     result.target1 = jsflight.getTargetId(mouseEvent);
+    result.target2 = jsflight.getElementXpathId(mouseEvent.target);
 
-    result.timestamp = mouseEvent.timeStamp;
+    result.timestamp = Date.now();
 
     result.screenX = mouseEvent.screenX;
     result.screenY = mouseEvent.screenY;

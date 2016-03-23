@@ -21,7 +21,6 @@ jsflight.TrackMouse = function(mouseEvent) {
             }
         }
         mouseEvent.eventId = jsflight.eventId;
-        mouseEvent.timeStamp = Date.now();
         var data = JSON.stringify(jsflight.getEventInfo(mouseEvent));
         jsflight.saveToStorage(jsflight.eventId, data);
     } catch (e) {
@@ -52,7 +51,6 @@ jsflight.TrackKeyboard = function(keyboardEvent) {
         }
 
         keyboardEvent.eventId = jsflight.eventId;
-        keyboardEvent.timeStamp = Date.now();
         var data = JSON.stringify(jsflight.getEventInfo(keyboardEvent));
         jsflight.saveToStorage(jsflight.eventId, data);
     } catch (e) {

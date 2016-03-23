@@ -91,12 +91,12 @@ public class SeleniumDriver
         WebDriver wd = getDriverForEvent(event);
         try
         {
-        	log.info("looking for " + target);
+            log.info("looking for " + target);
             return wd.findElement(By.xpath(target));
         }
         catch (org.openqa.selenium.NoSuchElementException e)
         {
-        	log.info("failed looking for " + getCSSSelector(event));
+            log.info("failed looking for " + getCSSSelector(event));
             return wd.findElement(By.cssSelector(getCSSSelector(event)));
         }
     }
@@ -332,19 +332,25 @@ public class SeleniumDriver
             }
             else
             {
-            	try{
-            		element.click();
-            	} catch(Exception ex){
-            		log.warn(ex.toString(), ex);
-            		
-            		try{
-	            		JavascriptExecutor executor = (JavascriptExecutor)wd;
-	            		executor.executeScript("arguments[0].click();", element);
-            		} catch(Exception ex1) {
-            			log.error(ex1.toString(), ex1);
-            			throw new WebDriverException(ex1);
-            		}
-            	}
+                try
+                {
+                    element.click();
+                }
+                catch (Exception ex)
+                {
+                    log.warn(ex.toString(), ex);
+
+                    try
+                    {
+                        JavascriptExecutor executor = (JavascriptExecutor)wd;
+                        executor.executeScript("arguments[0].click();", element);
+                    }
+                    catch (Exception ex1)
+                    {
+                        log.error(ex1.toString(), ex1);
+                        throw new WebDriverException(ex1);
+                    }
+                }
             }
         }
         else
@@ -387,6 +393,10 @@ public class SeleniumDriver
 
     public static void waitPageReady(JSONObject event)
     {
+        if (event.getString("type").equalsIgnoreCase(EventType.XHR))
+        {
+            return;
+        }
         int timeout = Integer.parseInt(CONFIG.getPageReadyTimeout()) * 1000;
         try
         {
@@ -507,7 +517,20 @@ public class SeleniumDriver
 
     private static void resizeForEvent(WebDriver wd, JSONObject event)
     {
-        wd.manage().window().setSize(new Dimension(event.getInt("window.width"), event.getInt("window.height")));
+        int w = 1000;
+        int h = 1000;
+        if (event.has("window.width"))
+        {
+            w = event.getInt("window.width");
+            h = event.getInt("window.height");
+        }
+        else
+        {
+            JSONObject window = event.getJSONObject("window");
+            w = window.getInt("width");
+            h = window.getInt("height");
+        }
+        wd.manage().window().setSize(new Dimension(w, h));
     }
 
     private static void scroll(JavascriptExecutor js, WebElement element)

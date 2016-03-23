@@ -14,6 +14,32 @@ jsflight.getElementXPath = function(element) {
         return jsflight.getElementTreeXPath(element);
 };
 
+jsflight.checkIdIsNotExcluded = function(id){
+  return !jsflight.options.exclusion_regexp.test(id);
+};
+
+jsflight.getElementXpathId = function(element){
+    var paths = [];
+    for (; element && element.nodeType == 1; element = element.parentNode) {
+        var attr = element.attributes;
+        var idr = element.id;
+        var tag = element.tagName.toLowerCase();
+        if(!idr && tag == "input"){
+            paths.push("//"+tag);    
+        };
+        if(idr && jsflight.checkIdIsNotExcluded(idr)){
+            paths.splice(0,0,"//*[@id='"+idr+"']");
+        } else {
+            var to_store = jsflight.options.attributes_to_store;
+            for(i=0;i<to_store.length;i++){
+                if(attr.hasOwnProperty(to_store[i])){
+                    paths.splice(0,0,"//*[@"+to_store[i]+"='"+ attr.getNamedItem(to_store[i]).nodeValue + "']");
+            }
+        };
+    }
+    return paths.join("");
+};
+
 jsflight.getElementTreeXPath = function(element) {
     var paths = [];
 

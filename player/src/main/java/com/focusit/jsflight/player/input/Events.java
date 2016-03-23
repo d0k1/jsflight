@@ -18,7 +18,7 @@ import org.json.JSONObject;
  */
 public class Events
 {
-    private static final String EVENT_ID = "eventId";
+    private static final String TIMESTAMP = "timestamp";
     private List<JSONObject> events = new ArrayList<>();
 
     public List<JSONObject> getEvents()
@@ -72,7 +72,7 @@ public class Events
             @Override
             public int compare(JSONObject o1, JSONObject o2)
             {
-                return ((Long)o1.getLong(EVENT_ID)).compareTo(o2.getLong(EVENT_ID));
+                return ((Long)o1.getLong(TIMESTAMP)).compareTo(o2.getLong(TIMESTAMP));
             }
         });
     }
