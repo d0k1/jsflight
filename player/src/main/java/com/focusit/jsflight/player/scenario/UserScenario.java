@@ -198,6 +198,10 @@ public class UserScenario
 
     public String getTargetForEvent(JSONObject event)
     {
+        if (event.has("target2"))
+        {
+            return event.getString("target2");
+        }
         if (!event.has("target1"))
         {
             return "";
@@ -282,21 +286,24 @@ public class UserScenario
         position--;
     }
 
-    public void play(int start, int finish){
+    public void play(int start, int finish)
+    {
         long begin = System.currentTimeMillis();
 
         log.info("playing the scenario");
-        if(start>0){
-        	log.info("skiping "+start+" events.");
-        	position = start;
+        if (start > 0)
+        {
+            log.info("skiping " + start + " events.");
+            position = start;
         }
-        
+
         int maxPosition = events.size();
-        
-        if(finish>0){
-        	maxPosition = finish;
+
+        if (finish > 0)
+        {
+            maxPosition = finish;
         }
-        
+
         while (position < maxPosition)
         {
             if (position > 0)
@@ -321,9 +328,9 @@ public class UserScenario
         }
         log.info(String.format("Done(%d):playing", System.currentTimeMillis() - begin));
         position--;
-    	
+
     }
-    
+
     public long postProcessScenario()
     {
         if (!postProcessScenarioScript.isEmpty())

@@ -35,6 +35,10 @@ jsflight.options = {
     send_interval : -1,
     // control panel disabled by default
     cp_disabled : true,
+    // list of element`s attributes to check and store
+    attributes_to_store : [],
+    //list of ids or id prefixes to ignore
+    id_exclusions : [],
     // function that checks if dom ready to be dumped or pictured or not
     dom_ready_check: function(){
     	return true;
@@ -42,6 +46,13 @@ jsflight.options = {
     propertyProvider : function(prop) {
     }
 };
+
+/* =================================================================================================================================== */
+/*Regex to test id exclusion */
+jsflight.exclusion_regexp = new RegExp(jsflight.options.id_exclusions.join('|'));
+
+
+
 /* =================================================================================================================================== */
 
 jsflight.parseOptions = function(options) {
@@ -93,3 +104,5 @@ jsflight.parseOptions = function(options) {
     if (options.track_duration)
         jsflight.options.track_duration = options.track_duration;
 };
+
+
