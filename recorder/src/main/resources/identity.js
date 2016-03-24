@@ -34,6 +34,7 @@ jsflight.getElementXpathId = function(element){
             for(i=0;i<to_store.length;i++){
                 if(attr.hasOwnProperty(to_store[i])){
                     paths.splice(0,0,"//*[@"+to_store[i]+"='"+ attr.getNamedItem(to_store[i]).nodeValue + "']");
+                }
             }
         };
     }
