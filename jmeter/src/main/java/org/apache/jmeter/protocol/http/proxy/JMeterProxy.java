@@ -308,6 +308,8 @@ public class JMeterProxy extends Thread
                 // save link to JSFlight event
                 JMeterJSFlightBridge.getInstace().addSampler(sampler);
 
+                // TODO add ability to customize post processing of recorded samples
+
                 target.deliverSampler(sampler,
                         children.isEmpty() ? null : (TestElement[])children.toArray(new TestElement[children.size()]),
                         result);

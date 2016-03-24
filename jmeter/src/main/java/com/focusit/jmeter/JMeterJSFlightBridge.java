@@ -5,6 +5,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.jmeter.protocol.http.sampler.HTTPSamplerBase;
 import org.json.JSONObject;
 
+/**
+ * Class holds references to user scenario step and associated http samples.
+ * Can be used during post processing of every http sample to find an appropriate cookie or other auth mechanism
+ */
 public class JMeterJSFlightBridge
 {
     private static final JMeterJSFlightBridge instance = new JMeterJSFlightBridge();

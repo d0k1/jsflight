@@ -110,11 +110,7 @@ jsflight.shouldStartOnLoad = function() {
         return false;
     }
 
-    if (window.sessionStorage.getItem('recorder.active')) {
-        return true;
-    }
-
-    return false;
+    return !!window.sessionStorage.getItem('recorder.active');
 };
 
 /**
@@ -189,8 +185,7 @@ jsflight.take_a_screenshot = function() {
     html2canvas(document.body, {
         onrendered : function(canvas) {
             try {
-                var myImage = canvas.toDataURL("image/png");
-                event.image = myImage;
+                event.image = canvas.toDataURL("image/png");
                 event.type = 'screenshot';
                 event.timeStamp = Date.now();
                 event.eventId = jsflight.eventId;

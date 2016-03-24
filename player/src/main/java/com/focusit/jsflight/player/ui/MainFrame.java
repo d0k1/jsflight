@@ -97,9 +97,6 @@ public class MainFrame
     private JTextField lookupFilename;
     private JTextField checkPageJs;
 
-    private HashMap<String, WebDriver> drivers = new HashMap<>();
-    private HashMap<String, String> lastUrls = new HashMap<>();
-
     private JTextField webDriverTag;
     private RSyntaxTextArea lookupScriptArea;
 
@@ -223,19 +220,6 @@ public class MainFrame
         return frmJsflightrecorderPlayer;
     }
 
-    public String getLastUrl(JSONObject event)
-    {
-        String no_result = "";
-        String result = lastUrls.get(getTagForEvent(event));
-        if (result == null)
-        {
-            lastUrls.put(getTagForEvent(event), no_result);
-            result = no_result;
-        }
-
-        return result;
-    }
-
     public String getTagForEvent(JSONObject event)
     {
         String tag = "null";
@@ -259,11 +243,6 @@ public class MainFrame
         table.getColumnModel().getColumn(7).setMaxWidth(180);
         table.getColumnModel().getColumn(8).setPreferredWidth(140);
         table.getColumnModel().getColumn(8).setMaxWidth(140);
-    }
-
-    public void updateLastUrl(JSONObject event, String url)
-    {
-        lastUrls.put(getTagForEvent(event), url);
     }
 
     protected void copyCurrentStep()

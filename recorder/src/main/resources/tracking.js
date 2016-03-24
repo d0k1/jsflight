@@ -180,14 +180,14 @@ jsflight.TrackXhrStateLoad = function(xhr) {
 jsflight.initXhrTracking = function() {
     XMLHttpRequest.prototype.oldOpen = XMLHttpRequest.prototype.open;
 
-    var newOpen = function(method, url, async, user, password) {
+    XMLHttpRequest.prototype.open = function (method, url, async, user, password) {
         var data = {
-            method : method,
-            target : url,
-            async : async,
-            user : user,
-            password : password,
-            xhrId : jsflight.xhrId
+            method: method,
+            target: url,
+            async: async,
+            user: user,
+            password: password,
+            xhrId: jsflight.xhrId
         };
         jsflight.xhrId++;
         // skip open to ourself url
@@ -197,8 +197,6 @@ jsflight.initXhrTracking = function() {
         this.openData = data;
         this.oldOpen(method, url, async, user, password);
     };
-
-    XMLHttpRequest.prototype.open = newOpen;
 
     XMLHttpRequest.prototype.oldSend = XMLHttpRequest.prototype.send;
     XMLHttpRequest.prototype.send = function(data) {

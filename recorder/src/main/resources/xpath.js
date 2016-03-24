@@ -126,8 +126,7 @@ Xpath.cssToXPath = function(rule) {
 		}
 	}
 
-	var xpath = parts.join("");
-	return xpath;
+	return parts.join("");
 };
 
 Xpath.getElementsBySelector = function(doc, css) {

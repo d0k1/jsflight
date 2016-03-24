@@ -9,10 +9,8 @@ jsflight.getEventInfo = function(mouseEvent) {
     if (mouseEvent === undefined)
         mouseEvent = window.event;
 
-    var target = 'target' in mouseEvent ? mouseEvent.target
-            : mouseEvent.srcElement;
-
-    mouseEvent.target = target;
+    mouseEvent.target = 'target' in mouseEvent ? mouseEvent.target
+        : mouseEvent.srcElement;
 
     var result = {};
 
@@ -20,7 +18,7 @@ jsflight.getEventInfo = function(mouseEvent) {
     result.type = mouseEvent.type;
     result.url = window.location.href;
     result.which = mouseEvent.which;
-    result.key = mouseEvent.key
+    result.key = mouseEvent.key;
     result.keyCode = mouseEvent.keyCode;
     result.charCode = mouseEvent.charCode;
     

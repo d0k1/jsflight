@@ -26,7 +26,7 @@ jsflight.getElementXpathId = function(element){
         var tag = element.tagName.toLowerCase();
         if(!idr && tag == "input"){
             paths.push("//"+tag);    
-        };
+        }
         if(idr && jsflight.checkIdIsNotExcluded(idr)){
             paths.splice(0,0,"//*[@id='"+idr+"']");
         } else {
@@ -36,7 +36,7 @@ jsflight.getElementXpathId = function(element){
                     paths.splice(0,0,"//*[@"+to_store[i]+"='"+ attr.getNamedItem(to_store[i]).nodeValue + "']");
                 }
             }
-        };
+        }
     }
     return paths.join("");
 };
@@ -98,20 +98,18 @@ jsflight.getElementFullId = function(target) {
         return null;
     }
 
-    var id1 = {
-        getxp : Xpath.getElementTreeXPath(target),
-        gecp : Css.getElementCSSPath(target),
-        gecs : Css.getElementCSSSelector(target),
-        csg : new CssSelectorGenerator().getAllSelectors(target)
+    return {
+        getxp: Xpath.getElementTreeXPath(target),
+        gecp: Css.getElementCSSPath(target),
+        gecs: Css.getElementCSSSelector(target),
+        csg: new CssSelectorGenerator().getAllSelectors(target)
         /* ,
-        csg1 : new CssSelectorGenerator(['id', 'class', 'tag', 'nthchild']).getSelector(target),
-        csg2 : new CssSelectorGenerator(['class', 'tag', 'nthchild']).getSelector(target),
-        csg3 : new CssSelectorGenerator(['tag', 'nthchild']).getSelector(target),
-        csg4 : new CssSelectorGenerator(['nthchild']).getSelector(target)
-        */
+         csg1 : new CssSelectorGenerator(['id', 'class', 'tag', 'nthchild']).getSelector(target),
+         csg2 : new CssSelectorGenerator(['class', 'tag', 'nthchild']).getSelector(target),
+         csg3 : new CssSelectorGenerator(['tag', 'nthchild']).getSelector(target),
+         csg4 : new CssSelectorGenerator(['nthchild']).getSelector(target)
+         */
     };
-    
-    return id1;
 };
 
 
