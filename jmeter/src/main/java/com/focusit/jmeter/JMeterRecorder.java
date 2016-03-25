@@ -1,14 +1,5 @@
 package com.focusit.jmeter;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import org.apache.jmeter.config.Argument;
 import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.protocol.http.control.Cookie;
@@ -27,6 +18,15 @@ import org.apache.jorphan.collections.HashTreeTraverser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
  * Interface to control jmeter proxy recorder
  * @author Denis V. Kirpichenkov
@@ -38,12 +38,12 @@ public class JMeterRecorder
 
     private static final Logger log = LoggerFactory.getLogger(JMeterRecorder.class);
     private HashTree hashTree;
-    JMeterProxyControl ctrl;
-    RecordingController recCtrl = null;
-    HashTree recCtrlPlace = null;
-    Arguments vars = null;
+    private JMeterProxyControl ctrl;
+    private RecordingController recCtrl = null;
+    private HashTree recCtrlPlace = null;
+    private Arguments vars = null;
 
-    HashTree varsPlace = null;
+    private HashTree varsPlace = null;
 
     public void init() throws Exception
     {

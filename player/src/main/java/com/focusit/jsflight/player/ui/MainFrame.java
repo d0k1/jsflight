@@ -1,63 +1,7 @@
 package com.focusit.jsflight.player.ui;
 
-import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.Font;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.io.IOException;
-import java.util.Date;
-import java.util.HashMap;
-
-import javax.swing.BoxLayout;
-import javax.swing.ButtonGroup;
-import javax.swing.DefaultCellEditor;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JFileChooser;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JRadioButton;
-import javax.swing.JScrollPane;
-import javax.swing.JSplitPane;
-import javax.swing.JTabbedPane;
-import javax.swing.JTable;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
-import javax.swing.JToolBar;
-import javax.swing.SwingConstants;
-import javax.swing.event.CellEditorListener;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
-import javax.swing.table.AbstractTableModel;
-
-import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
-import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
-import org.fife.ui.rsyntaxtextarea.folding.FoldParserManager;
-import org.fife.ui.rsyntaxtextarea.folding.JsonFoldParser;
-import org.fife.ui.rtextarea.RTextScrollPane;
-import org.json.JSONObject;
-import org.openqa.selenium.WebDriver;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.focusit.jmeter.JMeterRecorder;
-import com.focusit.jsflight.player.controller.IUIController;
-import com.focusit.jsflight.player.controller.InputController;
-import com.focusit.jsflight.player.controller.JMeterController;
-import com.focusit.jsflight.player.controller.OptionsController;
-import com.focusit.jsflight.player.controller.PostProcessController;
-import com.focusit.jsflight.player.controller.ScenarioController;
-import com.focusit.jsflight.player.controller.WebLookupController;
+import com.focusit.jsflight.player.controller.*;
 import com.focusit.jsflight.player.input.FileInput;
 import com.focusit.jsflight.player.scenario.UserScenario;
 import com.focusit.jsflight.player.webdriver.SeleniumDriver;
@@ -66,6 +10,25 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
+import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
+import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
+import org.fife.ui.rsyntaxtextarea.folding.FoldParserManager;
+import org.fife.ui.rsyntaxtextarea.folding.JsonFoldParser;
+import org.fife.ui.rtextarea.RTextScrollPane;
+import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import javax.swing.event.CellEditorListener;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+import javax.swing.table.AbstractTableModel;
+import java.awt.*;
+import java.awt.event.*;
+import java.io.IOException;
+import java.util.Date;
 
 public class MainFrame
 {
@@ -99,6 +62,8 @@ public class MainFrame
 
     private JTextField webDriverTag;
     private RSyntaxTextArea lookupScriptArea;
+    private RSyntaxTextArea stepProcessScript;
+    private RSyntaxTextArea scenarioProcessScript;
 
     /**
      * Create the application.
@@ -275,6 +240,7 @@ public class MainFrame
 
     protected void playTheScenario()
     {
+        saveControlersOptions();
         scenario.play();
         model.fireTableDataChanged();
     }
@@ -937,14 +903,14 @@ public class MainFrame
                 new ColumnSpec[] { FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"), },
                 new RowSpec[] { FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC, RowSpec.decode("default:grow"),
+                        FormSpecs.RELATED_GAP_ROWSPEC, RowSpec.decode("default:grow"), FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC, }));
 
         JLabel lblJmeterRecorder_1 = new JLabel("JMeter recorder");
-        jmeterPanel.add(lblJmeterRecorder_1, "2, 2");
+        jmeterPanel.add(lblJmeterRecorder_1, "2, 2, right, default");
 
         JPanel label_5 = new JPanel();
         jmeterPanel.add(label_5, "4, 2");
@@ -1008,6 +974,32 @@ public class MainFrame
         scenarioTextField.setColumns(10);
         jmeterPanel.add(scenarioTextField, "4, 4, fill, default");
 
+        JLabel lblJmeterStepPost = new JLabel("Step processor");
+        jmeterPanel.add(lblJmeterStepPost, "2, 6, right, top");
+
+        JPanel panel_7 = new JPanel();
+        jmeterPanel.add(panel_7, "4, 6, fill, fill");
+        panel_7.setLayout(new BorderLayout(0, 0));
+
+        JScrollPane scrollPane_5 = new JScrollPane();
+        panel_7.add(scrollPane_5, BorderLayout.CENTER);
+
+        stepProcessScript = new RSyntaxTextArea();
+        scrollPane_5.setViewportView(stepProcessScript);
+
+        JLabel lblScenarioProcessor = new JLabel("Scenario processor");
+        jmeterPanel.add(lblScenarioProcessor, "2, 8, right, top");
+
+        JPanel panel_8 = new JPanel();
+        jmeterPanel.add(panel_8, "4, 8, fill, fill");
+        panel_8.setLayout(new BorderLayout(0, 0));
+
+        JScrollPane scrollPane_6 = new JScrollPane();
+        panel_8.add(scrollPane_6, BorderLayout.CENTER);
+
+        scenarioProcessScript = new RSyntaxTextArea();
+        scrollPane_6.setViewportView(scenarioProcessScript);
+
         initUIFromControllers();
     }
 
@@ -1027,6 +1019,8 @@ public class MainFrame
 
     private void initUIFromJMeterController()
     {
+        stepProcessScript.setText(JMeterController.getInstance().getStepProcessorScript());
+        scenarioProcessScript.setText(JMeterController.getInstance().getScenarioProcessorScript());
     }
 
     private void initUIFromOptionsController()
@@ -1087,8 +1081,8 @@ public class MainFrame
 
     private void updateJMeterController()
     {
-        // TODO Auto-generated method stub
-
+        JMeterController.getInstance().setStepProcessorScript(stepProcessScript.getText());
+        JMeterController.getInstance().setScenarioProcessorScript(scenarioProcessScript.getText());
     }
 
     private void updateOptionsController()

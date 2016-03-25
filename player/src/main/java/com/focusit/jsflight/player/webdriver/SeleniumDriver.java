@@ -1,28 +1,10 @@
 package com.focusit.jsflight.player.webdriver;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-
+import com.focusit.jsflight.player.constants.EventType;
+import com.focusit.jsflight.player.scenario.UserScenario;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.openqa.selenium.By;
-import org.openqa.selenium.Cookie.Builder;
-import org.openqa.selenium.Dimension;
-import org.openqa.selenium.JavascriptExecutor;
-import org.openqa.selenium.Keys;
-import org.openqa.selenium.NoSuchElementException;
-import org.openqa.selenium.OutputType;
-import org.openqa.selenium.TakesScreenshot;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebDriverException;
-import org.openqa.selenium.WebElement;
+import org.openqa.selenium.*;
 import org.openqa.selenium.firefox.FirefoxBinary;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxProfile;
@@ -33,9 +15,15 @@ import org.openqa.selenium.remote.DesiredCapabilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.focusit.jmeter.JMeterJSFlightBridge;
-import com.focusit.jsflight.player.constants.EventType;
-import com.focusit.jsflight.player.scenario.UserScenario;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 /**
  * Selenium webdriver helper: runs a browser, sends events, make screenshots
@@ -45,7 +33,6 @@ import com.focusit.jsflight.player.scenario.UserScenario;
  */
 public class SeleniumDriver
 {
-    public static String CHECK_PAGE_READY_JS = "return (document.getElementById('state.dispatch')==null || document.getElementById('state.dispatch').getAttribute('value')==0) &&  (document.getElementById('state.context')==null ||  document.getElementById('state.context').getAttribute('value')=='ready');";
     private static final String SET_ELEMENT_VISIBLE_JS = "var e = document.evaluate('%s' ,document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null ).singleNodeValue; if(e!== null) {e.style.visibility='visible';};";
 
     private static final Logger log = LoggerFactory.getLogger(SeleniumDriver.class);
@@ -57,30 +44,9 @@ public class SeleniumDriver
 
     private static HashMap<String, String> lastUrls = new HashMap<>();
 
-    public static void addTagCookie(JSONObject event, WebDriver wd)
-    {
-        String event_url = event.getString("url");
-
-        //Adding cookie        
-        Builder b = new Builder("employee", event.getString(JMeterJSFlightBridge.TAG_FIELD));
-        try
-        {
-            b.domain(getDomain(event_url));
-            b.path("/");
-        }
-        catch (MalformedURLException e)
-        {
-            log.error(e.toString(), e);
-        }
-
-        wd.manage().addCookie(b.build());
-    }
-
     public static void closeWebDrivers()
     {
-        drivers.values().stream().forEach(v -> {
-            v.close();
-        });
+        drivers.values().stream().forEach(WebDriver::close);
         drivers.clear();
         lastUrls.clear();
     }
@@ -101,7 +67,7 @@ public class SeleniumDriver
         }
     }
 
-    public static WebDriver getDriverForEvent(JSONObject event)
+    private static WebDriver getDriverForEvent(JSONObject event)
     {
 
         String tag = UserScenario.getTagForEvent(event);
@@ -219,7 +185,10 @@ public class SeleniumDriver
             byte[] shot = shoter.getScreenshotAs(OutputType.BYTES);
             File dir = new File(CONFIG.getScreenDir() + File.separator
                     + Paths.get(UserScenario.getScenarioFilename()).getFileName().toString());
-            dir.mkdirs();
+
+            if(!dir.mkdirs()){
+                return;
+            }
 
             try (FileOutputStream fos = new FileOutputStream(new String(dir.getAbsolutePath() + File.separator
                     + String.format("%05d", UserScenario.getPosition()) + ".png")))
@@ -242,8 +211,6 @@ public class SeleniumDriver
         if (wd.getCurrentUrl().equals("about:blank") || !getLastUrl(event).equals(event_url))
         {
             wd.get(event_url);
-
-            addTagCookie(event, wd);
 
             waitUiShow(wd);
             waitPageReady(event);
@@ -405,6 +372,7 @@ public class SeleniumDriver
             while (sleeps < timeout)
             {
                 Thread.sleep(2000);
+                String CHECK_PAGE_READY_JS = "return (document.getElementById('state.dispatch')==null || document.getElementById('state.dispatch').getAttribute('value')==0) &&  (document.getElementById('state.context')==null ||  document.getElementById('state.context').getAttribute('value')=='ready');";
                 Object result = js.executeScript(CHECK_PAGE_READY_JS);
                 if (result != null && Boolean.parseBoolean(result.toString().toLowerCase()) == true)
                 {
@@ -517,8 +485,8 @@ public class SeleniumDriver
 
     private static void resizeForEvent(WebDriver wd, JSONObject event)
     {
-        int w = 1000;
-        int h = 1000;
+        int w = 0;
+        int h = 0;
         if (event.has("window.width"))
         {
             w = event.getInt("window.width");
@@ -530,6 +498,15 @@ public class SeleniumDriver
             w = window.getInt("width");
             h = window.getInt("height");
         }
+
+        if(w==0) {
+            w = 1000;
+        }
+
+        if(h==0) {
+            h = 1000;
+        }
+
         wd.manage().window().setSize(new Dimension(w, h));
     }
 
@@ -540,7 +517,7 @@ public class SeleniumDriver
 
     private static void waitUiShow(WebDriver wd)
     {
-        long timeout = System.currentTimeMillis() + 20000l;
+        long timeout = System.currentTimeMillis() + 20000L;
         while (System.currentTimeMillis() < timeout)
         {
             try
@@ -558,9 +535,8 @@ public class SeleniumDriver
                 catch (InterruptedException e1)
                 {
                     //Should never happen
-                    e1.printStackTrace();
+                    log.error(e1.toString(), e1);
                 }
-                continue;
             }
         }
         throw new RuntimeException("UI didn`t show up. =(");

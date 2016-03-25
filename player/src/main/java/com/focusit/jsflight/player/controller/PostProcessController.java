@@ -1,15 +1,13 @@
 package com.focusit.jsflight.player.controller;
 
+import com.focusit.jsflight.player.input.Events;
+import com.focusit.jsflight.player.script.Engine;
+import org.json.JSONObject;
+
 import java.io.ObjectInputStream;
-import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.json.JSONObject;
-
-import com.focusit.jsflight.player.input.Events;
-import com.focusit.jsflight.player.script.Engine;
 
 public class PostProcessController extends UIController
 {

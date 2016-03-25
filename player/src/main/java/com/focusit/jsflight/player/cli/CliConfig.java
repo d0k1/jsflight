@@ -57,6 +57,12 @@ public class CliConfig
     @Parameter(names = { "-h", "--help" }, description = "Show this help")
     private boolean help = false;
 
+    @Parameter(names = { "-js1", "--jmeterpreprocesstep" }, description = "Script to preprocess jmeter's sample")
+    private String jmeterStepPreprocess;
+
+    @Parameter(names = { "-js2", "--jmeterpreprocesscenario" }, description = "Script to preprocess whole jmeter scenario")
+    private String jmeterScenarioPreprocess;
+
     public String getFfPath()
     {
         return ffPath;
@@ -147,4 +153,20 @@ public class CliConfig
 	public void setFinishStep(String finishStep) {
 		this.finishStep = finishStep;
 	}
+
+    public String getJmeterStepPreprocess() {
+        return jmeterStepPreprocess;
+    }
+
+    public void setJmeterStepPreprocess(String jmeterStepPreprocess) {
+        this.jmeterStepPreprocess = jmeterStepPreprocess;
+    }
+
+    public String getJmeterScenarioPreprocess() {
+        return jmeterScenarioPreprocess;
+    }
+
+    public void setJmeterScenarioPreprocess(String jmeterScenarioPreprocess) {
+        this.jmeterScenarioPreprocess = jmeterScenarioPreprocess;
+    }
 }
