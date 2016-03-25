@@ -1,7 +1,6 @@
 package com.focusit.jsflight.player.ui;
 
 import com.focusit.jmeter.JMeterRecorder;
-import com.focusit.jmeter.JMeterScriptProcessor;
 import com.focusit.jsflight.player.controller.*;
 import com.focusit.jsflight.player.input.FileInput;
 import com.focusit.jsflight.player.scenario.UserScenario;
