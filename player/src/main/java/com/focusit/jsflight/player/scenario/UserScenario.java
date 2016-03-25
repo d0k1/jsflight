@@ -219,12 +219,8 @@ public class UserScenario
     public boolean isStepDuplicates(JSONObject event)
     {
         JSONObject prev = getPrevEvent(event);
-        if (prev == null)
-        {
-            return false;
-        }
 
-        if (prev.getString("type").equals(event.getString("type"))
+        if (prev != null && prev.getString("type").equals(event.getString("type"))
                 && prev.getString("url").equals(event.getString("url"))
                 && getTargetForEvent(prev).equals(getTargetForEvent(event)))
         {

@@ -1,7 +1,10 @@
 package com.focusit.jsflight.player.cli;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
+import com.focusit.jmeter.JMeterScriptProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,6 +33,14 @@ public class CliPlayer
         {
             LOG.info("Initializing Jmeter with jmx template: {}", templatePath);
             jmeter.init(templatePath);
+        }
+
+        if(!this.config.getJmeterStepPreprocess().trim().isEmpty()){
+            JMeterScriptProcessor.getInstance().setRecordingScript(new String(Files.readAllBytes(Paths.get(this.config.getJmeterStepPreprocess().trim())), "UTF-8"));
+        }
+
+        if(!this.config.getJmeterScenarioPreprocess().trim().isEmpty()){
+            JMeterScriptProcessor.getInstance().setProcessScript(new String(Files.readAllBytes(Paths.get(this.config.getJmeterScenarioPreprocess().trim())), "UTF-8"));
         }
     }
 

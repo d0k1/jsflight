@@ -1,5 +1,7 @@
 package com.focusit.jsflight.player.controller;
 
+import com.focusit.jmeter.JMeterScriptProcessor;
+
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
@@ -25,6 +27,12 @@ public class JMeterController extends UIController
         ObjectInputStream stream = getInputStream(file);
         stepProcessorScript = (String) stream.readObject();
         scenarioProcessorScript = (String) stream.readObject();
+        syncScripts();
+    }
+
+    private void syncScripts(){
+        JMeterScriptProcessor.getInstance().setRecordingScript(getStepProcessorScript());
+        JMeterScriptProcessor.getInstance().setProcessScript(getScenarioProcessorScript());
     }
 
     @Override
@@ -47,6 +55,7 @@ public class JMeterController extends UIController
 
     public void setStepProcessorScript(String stepProcessorScript) {
         this.stepProcessorScript = stepProcessorScript;
+        syncScripts();
     }
 
     public String getScenarioProcessorScript() {
@@ -55,5 +64,6 @@ public class JMeterController extends UIController
 
     public void setScenarioProcessorScript(String scenarioProcessorScript) {
         this.scenarioProcessorScript = scenarioProcessorScript;
+        syncScripts();
     }
 }

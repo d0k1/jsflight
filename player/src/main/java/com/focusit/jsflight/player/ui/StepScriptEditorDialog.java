@@ -16,12 +16,11 @@ public class StepScriptEditorDialog extends DefaultCellEditor implements TableCe
 {
     private static final long serialVersionUID = 1L;
 
-    static final String EDIT = "edit";
-    String newInput;
-    String oldValue;
-    ScriptDialog dialog;
+    private String newInput;
+    private String oldValue;
+    private ScriptDialog dialog;
     private JButton editorComponent;
-    UserScenario scenario;
+    private UserScenario scenario;
     private String stepProperty = "";
     private int position = -1;
 
@@ -87,14 +86,9 @@ public class StepScriptEditorDialog extends DefaultCellEditor implements TableCe
         final StepScriptEditorDialog editor = this;
         dialog.setOldValue(oldValue);
 
-        SwingUtilities.invokeLater(new Runnable()
-        {
-            @Override
-            public void run()
-            {
-                dialog.setEditor(editor);
-                dialog.show();
-            }
+        SwingUtilities.invokeLater(() -> {
+            dialog.setEditor(editor);
+            dialog.show();
         });
 
         return editorComponent;

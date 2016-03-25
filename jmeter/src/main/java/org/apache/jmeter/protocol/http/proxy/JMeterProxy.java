@@ -25,6 +25,7 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
+import com.focusit.jmeter.JMeterScriptProcessor;
 import org.apache.jmeter.protocol.http.control.HeaderManager;
 import org.apache.jmeter.protocol.http.parser.HTMLParseException;
 import org.apache.jmeter.protocol.http.sampler.HTTPSamplerBase;
@@ -305,14 +306,15 @@ public class JMeterProxy extends Thread
                 String name = JMeterProxyCounter.getInstance().counter.incrementAndGet() + ". " + sampler.getName();
                 sampler.setName(name);
 
-                // save link to JSFlight event
-                JMeterJSFlightBridge.getInstace().addSampler(sampler);
-
                 // TODO add ability to customize post processing of recorded samples
+                if(JMeterScriptProcessor.getInstance().processSampleDuringRecord(sampler, result)){
+                    // save link to JSFlight event
+                    JMeterJSFlightBridge.getInstace().addSampler(sampler);
 
-                target.deliverSampler(sampler,
-                        children.isEmpty() ? null : (TestElement[])children.toArray(new TestElement[children.size()]),
-                        result);
+                    target.deliverSampler(sampler,
+                            children.isEmpty() ? null : (TestElement[])children.toArray(new TestElement[children.size()]),
+                            result);
+                }
             }
             try
             {

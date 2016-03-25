@@ -60,7 +60,7 @@ public class SeleniumDriver
             log.info("looking for " + target);
             return wd.findElement(By.xpath(target));
         }
-        catch (org.openqa.selenium.NoSuchElementException e)
+        catch (NoSuchElementException e)
         {
             log.info("failed looking for " + getCSSSelector(event));
             return wd.findElement(By.cssSelector(getCSSSelector(event)));
@@ -92,7 +92,7 @@ public class SeleniumDriver
                 {
                     host += ":" + proxyPort;
                 }
-                org.openqa.selenium.Proxy proxy = new org.openqa.selenium.Proxy();
+                Proxy proxy = new Proxy();
                 proxy.setHttpProxy(host).setFtpProxy(host).setSslProxy(host);
                 cap.setCapability(CapabilityType.PROXY, proxy);
             }
@@ -229,6 +229,7 @@ public class SeleniumDriver
                     char ch = (char)event.getBigInteger(("charCode")).intValue();
                     char keys[] = new char[1];
                     keys[0] = ch;
+                    // TODO use keys
                     //element.sendKeys(new String(keys));
                     element.sendKeys("UI Recording" + System.currentTimeMillis());
                 }
@@ -237,6 +238,7 @@ public class SeleniumDriver
                     WebDriver wd = getDriverForEvent(event);
                     WebDriver frame = wd.switchTo().frame(element);
                     WebElement editor = frame.findElement(By.tagName("body"));
+                    // TODO use keys
                     editor.sendKeys("UI Recording" + System.currentTimeMillis());
                     wd.switchTo().defaultContent();
                 }
@@ -249,7 +251,7 @@ public class SeleniumDriver
             {
                 int code = event.getBigInteger(("charCode")).intValue();
 
-                if (event.getBoolean("ctrlKey") == true)
+                if (event.getBoolean("ctrlKey"))
                 {
                     element.sendKeys(Keys.chord(Keys.CONTROL, new String(new byte[] { (byte)code })));
                 }
@@ -280,6 +282,8 @@ public class SeleniumDriver
                         break;
                     case 40:
                         element.sendKeys(Keys.ARROW_DOWN);
+                        break;
+                    default:
                         break;
                     }
                 }
@@ -337,6 +341,7 @@ public class SeleniumDriver
         do
         {
             waitPageReady(event);
+            // TODO WebLookup script must return the element
             WebElement el = getMax(wd);
             scroll((JavascriptExecutor)wd, el);
             if (checkElementPresent(wd, target))
@@ -345,7 +350,7 @@ public class SeleniumDriver
             }
         }
         while (System.currentTimeMillis() < timeout);
-        throw new RuntimeException("Element was not found during scroll");
+        throw new NoSuchElementException("Element was not found during scroll");
     }
 
     public static void resetLastUrls()
@@ -374,7 +379,7 @@ public class SeleniumDriver
                 Thread.sleep(2000);
                 String CHECK_PAGE_READY_JS = "return (document.getElementById('state.dispatch')==null || document.getElementById('state.dispatch').getAttribute('value')==0) &&  (document.getElementById('state.context')==null ||  document.getElementById('state.context').getAttribute('value')=='ready');";
                 Object result = js.executeScript(CHECK_PAGE_READY_JS);
-                if (result != null && Boolean.parseBoolean(result.toString().toLowerCase()) == true)
+                if (result != null && Boolean.parseBoolean(result.toString().toLowerCase()))
                 {
                     break;
                 }
@@ -386,7 +391,7 @@ public class SeleniumDriver
         catch (InterruptedException e)
         {
             log.error(e.toString(), e);
-            throw new RuntimeException(e);
+            throw new IllegalStateException(e);
         }
     }
 
@@ -431,42 +436,6 @@ public class SeleniumDriver
 
         String target = array.getJSONObject(0).getString("gecp");
         return target;
-    }
-
-    private static String getDomain(String url) throws MalformedURLException
-    {
-        URL aURL = new URL(url);
-        return aURL.getHost() + ":" + aURL.getPort();
-        /*
-        URL aURL = new URL("http://example.com:80/docs/books/tutorial" + "/index.html?name=networking#DOWNLOADING");
-        
-        System.out.println("protocol = " + aURL.getProtocol()); //http
-        System.out.println("authority = " + aURL.getAuthority()); //example.com:80
-        System.out.println("host = " + aURL.getHost()); //example.com
-        System.out.println("port = " + aURL.getPort()); //80
-        System.out.println("path = " + aURL.getPath()); //  /docs/books/tutorial/index.html
-        System.out.println("query = " + aURL.getQuery()); //name=networking
-        System.out.println("filename = " + aURL.getFile()); ///docs/books/tutorial/index.html?name=networking
-        System.out.println("ref = " + aURL.getRef()); //DOWNLOADING
-        */
-    }
-
-    private static String getDomainPath(String url) throws MalformedURLException
-    {
-        URL aURL = new URL(url);
-        return aURL.getPath();
-        /*
-        URL aURL = new URL("http://example.com:80/docs/books/tutorial" + "/index.html?name=networking#DOWNLOADING");
-        
-        System.out.println("protocol = " + aURL.getProtocol()); //http
-        System.out.println("authority = " + aURL.getAuthority()); //example.com:80
-        System.out.println("host = " + aURL.getHost()); //example.com
-        System.out.println("port = " + aURL.getPort()); //80
-        System.out.println("path = " + aURL.getPath()); //  /docs/books/tutorial/index.html
-        System.out.println("query = " + aURL.getQuery()); //name=networking
-        System.out.println("filename = " + aURL.getFile()); ///docs/books/tutorial/index.html?name=networking
-        System.out.println("ref = " + aURL.getRef()); //DOWNLOADING
-        */
     }
 
     private static WebElement getMax(WebDriver wd)
@@ -539,6 +508,6 @@ public class SeleniumDriver
                 }
             }
         }
-        throw new RuntimeException("UI didn`t show up. =(");
+        throw new NoSuchElementException("UI didn`t show up. =(");
     }
 }

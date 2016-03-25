@@ -1,6 +1,7 @@
 package com.focusit.jsflight.player.ui;
 
 import com.focusit.jmeter.JMeterRecorder;
+import com.focusit.jmeter.JMeterScriptProcessor;
 import com.focusit.jsflight.player.controller.*;
 import com.focusit.jsflight.player.input.FileInput;
 import com.focusit.jsflight.player.scenario.UserScenario;
@@ -124,19 +125,19 @@ public class MainFrame
                     return event.has("hash") ? event.get("hash") : "";
                 case 4:
                     String type = event.getString("type");
-                    if (type.equals("mousedown"))
+                    if ("mousedown".equals(type))
                     {
                         return "md";
                     }
-                    if (type.equals("keypress"))
+                    if ("keypress".equals(type))
                     {
                         return "kp";
                     }
-                    if (type.equals("keyup"))
+                    if ("keyup".equals(type))
                     {
                         return "ku";
                     }
-                    if (type.equals("hashchange"))
+                    if ("hashchange".equals(type))
                     {
                         return "hc";
                     }
@@ -164,8 +165,9 @@ public class MainFrame
                     return event.has("pre") ? event.getString("pre") : "no";
                 case 10:
                     return event.has("post") ? event.getString("post") : "no";
+                default:
+                    return null;
                 }
-                return null;
             }
 
             @Override
@@ -355,7 +357,7 @@ public class MainFrame
                 }
                 catch (IOException e1)
                 {
-                    throw new RuntimeException(e1);
+                    throw new IllegalArgumentException(e1);
                 }
             }
         });
@@ -646,7 +648,7 @@ public class MainFrame
         scenarioPanel.add(splitPane, BorderLayout.CENTER);
 
         eventContent = new RSyntaxTextArea();
-        eventContent.setSyntaxEditingStyle(org.fife.ui.rsyntaxtextarea.SyntaxConstants.SYNTAX_STYLE_JSON);
+        eventContent.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JSON);
         eventContent.getFoldManager().setCodeFoldingEnabled(true);
         eventContent.setFont(new Font("Hack", Font.PLAIN, 14));
         eventContent.setRows(3);
@@ -660,7 +662,7 @@ public class MainFrame
         splitPane.setLeftComponent(panel_4);
         splitPane.setRightComponent(scrollPane_2);
 
-        FoldParserManager.get().addFoldParserMapping(org.fife.ui.rsyntaxtextarea.SyntaxConstants.SYNTAX_STYLE_JSON,
+        FoldParserManager.get().addFoldParserMapping(SyntaxConstants.SYNTAX_STYLE_JSON,
                 new JsonFoldParser());
 
         JPanel panel_6 = new JPanel();

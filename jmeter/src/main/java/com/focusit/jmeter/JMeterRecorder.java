@@ -161,9 +161,16 @@ public class JMeterRecorder
 
             HashTree parent = recCtrlPlace.add(sample);
 
+            for (TestElement child : childs)
+            {
+                parent.add(child);
+            }
+
             // TODO Groovy script should decide whether add cookie manager or not
-            if(sample instanceof HTTPSamplerBase){ 
+            if(sample instanceof HTTPSamplerBase){
             	HTTPSamplerBase http = (HTTPSamplerBase) sample;
+
+                JMeterScriptProcessor.getInstance().processScenario(http, parent);
 
             	boolean accesKeyFound = false;
             	
@@ -209,12 +216,6 @@ public class JMeterRecorder
 		            }
             	}
             }
-
-            for (TestElement child : childs)
-            {
-                parent.add(child);
-            }
-
             sample = recCtrl.next();
         }
 
