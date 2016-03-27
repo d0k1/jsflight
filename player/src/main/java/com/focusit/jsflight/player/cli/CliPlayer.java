@@ -35,12 +35,16 @@ public class CliPlayer
             jmeter.init(templatePath);
         }
 
-        if(!this.config.getJmeterStepPreprocess().trim().isEmpty()){
-            JMeterScriptProcessor.getInstance().setRecordingScript(new String(Files.readAllBytes(Paths.get(this.config.getJmeterStepPreprocess().trim())), "UTF-8"));
+        updateControllers();
+    }
+
+    private void updateControllers() throws IOException {
+        if(!this.config.getJmeterStepPreprocess().trim().isEmpty()) {
+            JMeterScriptProcessor.getInstance().setRecordingScript(new String(Files.readAllBytes(Paths.get(config.getJmeterStepPreprocess().trim())), "UTF-8"));
         }
 
         if(!this.config.getJmeterScenarioPreprocess().trim().isEmpty()){
-            JMeterScriptProcessor.getInstance().setProcessScript(new String(Files.readAllBytes(Paths.get(this.config.getJmeterScenarioPreprocess().trim())), "UTF-8"));
+            JMeterScriptProcessor.getInstance().setProcessScript(new String(Files.readAllBytes(Paths.get(config.getJmeterScenarioPreprocess().trim())), "UTF-8"));
         }
     }
 

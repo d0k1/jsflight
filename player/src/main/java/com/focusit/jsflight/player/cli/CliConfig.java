@@ -142,31 +142,16 @@ public class CliConfig
 		return startStep;
 	}
 
-	public void setStartStep(String startStep) {
-		this.startStep = startStep;
-	}
-
 	public String getFinishStep() {
 		return finishStep;
-	}
-
-	public void setFinishStep(String finishStep) {
-		this.finishStep = finishStep;
 	}
 
     public String getJmeterStepPreprocess() {
         return jmeterStepPreprocess;
     }
 
-    public void setJmeterStepPreprocess(String jmeterStepPreprocess) {
-        this.jmeterStepPreprocess = jmeterStepPreprocess;
-    }
-
     public String getJmeterScenarioPreprocess() {
         return jmeterScenarioPreprocess;
     }
 
-    public void setJmeterScenarioPreprocess(String jmeterScenarioPreprocess) {
-        this.jmeterScenarioPreprocess = jmeterScenarioPreprocess;
-    }
 }
