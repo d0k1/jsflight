@@ -1,16 +1,15 @@
 package com.focusit.jsflight.player.cli;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-
+import com.focusit.jmeter.JMeterRecorder;
 import com.focusit.jmeter.JMeterScriptProcessor;
+import com.focusit.jsflight.player.scenario.UserScenario;
+import com.focusit.jsflight.player.webdriver.SeleniumDriverConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.focusit.jmeter.JMeterRecorder;
-import com.focusit.jsflight.player.scenario.UserScenario;
-import com.focusit.jsflight.player.webdriver.SeleniumDriverConfig;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 public class CliPlayer
 {
@@ -39,11 +38,11 @@ public class CliPlayer
     }
 
     private void updateControllers() throws IOException {
-        if(!this.config.getJmeterStepPreprocess().trim().isEmpty()) {
+        if(this.config.getJmeterStepPreprocess()!=null && !this.config.getJmeterStepPreprocess().trim().isEmpty()) {
             JMeterScriptProcessor.getInstance().setRecordingScript(new String(Files.readAllBytes(Paths.get(config.getJmeterStepPreprocess().trim())), "UTF-8"));
         }
 
-        if(!this.config.getJmeterScenarioPreprocess().trim().isEmpty()){
+        if(this.config.getJmeterScenarioPreprocess()!=null && !this.config.getJmeterScenarioPreprocess().trim().isEmpty()){
             JMeterScriptProcessor.getInstance().setProcessScript(new String(Files.readAllBytes(Paths.get(config.getJmeterScenarioPreprocess().trim())), "UTF-8"));
         }
     }

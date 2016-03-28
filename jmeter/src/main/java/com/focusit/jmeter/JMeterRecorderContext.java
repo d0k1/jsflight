@@ -27,4 +27,8 @@ public class JMeterRecorderContext {
     public String getTemplate(String source) {
         return templateReplacemnts.get(source);
     }
+
+    public void reset(){
+        templateReplacemnts.clear();
+    }
 }

@@ -224,6 +224,7 @@ public class JMeterRecorder
 
     public void startRecording() throws IOException
     {
+        JMeterRecorderContext.getInstance().reset();
         ctrl.startProxy();
     }
 
