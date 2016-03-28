@@ -1,9 +1,9 @@
 package com.focusit.jmeter;
 
-import java.util.concurrent.ConcurrentHashMap;
-
 import org.apache.jmeter.protocol.http.sampler.HTTPSamplerBase;
 import org.json.JSONObject;
+
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Class holds references to user scenario step and associated http samples.
@@ -11,6 +11,13 @@ import org.json.JSONObject;
  */
 public class JMeterJSFlightBridge
 {
+    {
+        NO_SCENARIO_STEP = new JSONObject();
+        NO_SCENARIO_STEP.put("DO NOT USE IT", true);
+    }
+
+    public static JSONObject NO_SCENARIO_STEP;
+
     private static final JMeterJSFlightBridge instance = new JMeterJSFlightBridge();
 
     public static JMeterJSFlightBridge getInstace()
@@ -22,7 +29,7 @@ public class JMeterJSFlightBridge
 
     private final ConcurrentHashMap<String, JSONObject> namesEvents = new ConcurrentHashMap<>();
 
-    private JSONObject currentScenarioStep = null;
+    private JSONObject currentScenarioStep = NO_SCENARIO_STEP;
 
     public static String TAG_FIELD = "uuid";
 
@@ -35,6 +42,10 @@ public class JMeterJSFlightBridge
     {
         namesEvents.put(sampler.getName(), getCurrentScenarioStep());
         samplersEvents.put(sampler, getCurrentScenarioStep());
+    }
+
+    public boolean isCurrentStepEmpty(){
+        return currentScenarioStep.equals(NO_SCENARIO_STEP);
     }
 
     public JSONObject getCurrentScenarioStep()

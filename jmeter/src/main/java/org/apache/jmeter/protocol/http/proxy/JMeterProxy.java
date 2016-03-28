@@ -1,30 +1,7 @@
 package org.apache.jmeter.protocol.http.proxy;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintStream;
-import java.net.Socket;
-import java.net.URL;
-import java.net.UnknownHostException;
-import java.nio.charset.IllegalCharsetNameException;
-import java.security.GeneralSecurityException;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocket;
-import javax.net.ssl.SSLSocketFactory;
-
+import com.focusit.jmeter.JMeterJSFlightBridge;
+import com.focusit.jmeter.JMeterProxyCounter;
 import com.focusit.jmeter.JMeterScriptProcessor;
 import org.apache.jmeter.protocol.http.control.HeaderManager;
 import org.apache.jmeter.protocol.http.parser.HTMLParseException;
@@ -39,8 +16,19 @@ import org.apache.jorphan.util.JMeterException;
 import org.apache.jorphan.util.JOrphanUtils;
 import org.apache.log.Logger;
 
-import com.focusit.jmeter.JMeterJSFlightBridge;
-import com.focusit.jmeter.JMeterProxyCounter;
+import javax.net.ssl.*;
+import java.io.*;
+import java.net.Socket;
+import java.net.URL;
+import java.net.UnknownHostException;
+import java.nio.charset.IllegalCharsetNameException;
+import java.security.GeneralSecurityException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Copy paste of org.apache.jmeter.protocol.http.proxy.Proxy
@@ -303,17 +291,21 @@ public class JMeterProxy extends Thread
                     children.addAll(samplerCreator.createChildren(sampler, result));
                 }
 
-                String name = JMeterProxyCounter.getInstance().counter.incrementAndGet() + ". " + sampler.getName();
-                sampler.setName(name);
+                if(sampler!=null) {
+                    String name = JMeterProxyCounter.getInstance().counter.incrementAndGet() + ". " + sampler.getName();
+                    sampler.setName(name);
 
-                // TODO add ability to customize post processing of recorded samples
-                if(JMeterScriptProcessor.getInstance().processSampleDuringRecord(sampler, result)){
-                    // save link to JSFlight event
-                    JMeterJSFlightBridge.getInstace().addSampler(sampler);
+                    // TODO add ability to customize post processing of recorded samples
+                    if (JMeterScriptProcessor.getInstance().processSampleDuringRecord(sampler, result)) {
+                        if(!JMeterJSFlightBridge.getInstace().isCurrentStepEmpty()) {
+                            // save link to JSFlight event
+                            JMeterJSFlightBridge.getInstace().addSampler(sampler);
+                        }
 
-                    target.deliverSampler(sampler,
-                            children.isEmpty() ? null : (TestElement[])children.toArray(new TestElement[children.size()]),
-                            result);
+                        target.deliverSampler(sampler,
+                                children.isEmpty() ? null : (TestElement[]) children.toArray(new TestElement[children.size()]),
+                                result);
+                    }
                 }
             }
             try

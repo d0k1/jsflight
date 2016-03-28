@@ -71,7 +71,13 @@ public class JMeterScriptProcessor {
         binding.setVariable("jsflight", JMeterJSFlightBridge.getInstace());
 
         compiledRecordingScript.setBinding(binding);
-        boolean isOk = (Boolean) compiledRecordingScript.run();
+        boolean isOk = true;
+        Object scriptResult = compiledRecordingScript.run();
+
+        if(scriptResult!=null && scriptResult instanceof Boolean){
+            isOk = (boolean) scriptResult;
+        }
+
         return isOk;
     }
 

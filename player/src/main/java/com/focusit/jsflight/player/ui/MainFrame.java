@@ -1,6 +1,7 @@
 package com.focusit.jsflight.player.ui;
 
 import com.focusit.jmeter.JMeterRecorder;
+import com.focusit.jmeter.JMeterScriptProcessor;
 import com.focusit.jsflight.player.controller.*;
 import com.focusit.jsflight.player.input.FileInput;
 import com.focusit.jsflight.player.scenario.UserScenario;
@@ -940,9 +941,14 @@ public class MainFrame
             @Override
             public void actionPerformed(ActionEvent e)
             {
-                try {
+                try
+                {
+                    JMeterScriptProcessor.setProcessScript(stepProcessScript.getText());
+                    JMeterScriptProcessor.setRecordingScript(scenarioProcessScript.getText());
                     jmeter.reset();
-                } catch (IOException e1) {
+                }
+                catch (IOException e1)
+                {
                     log.error(e1.toString(), e1);
                 }
             }
