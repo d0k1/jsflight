@@ -111,40 +111,35 @@ public class UserScenario
 
             SeleniumDriver.waitPageReady(event);
 
-            switch (type)
+            try
             {
-            case EventType.SCROLL_EMULATION:
-                SeleniumDriver.processScroll(event, target);
-                break;
-
-            case EventType.MOUSEDOWN:
-                try
+                switch (type)
                 {
+                case EventType.MOUSEWHEEL:
+                    SeleniumDriver.processMouseWheel(event, target);
+                    break;
+                case EventType.SCROLL_EMULATION:
+                    SeleniumDriver.processScroll(event, target);
+                    break;
+
+                case EventType.MOUSEDOWN:
                     element = SeleniumDriver.findTargetWebElement(event, target);
                     SeleniumDriver.processMouseEvent(event, element);
                     SeleniumDriver.waitPageReady(event);
-                }
-                catch (Exception ex)
-                {
-                    log.error("Failed to proceed step " + position, ex);
-                }
-                break;
-
-            case EventType.KEY_UP:
-            case EventType.KEY_PRESS:
-                try
-                {
+                    break;
+                case EventType.KEY_UP:
+                case EventType.KEY_PRESS:
                     element = SeleniumDriver.findTargetWebElement(event, target);
                     SeleniumDriver.processKeyboardEvent(event, element);
                     SeleniumDriver.waitPageReady(event);
+                    break;
+                default:
+                    break;
                 }
-                catch (Exception ex)
-                {
-                    log.error("Failed to proceed step " + position, ex);
-                }
-                break;
-            default:
-                break;
+            }
+            catch (Exception e)
+            {
+                log.error("Failed to process step: " + position, e);
             }
 
             SeleniumDriver.makeAShot(event);
@@ -427,6 +422,7 @@ public class UserScenario
         return eventType.equalsIgnoreCase(EventType.XHR) || eventType.equalsIgnoreCase(EventType.HASH_CHANGE)
                 || (!eventType.equalsIgnoreCase(EventType.MOUSEDOWN) && !eventType.equalsIgnoreCase(EventType.KEY_PRESS)
                         && !eventType.equalsIgnoreCase(EventType.KEY_UP))
-                        && !eventType.equalsIgnoreCase(EventType.SCROLL_EMULATION);
+                        && !eventType.equalsIgnoreCase(EventType.SCROLL_EMULATION)
+                        && !eventType.equalsIgnoreCase(EventType.MOUSEWHEEL);
     }
 }

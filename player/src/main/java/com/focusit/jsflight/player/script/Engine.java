@@ -7,6 +7,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.json.JSONObject;
+import org.openqa.selenium.WebDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,9 +40,21 @@ public class Engine
 
     public Engine(String script)
     {
-        super();
         this.script = script;
         compileScript(script);
+    }
+
+    public Object executeWebLookupScript(WebDriver wd, String target, JSONObject event)
+    {
+        Binding binding = new Binding();
+        binding.setVariable("webdriver", wd);
+        binding.setVariable("target", target);
+        binding.setVariable("event", event);
+        binding.setVariable("logger", LOG);
+        Script scr = scripts.get(script);
+        scr.setBinding(binding);
+        return scr.run();
+
     }
 
     public String getScript()

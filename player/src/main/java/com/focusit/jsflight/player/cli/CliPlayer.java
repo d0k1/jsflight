@@ -1,15 +1,19 @@
 package com.focusit.jsflight.player.cli;
 
-import com.focusit.jmeter.JMeterRecorder;
-import com.focusit.jmeter.JMeterScriptProcessor;
-import com.focusit.jsflight.player.scenario.UserScenario;
-import com.focusit.jsflight.player.webdriver.SeleniumDriverConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+
+import org.apache.commons.io.FileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.focusit.jmeter.JMeterRecorder;
+import com.focusit.jmeter.JMeterScriptProcessor;
+import com.focusit.jsflight.player.controller.OptionsController;
+import com.focusit.jsflight.player.controller.WebLookupController;
+import com.focusit.jsflight.player.scenario.UserScenario;
 
 public class CliPlayer
 {
@@ -37,24 +41,12 @@ public class CliPlayer
         updateControllers();
     }
 
-    private void updateControllers() throws IOException {
-        if(this.config.getJmeterStepPreprocess()!=null && !this.config.getJmeterStepPreprocess().trim().isEmpty()) {
-            JMeterScriptProcessor.getInstance().setRecordingScript(new String(Files.readAllBytes(Paths.get(config.getJmeterStepPreprocess().trim())), "UTF-8"));
-        }
-
-        if(this.config.getJmeterScenarioPreprocess()!=null && !this.config.getJmeterScenarioPreprocess().trim().isEmpty()){
-            JMeterScriptProcessor.getInstance().setProcessScript(new String(Files.readAllBytes(Paths.get(config.getJmeterScenarioPreprocess().trim())), "UTF-8"));
-        }
-    }
-
     public void play() throws IOException
     {
         UserScenario scenario = new UserScenario();
         LOG.info("Loading {}", config.getPathToRecording());
         scenario.parse(config.getPathToRecording());
         scenario.postProcessScenario();
-
-        SeleniumDriverConfig.get().updateByCliConfig(config);
 
         if (config.isEnableRecording())
         {
@@ -74,5 +66,38 @@ public class CliPlayer
         {
             scenario.play();
         }
+    }
+
+    private void updateControllers() throws IOException
+    {
+        if (this.config.getJmeterStepPreprocess() != null && !this.config.getJmeterStepPreprocess().trim().isEmpty())
+        {
+            JMeterScriptProcessor.getInstance();
+            JMeterScriptProcessor.setRecordingScript(
+                    new String(Files.readAllBytes(Paths.get(config.getJmeterStepPreprocess().trim())), "UTF-8"));
+        }
+
+        if (this.config.getJmeterScenarioPreprocess() != null
+                && !this.config.getJmeterScenarioPreprocess().trim().isEmpty())
+        {
+            JMeterScriptProcessor.getInstance();
+            JMeterScriptProcessor.setProcessScript(
+                    new String(Files.readAllBytes(Paths.get(config.getJmeterScenarioPreprocess().trim())), "UTF-8"));
+        }
+
+        OptionsController options = OptionsController.getInstance();
+
+        options.setFfPath(config.getFfPath());
+        options.setMakeShots(config.getMakeShots());
+        options.setPageReadyTimeout(config.getPageReadyTimeout());
+        options.setProxyHost(config.getProxyHost());
+        options.setProxyPort(config.getProxyPort());
+        options.setScreenDir(config.getScreenDir());
+        options.setUseFirefox(config.isUseFirefox());
+        options.setUsePhantomJs(config.isUsePhantomJs());
+        options.setPjsPath(config.getPjsPath());
+
+        WebLookupController.getInstance()
+                .setScript(FileUtils.readFileToString(new File(config.getWebLookupScriptPath())));
     }
 }

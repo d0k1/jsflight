@@ -3,8 +3,6 @@ package com.focusit.jsflight.player;
 import java.awt.EventQueue;
 import java.lang.Thread.UncaughtExceptionHandler;
 
-import javax.swing.UIManager;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -92,7 +90,6 @@ public class Player
             {
                 try
                 {
-                    UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
                     MainFrame window = new MainFrame();
                     window.getFrame().setVisible(true);
                 }

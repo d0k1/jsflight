@@ -1,10 +1,25 @@
 package com.focusit.jsflight.player.webdriver;
 
-import com.focusit.jsflight.player.constants.EventType;
-import com.focusit.jsflight.player.scenario.UserScenario;
-import org.json.JSONArray;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
 import org.json.JSONObject;
-import org.openqa.selenium.*;
+import org.openqa.selenium.By;
+import org.openqa.selenium.Dimension;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.Keys;
+import org.openqa.selenium.NoSuchElementException;
+import org.openqa.selenium.OutputType;
+import org.openqa.selenium.Proxy;
+import org.openqa.selenium.TakesScreenshot;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebDriverException;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.firefox.FirefoxBinary;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxProfile;
@@ -15,15 +30,11 @@ import org.openqa.selenium.remote.DesiredCapabilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import com.focusit.jsflight.player.constants.EventType;
+import com.focusit.jsflight.player.controller.OptionsController;
+import com.focusit.jsflight.player.controller.WebLookupController;
+import com.focusit.jsflight.player.scenario.UserScenario;
+import com.focusit.jsflight.player.script.Engine;
 
 /**
  * Selenium webdriver helper: runs a browser, sends events, make screenshots
@@ -37,7 +48,9 @@ public class SeleniumDriver
 
     private static final Logger log = LoggerFactory.getLogger(SeleniumDriver.class);
 
-    private static final SeleniumDriverConfig CONFIG = SeleniumDriverConfig.get();
+    private static OptionsController config = OptionsController.getInstance();
+
+    private static Engine webLookUpscriptEngine;
 
     private static HashMap<String, WebDriver> drivers = new HashMap<>();
     private static HashMap<String, String> tabsWindow = new HashMap<>();
@@ -53,7 +66,6 @@ public class SeleniumDriver
 
     public static WebElement findTargetWebElement(JSONObject event, String target)
     {
-        //makeElementVisibleByJS(event, target);
         WebDriver wd = getDriverForEvent(event);
         try
         {
@@ -62,105 +74,8 @@ public class SeleniumDriver
         }
         catch (NoSuchElementException e)
         {
-            log.info("failed looking for " + getCSSSelector(event));
-            return wd.findElement(By.cssSelector(getCSSSelector(event)));
-        }
-    }
-
-    private static WebDriver getDriverForEvent(JSONObject event)
-    {
-
-        String tag = UserScenario.getTagForEvent(event);
-
-        WebDriver driver = drivers.get(tag);
-
-        try
-        {
-            if (driver != null)
-            {
-                return driver;
-            }
-
-            FirefoxProfile profile = new FirefoxProfile();
-            DesiredCapabilities cap = new DesiredCapabilities();
-            String proxyHost = CONFIG.getProxyHost();
-            if (proxyHost.trim().length() > 0)
-            {
-                String host = proxyHost;
-                String proxyPort = CONFIG.getProxyPort();
-                if (proxyPort.trim().length() > 0)
-                {
-                    host += ":" + proxyPort;
-                }
-                Proxy proxy = new Proxy();
-                proxy.setHttpProxy(host).setFtpProxy(host).setSslProxy(host);
-                cap.setCapability(CapabilityType.PROXY, proxy);
-            }
-            boolean useFirefox = CONFIG.isUseFirefox();
-            boolean usePhantomJs = CONFIG.isUsePhantomJs();
-            if (useFirefox)
-            {
-                String ffPath = CONFIG.getFfPath();
-                if (ffPath != null && ffPath.trim().length() > 0)
-                {
-                    FirefoxBinary binary = new FirefoxBinary(new File(ffPath));
-                    driver = new FirefoxDriver(binary, profile, cap);
-                }
-                else
-                {
-                    driver = new FirefoxDriver(new FirefoxBinary(), profile, cap);
-                }
-            }
-            else if (usePhantomJs)
-            {
-                String pjsPath = CONFIG.getPjsPath();
-                if (pjsPath != null && pjsPath.trim().length() > 0)
-                {
-                    cap.setCapability("phantomjs.binary.path", pjsPath);
-                    driver = new PhantomJSDriver(cap);
-                }
-                else
-                {
-                    driver = new PhantomJSDriver(cap);
-                }
-            }
-            try
-            {
-                Thread.sleep(3000);
-            }
-            catch (InterruptedException e)
-            {
-                log.error(e.toString(), e);
-            }
-
-            drivers.put(tag, driver);
-            return driver;
-        }
-        catch (Throwable ex)
-        {
-            log.error(ex.toString(), ex);
-            throw ex;
-        }
-        finally
-        {
-            String tabUuid = event.getString("tabuuid");
-            String window = tabsWindow.get(tabUuid);
-            if (window == null)
-            {
-                ArrayList<String> tabs = new ArrayList<String>(driver.getWindowHandles());
-                if (tabsWindow.values().contains(tabs.get(0)))
-                {
-                    String newTabKey = Keys.chord(Keys.CONTROL, "n");
-                    driver.findElement(By.tagName("body")).sendKeys(newTabKey);
-                    tabs = new ArrayList<String>(driver.getWindowHandles());
-                }
-                window = tabs.get(tabs.size() - 1);
-                tabsWindow.put(tabUuid, window);
-            }
-            if (!driver.getWindowHandle().equals(window))
-            {
-                driver.switchTo().window(window);
-            }
+            log.info("failed looking for {}. trying to restore xpath");
+            return (WebElement)getEngine().executeWebLookupScript(wd, target, event);
         }
     }
 
@@ -179,14 +94,15 @@ public class SeleniumDriver
 
     public static void makeAShot(JSONObject event)
     {
-        if (CONFIG.isMakeShots())
+        if (config.getMakeShots())
         {
             TakesScreenshot shoter = (TakesScreenshot)getDriverForEvent(event);
             byte[] shot = shoter.getScreenshotAs(OutputType.BYTES);
-            File dir = new File(CONFIG.getScreenDir() + File.separator
+            File dir = new File(config.getScreenDir() + File.separator
                     + Paths.get(UserScenario.getScenarioFilename()).getFileName().toString());
 
-            if(!dir.mkdirs()){
+            if (!dir.mkdirs())
+            {
                 return;
             }
 
@@ -297,6 +213,7 @@ public class SeleniumDriver
         ensureElementInWindow(wd, element);
         if (element.isDisplayed())
         {
+
             if (event.getInt("button") == 2)
             {
                 new Actions(wd).contextClick(element).perform();
@@ -326,7 +243,24 @@ public class SeleniumDriver
         }
         else
         {
-            log.warn("Element is not visible : " + element.toString());
+            JavascriptExecutor executor = (JavascriptExecutor)wd;
+            executor.executeScript("arguments[0].click();", element);
+        }
+    }
+
+    public static void processMouseWheel(JSONObject event, String target)
+    {
+        WebDriver wd = getDriverForEvent(event);
+        WebElement el = (WebElement)getEngine().executeWebLookupScript(wd, target, event);
+        //Web lookup script MUST return /html element if scroll occurs not in a popup
+        if (!el.getTagName().equalsIgnoreCase("html"))
+        {
+            ((JavascriptExecutor)wd).executeScript("arguments[0].scrollTop = arguments[0].scrollTop + arguments[1]", el,
+                    event.getInt("deltaY"));
+        }
+        else
+        {
+            ((JavascriptExecutor)wd).executeScript("window.scrollBy(0, arguments[0])", event.getInt("deltaY"));
         }
     }
 
@@ -369,7 +303,7 @@ public class SeleniumDriver
         {
             return;
         }
-        int timeout = Integer.parseInt(CONFIG.getPageReadyTimeout()) * 1000;
+        int timeout = Integer.parseInt(config.getPageReadyTimeout()) * 1000;
         try
         {
             int sleeps = 0;
@@ -422,20 +356,110 @@ public class SeleniumDriver
         }
     }
 
-    private static String getCSSSelector(JSONObject event)
+    private static WebDriver getDriverForEvent(JSONObject event)
     {
-        if (!event.has("target1"))
-        {
-            return "";
-        }
-        JSONArray array = event.getJSONArray("target1");
-        if (array.isNull(0))
-        {
-            return "";
-        }
 
-        String target = array.getJSONObject(0).getString("gecp");
-        return target;
+        String tag = UserScenario.getTagForEvent(event);
+
+        WebDriver driver = drivers.get(tag);
+
+        try
+        {
+            if (driver != null)
+            {
+                return driver;
+            }
+
+            FirefoxProfile profile = new FirefoxProfile();
+            DesiredCapabilities cap = new DesiredCapabilities();
+            String proxyHost = config.getProxyHost();
+            if (proxyHost.trim().length() > 0)
+            {
+                String host = proxyHost;
+                String proxyPort = config.getProxyPort();
+                if (proxyPort.trim().length() > 0)
+                {
+                    host += ":" + proxyPort;
+                }
+                Proxy proxy = new Proxy();
+                proxy.setHttpProxy(host).setFtpProxy(host).setSslProxy(host);
+                cap.setCapability(CapabilityType.PROXY, proxy);
+            }
+            boolean useFirefox = config.isUseFirefox();
+            boolean usePhantomJs = config.isUsePhantomJs();
+            if (useFirefox)
+            {
+                String ffPath = config.getFfPath();
+                if (ffPath != null && ffPath.trim().length() > 0)
+                {
+                    FirefoxBinary binary = new FirefoxBinary(new File(ffPath));
+                    driver = new FirefoxDriver(binary, profile, cap);
+                }
+                else
+                {
+                    driver = new FirefoxDriver(new FirefoxBinary(), profile, cap);
+                }
+            }
+            else if (usePhantomJs)
+            {
+                String pjsPath = config.getPjsPath();
+                if (pjsPath != null && pjsPath.trim().length() > 0)
+                {
+                    cap.setCapability("phantomjs.binary.path", pjsPath);
+                    driver = new PhantomJSDriver(cap);
+                }
+                else
+                {
+                    driver = new PhantomJSDriver(cap);
+                }
+            }
+            try
+            {
+                Thread.sleep(3000);
+            }
+            catch (InterruptedException e)
+            {
+                log.error(e.toString(), e);
+            }
+
+            drivers.put(tag, driver);
+            return driver;
+        }
+        catch (Throwable ex)
+        {
+            log.error(ex.toString(), ex);
+            throw ex;
+        }
+        finally
+        {
+            String tabUuid = event.getString("tabuuid");
+            String window = tabsWindow.get(tabUuid);
+            if (window == null)
+            {
+                ArrayList<String> tabs = new ArrayList<String>(driver.getWindowHandles());
+                if (tabsWindow.values().contains(tabs.get(0)))
+                {
+                    String newTabKey = Keys.chord(Keys.CONTROL, "n");
+                    driver.findElement(By.tagName("body")).sendKeys(newTabKey);
+                    tabs = new ArrayList<String>(driver.getWindowHandles());
+                }
+                window = tabs.get(tabs.size() - 1);
+                tabsWindow.put(tabUuid, window);
+            }
+            if (!driver.getWindowHandle().equals(window))
+            {
+                driver.switchTo().window(window);
+            }
+        }
+    }
+
+    private static Engine getEngine()
+    {
+        if (webLookUpscriptEngine == null)
+        {
+            webLookUpscriptEngine = new Engine(WebLookupController.getInstance().getScript());
+        }
+        return webLookUpscriptEngine;
     }
 
     private static WebElement getMax(WebDriver wd)
@@ -444,12 +468,6 @@ public class SeleniumDriver
         els.sort((WebElement el1, WebElement el2) -> Integer.valueOf(el1.getAttribute("__idx"))
                 .compareTo(Integer.valueOf(el2.getAttribute("__idx"))));
         return els.get(els.size() - 1);
-    }
-
-    private static void makeElementVisibleByJS(JSONObject event, String target)
-    {
-        JavascriptExecutor js = (JavascriptExecutor)getDriverForEvent(event);
-        js.executeScript(String.format(SET_ELEMENT_VISIBLE_JS, target));
     }
 
     private static void resizeForEvent(WebDriver wd, JSONObject event)
@@ -468,11 +486,13 @@ public class SeleniumDriver
             h = window.getInt("height");
         }
 
-        if(w==0) {
+        if (w == 0)
+        {
             w = 1000;
         }
 
-        if(h==0) {
+        if (h == 0)
+        {
             h = 1000;
         }
 
