@@ -64,6 +64,7 @@ public class MainFrame
     private RSyntaxTextArea lookupScriptArea;
     private RSyntaxTextArea stepProcessScript;
     private RSyntaxTextArea scenarioProcessScript;
+    private JButton resetButton;
 
     /**
      * Create the application.
@@ -661,8 +662,7 @@ public class MainFrame
         splitPane.setLeftComponent(panel_4);
         splitPane.setRightComponent(scrollPane_2);
 
-        FoldParserManager.get().addFoldParserMapping(SyntaxConstants.SYNTAX_STYLE_JSON,
-                new JsonFoldParser());
+        FoldParserManager.get().addFoldParserMapping(SyntaxConstants.SYNTAX_STYLE_JSON, new JsonFoldParser());
 
         JPanel panel_6 = new JPanel();
         panel_6.setBorder(null);
@@ -933,6 +933,22 @@ public class MainFrame
                 }
             }
         });
+
+        resetButton = new JButton("Reset");
+        resetButton.addActionListener(new ActionListener()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                try {
+                    jmeter.reset();
+                } catch (IOException e1) {
+                    log.error(e1.toString(), e1);
+                }
+            }
+        });
+        resetButton.setSelected(true);
+        label_5.add(resetButton);
         startProxyButton.setSelected(true);
         label_5.add(startProxyButton);
 

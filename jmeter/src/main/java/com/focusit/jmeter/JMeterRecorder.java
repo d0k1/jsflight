@@ -44,6 +44,7 @@ public class JMeterRecorder
     private Arguments vars = null;
 
     private HashTree varsPlace = null;
+    private String currentTemplate = DEFAULT_TEMPLATE_NAME;
 
     public void init() throws Exception
     {
@@ -52,6 +53,7 @@ public class JMeterRecorder
 
     public void init(String pathToTemplate) throws Exception
     {
+        this.currentTemplate = pathToTemplate;
         JMeterUtils.setJMeterHome(new File("").getAbsolutePath());
         JMeterUtils.loadJMeterProperties(new File("jmeter.properties").getAbsolutePath());
         JMeterUtils.setProperty("saveservice_properties", File.separator + "saveservice.properties");
@@ -231,5 +233,52 @@ public class JMeterRecorder
     public void stopRecording()
     {
         ctrl.stopProxy();
+    }
+
+    public void reset() throws IOException {
+        hashTree = SaveService.loadTree(new File(currentTemplate));
+
+        hashTree.traverse(new HashTreeTraverser()
+        {
+
+            @Override
+            public void addNode(Object node, HashTree subTree)
+            {
+                System.out.println("Node: " + node.toString());
+
+                if (node instanceof Arguments)
+                {
+                    if (((Arguments)node).getName().equalsIgnoreCase("UDV"))
+                    {
+                        if (varsPlace == null)
+                        {
+                            varsPlace = subTree;
+                            vars = (Arguments)node;
+                        }
+                    }
+                }
+
+                if (node instanceof RecordingController)
+                {
+                    if (recCtrl == null)
+                    {
+                        recCtrl = (RecordingController)node;
+                        recCtrlPlace = subTree;
+                    }
+                }
+            }
+
+            @Override
+            public void processPath()
+            {
+            }
+
+            @Override
+            public void subtractNode()
+            {
+            }
+        });
+
+        ctrl.setTargetTestElement(recCtrl);
     }
 }

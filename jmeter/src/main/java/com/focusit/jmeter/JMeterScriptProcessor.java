@@ -60,9 +60,15 @@ public class JMeterScriptProcessor {
      * @return is sample ok
      */
     public boolean processSampleDuringRecord(HTTPSamplerBase sampler, SampleResult result) {
+        if(compiledRecordingScript==null) {
+            return true;
+        }
+
         Binding binding = new Binding();
         binding.setVariable("request", sampler);
         binding.setVariable("response", result);
+        binding.setVariable("ctx", JMeterRecorderContext.getInstance());
+        binding.setVariable("jsflight", JMeterJSFlightBridge.getInstace());
 
         compiledRecordingScript.setBinding(binding);
         boolean isOk = (Boolean) compiledRecordingScript.run();
@@ -75,9 +81,15 @@ public class JMeterScriptProcessor {
      * @param tree HashTree (XML like data structure) that represents exact recorded sample
      */
     public void processScenario(HTTPSamplerBase sample, HashTree tree) {
+        if (compiledProcessScript==null) {
+            return;
+        }
+
         Binding binding = new Binding();
         binding.setVariable("sample", sample);
         binding.setVariable("tree", tree);
+        binding.setVariable("ctx", JMeterRecorderContext.getInstance());
+        binding.setVariable("jsflight", JMeterJSFlightBridge.getInstace());
 
         compiledProcessScript.setBinding(binding);
         compiledProcessScript.run();
