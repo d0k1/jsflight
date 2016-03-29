@@ -1,5 +1,5 @@
 boolean accesKeyFound = false;
-            
+
 for(String key : sample.getArguments().getArgumentsAsMap().keySet()) {
     if(key.equalsIgnoreCase("accessKey")){
         accesKeyFound = true;
@@ -57,12 +57,33 @@ srcs.each({
     def template = ctx.getTemplate(it);
 
     // should add regex post processor here
-    if(template.equals(sample)){        
-        
-    } else if(template instanceof String) {
+    if(template instanceof String) {
         // add just an user defined variable
         vars.addArgument(new org.apache.jmeter.config.Argument(it, template));
+
+        ctx.getProperty(vars_key).remove(it);
+    } else if(template.equals(sample)){
+        def ree = new org.apache.jmeter.extractor.RegexExtractor();
+        ree.setProperty(org.apache.jmeter.testelement.TestElement.GUI_CLASS, "RegexExtractorGui");
+        ree.setProperty(org.apache.jmeter.testelement.TestElement.TEST_CLASS, "RegexExtractor");
+        ree.setEnabled(true);
+        ree.setRefName(it);
+        ree.setName('REE.'+it);
+
+        String pattern = '(\\w+)\\.(\\d+)';
+        def r = java.util.regex.Pattern.compile(pattern);
+        def m = r.matcher(it);
+        m.find();
+        ree.setRegex(m.group(1)+'\\$'+'\\d+');
+        ree.setTemplate('$0$');
+        ree.setDefaultValue('ererrer-1212$233232');
+        ree.setMatchNumber(0);
+        ree.useHeaders();
+        tree.add(ree);
+
+        ctx.getProperty(vars_key).remove(it);
+    } else {
+        System.err.println('Source '+ it+' template '+template.getName()+' sample '+sample.getName());
     }
-    ctx.getProperty(vars_key).remove(it);
 })
 
