@@ -1,4 +1,4 @@
-if(!request.getUrl().toString().contains('app-base-url'))
+if(!request.getUrl().toString().contains('sd40.naumen.ru'))
 {
 	System.out.println("Skipped " + request.getUrl()+" Response code " + response.getResponseCode());
 	return false;
@@ -11,7 +11,7 @@ if(request.getMethod().toLowerCase().equals('post')){
 	// requestt processing
 	def body = request.getPropertyAsString('HTTPsampler.Arguments');
 	
-	String pattern = '(\\w+)\\$(\\w+)';
+	String pattern = '(\\w+)\\$(\\d+)';
 	def r = java.util.regex.Pattern.compile(pattern);
 	def m = r.matcher(body);
 	
@@ -26,7 +26,7 @@ if(request.getMethod().toLowerCase().equals('post')){
 		body = body.replace(template, '${'+src+'}');
 		m = r.matcher(body);
 	}
-	
+	request.getArguments().getArgument(0).setValue(body);
 	System.out.println('-----------------request-'+body);
 
 	// response processing

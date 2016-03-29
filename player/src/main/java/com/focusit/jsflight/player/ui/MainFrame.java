@@ -1,45 +1,15 @@
 package com.focusit.jsflight.player.ui;
 
-import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.Font;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.io.File;
-import java.io.IOException;
-import java.util.Date;
-
-import javax.swing.BoxLayout;
-import javax.swing.ButtonGroup;
-import javax.swing.DefaultCellEditor;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JFileChooser;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JRadioButton;
-import javax.swing.JScrollPane;
-import javax.swing.JSplitPane;
-import javax.swing.JTabbedPane;
-import javax.swing.JTable;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
-import javax.swing.JToolBar;
-import javax.swing.SwingConstants;
-import javax.swing.event.CellEditorListener;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
-import javax.swing.table.AbstractTableModel;
-
+import com.focusit.jmeter.JMeterRecorder;
+import com.focusit.jmeter.JMeterScriptProcessor;
+import com.focusit.jsflight.player.controller.*;
+import com.focusit.jsflight.player.input.FileInput;
+import com.focusit.jsflight.player.scenario.UserScenario;
+import com.focusit.jsflight.player.webdriver.SeleniumDriver;
+import com.jgoodies.forms.layout.ColumnSpec;
+import com.jgoodies.forms.layout.FormLayout;
+import com.jgoodies.forms.layout.FormSpecs;
+import com.jgoodies.forms.layout.RowSpec;
 import org.apache.commons.io.FileUtils;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
@@ -50,22 +20,17 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.focusit.jmeter.JMeterRecorder;
-import com.focusit.jmeter.JMeterScriptProcessor;
-import com.focusit.jsflight.player.controller.IUIController;
-import com.focusit.jsflight.player.controller.InputController;
-import com.focusit.jsflight.player.controller.JMeterController;
-import com.focusit.jsflight.player.controller.OptionsController;
-import com.focusit.jsflight.player.controller.PostProcessController;
-import com.focusit.jsflight.player.controller.ScenarioController;
-import com.focusit.jsflight.player.controller.WebLookupController;
-import com.focusit.jsflight.player.input.FileInput;
-import com.focusit.jsflight.player.scenario.UserScenario;
-import com.focusit.jsflight.player.webdriver.SeleniumDriver;
-import com.jgoodies.forms.layout.ColumnSpec;
-import com.jgoodies.forms.layout.FormLayout;
-import com.jgoodies.forms.layout.FormSpecs;
-import com.jgoodies.forms.layout.RowSpec;
+import javax.swing.*;
+import javax.swing.event.CellEditorListener;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+import javax.swing.table.AbstractTableModel;
+import java.awt.*;
+import java.awt.event.*;
+import java.io.File;
+import java.io.IOException;
+import java.util.Date;
 
 public class MainFrame
 {
@@ -349,7 +314,7 @@ public class MainFrame
                 saveControlersOptions();
             }
         });
-        frmJsflightrecorderPlayer.setTitle("JSFlightRecorder Player");
+        frmJsflightrecorderPlayer.setTitle("JSFlight player");
         frmJsflightrecorderPlayer.setBounds(100, 100, 1110, 850);
         frmJsflightrecorderPlayer.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
@@ -685,17 +650,9 @@ public class MainFrame
         scenarioPanel.add(splitPane, BorderLayout.CENTER);
 
         eventContent = new RSyntaxTextArea();
-        eventContent.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JSON);
-        eventContent.getFoldManager().setCodeFoldingEnabled(true);
-        eventContent.setFont(new Font("Hack", Font.PLAIN, 14));
-        eventContent.setRows(3);
-        eventContent.setMarkOccurrences(true);
-        eventContent.setLineWrap(true);
-        eventContent.setWrapStyleWord(true);
-
         RTextScrollPane scrollPane_2 = new RTextScrollPane((Component)eventContent);
-        scrollPane_2.setLineNumbersEnabled(true);
-        scrollPane_2.setFoldIndicatorEnabled(true);
+        configureScriptTextArea(eventContent, scrollPane_2);
+
         splitPane.setLeftComponent(panel_4);
         splitPane.setRightComponent(scrollPane_2);
 
@@ -797,9 +754,8 @@ public class MainFrame
         postProcessPanel.add(scrollPane_3, BorderLayout.CENTER);
 
         scriptArea = new RSyntaxTextArea();
-        scriptArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_GROOVY);
-        scriptArea.setCodeFoldingEnabled(true);
         scrollPane_3.setViewportView(scriptArea);
+        configureScriptTextArea(scriptArea, scrollPane_3);
 
         JPanel webLookupPanel = new JPanel();
         tabbedPane.addTab("Web lookup", null, webLookupPanel, null);
@@ -874,13 +830,12 @@ public class MainFrame
         JButton button_3 = new JButton("Reset");
         toolBar_1.add(button_3);
 
-        JScrollPane scrollPane_4 = new JScrollPane();
+        RTextScrollPane scrollPane_4 = new RTextScrollPane();
         webLookupPanel.add(scrollPane_4, BorderLayout.CENTER);
 
         lookupScriptArea = new RSyntaxTextArea();
-        lookupScriptArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_GROOVY);
-        lookupScriptArea.setCodeFoldingEnabled(true);
         scrollPane_4.setViewportView(lookupScriptArea);
+        configureScriptTextArea(lookupScriptArea, scrollPane_4);
 
         JPanel optionsPanel = new JPanel();
         tabbedPane.addTab("Options", null, optionsPanel, null);
@@ -1086,11 +1041,12 @@ public class MainFrame
         jmeterPanel.add(panel_7, "4, 6, fill, fill");
         panel_7.setLayout(new BorderLayout(0, 0));
 
-        JScrollPane scrollPane_5 = new JScrollPane();
+        RTextScrollPane scrollPane_5 = new RTextScrollPane();
         panel_7.add(scrollPane_5, BorderLayout.CENTER);
 
         stepProcessScript = new RSyntaxTextArea();
         scrollPane_5.setViewportView(stepProcessScript);
+        configureScriptTextArea(stepProcessScript, scrollPane_5);
 
         JLabel lblScenarioProcessor = new JLabel("Scenario processor");
         jmeterPanel.add(lblScenarioProcessor, "2, 8, right, top");
@@ -1099,11 +1055,12 @@ public class MainFrame
         jmeterPanel.add(panel_8, "4, 8, fill, fill");
         panel_8.setLayout(new BorderLayout(0, 0));
 
-        JScrollPane scrollPane_6 = new JScrollPane();
+        RTextScrollPane scrollPane_6 = new RTextScrollPane();
         panel_8.add(scrollPane_6, BorderLayout.CENTER);
 
         scenarioProcessScript = new RSyntaxTextArea();
         scrollPane_6.setViewportView(scenarioProcessScript);
+        configureScriptTextArea(scenarioProcessScript, scrollPane_6);
 
         initUIFromControllers();
     }
@@ -1213,5 +1170,18 @@ public class MainFrame
     {
         WebLookupController.getInstance().setFilename(lookupFilename.getText());
         WebLookupController.getInstance().setScript(lookupScriptArea.getText());
+    }
+
+    private void configureScriptTextArea(RSyntaxTextArea eventContent, RTextScrollPane scrollPane_2){
+        eventContent.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JSON);
+        eventContent.getFoldManager().setCodeFoldingEnabled(true);
+        eventContent.setFont(new Font("Hack", Font.PLAIN, 14));
+        eventContent.setRows(3);
+        eventContent.setMarkOccurrences(true);
+        eventContent.setLineWrap(true);
+        eventContent.setWrapStyleWord(true);
+
+        scrollPane_2.setLineNumbersEnabled(true);
+        scrollPane_2.setFoldIndicatorEnabled(true);
     }
 }

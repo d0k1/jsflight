@@ -1,7 +1,5 @@
 package com.focusit.jmeter;
 
-import org.apache.jmeter.protocol.http.sampler.HTTPSamplerBase;
-
 import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -14,6 +12,7 @@ public class JMeterRecorderContext {
     private final static JMeterRecorderContext instance = new JMeterRecorderContext();
 
     private static final ConcurrentHashMap<String, Object> templateReplacemnts = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, Object> properties = new ConcurrentHashMap<>();
 
     private JMeterRecorderContext(){
 
@@ -37,5 +36,13 @@ public class JMeterRecorderContext {
 
     public Collection<String> getSources(){
         return templateReplacemnts.keySet();
+    }
+
+    public void addProperty(String key, Object value){
+        properties.put(key, value);
+    }
+
+    public Object getProperty(String key){
+        return properties.get(key);
     }
 }

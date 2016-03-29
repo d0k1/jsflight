@@ -1,9 +1,6 @@
 package com.focusit.jmeter;
 
-import org.apache.jmeter.config.Argument;
 import org.apache.jmeter.config.Arguments;
-import org.apache.jmeter.protocol.http.control.Cookie;
-import org.apache.jmeter.protocol.http.control.CookieManager;
 import org.apache.jmeter.protocol.http.control.HeaderManager;
 import org.apache.jmeter.protocol.http.control.RecordingController;
 import org.apache.jmeter.protocol.http.proxy.JMeterProxyControl;
@@ -24,8 +21,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Interface to control jmeter proxy recorder
@@ -172,51 +167,7 @@ public class JMeterRecorder
             if(sample instanceof HTTPSamplerBase){
             	HTTPSamplerBase http = (HTTPSamplerBase) sample;
 
-                JMeterScriptProcessor.getInstance().processScenario(http, parent);
-
-            	boolean accesKeyFound = false;
-            	
-            	for(String key : http.getArguments().getArgumentsAsMap().keySet()) {
-            		if(key.equalsIgnoreCase("accessKey")){
-            			accesKeyFound = true;
-            			break;
-            		}
-            	}
-            	
-            	if(!accesKeyFound) {
-		            CookieManager cookies = new CookieManager();
-		            cookies.setName("HTTP Cookie Manager");
-		            cookies.setEnabled(true);
-		            cookies.setProperty(TestElement.GUI_CLASS, "CookiePanel");
-		            cookies.setProperty(TestElement.TEST_CLASS, "CookieManager");
-		            parent.add(cookies);
-		
-		            // TODO groovy script should decide what cookies might be added to manager
-		            if (JMeterJSFlightBridge.getInstace().getSourceEvent((HTTPSamplerBase)sample) != null)
-		            {
-		                String cooks = "employee=" + JMeterJSFlightBridge.getInstace()
-		                        .getSourceEvent((HTTPSamplerBase)sample).getString(JMeterJSFlightBridge.TAG_FIELD);
-		
-		                String pattern = "employee=(\\w+)\\$(\\w+)";
-		                Pattern r = Pattern.compile(pattern);
-		                Matcher m = r.matcher(cooks);
-		                if (m.find())
-		                {
-		                    String name = "jsid_" + m.group(1) + "_" + m.group(2);
-		                    cookies.add(new Cookie("JSESSIONID", "${" + name + "}",
-		                            sample.getPropertyAsString(HTTPSamplerBase.DOMAIN), "/", false, 0L));
-		
-		                    if (!vars.getArgumentsAsMap().containsKey(name))
-		                    {
-		                        vars.addArgument(new Argument(name, "empty_session"));
-		                    }
-		                }
-		            }
-		            else
-		            {
-		                log.warn("No tag found for sampler " + sample.getName());
-		            }
-            	}
+                JMeterScriptProcessor.getInstance().processScenario(http, parent, vars);
             }
             sample = recCtrl.next();
         }

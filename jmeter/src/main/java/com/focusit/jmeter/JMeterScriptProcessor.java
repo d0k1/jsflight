@@ -3,9 +3,12 @@ package com.focusit.jmeter;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
 import groovy.lang.Script;
+import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.protocol.http.sampler.HTTPSamplerBase;
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jorphan.collections.HashTree;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Helper class to run groovy scripts against recorded samples
@@ -26,6 +29,8 @@ public class JMeterScriptProcessor {
 
     private static final GroovyShell shell = new GroovyShell();
 
+    private static final Logger log = LoggerFactory.getLogger(JMeterScriptProcessor.class);
+
     private JMeterScriptProcessor(){
 
     }
@@ -40,7 +45,11 @@ public class JMeterScriptProcessor {
 
     public static void setRecordingScript(String recordingScript) {
         JMeterScriptProcessor.recordingScript = recordingScript;
-        JMeterScriptProcessor.compiledRecordingScript = shell.parse(recordingScript);
+        try {
+            JMeterScriptProcessor.compiledRecordingScript = shell.parse(recordingScript);
+        } catch (Exception ex) {
+            log.error(ex.toString(), ex);
+        }
     }
 
     public static String getProcessScript() {
@@ -49,7 +58,11 @@ public class JMeterScriptProcessor {
 
     public static void setProcessScript(String processScript) {
         JMeterScriptProcessor.processScript = processScript;
-        JMeterScriptProcessor.compiledProcessScript = shell.parse(processScript);
+        try {
+            JMeterScriptProcessor.compiledProcessScript = shell.parse(processScript);
+        } catch (Exception ex) {
+            log.error(ex.toString(), ex);
+        }
     }
 
     /**
@@ -86,7 +99,7 @@ public class JMeterScriptProcessor {
      * @param sample  recorded http-request (sample)
      * @param tree HashTree (XML like data structure) that represents exact recorded sample
      */
-    public void processScenario(HTTPSamplerBase sample, HashTree tree) {
+    public void processScenario(HTTPSamplerBase sample, HashTree tree, Arguments userVariables) {
         if (compiledProcessScript==null) {
             return;
         }
@@ -96,6 +109,7 @@ public class JMeterScriptProcessor {
         binding.setVariable("tree", tree);
         binding.setVariable("ctx", JMeterRecorderContext.getInstance());
         binding.setVariable("jsflight", JMeterJSFlightBridge.getInstace());
+        binding.setVariable("vars", userVariables);
 
         compiledProcessScript.setBinding(binding);
         compiledProcessScript.run();
