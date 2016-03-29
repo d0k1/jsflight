@@ -19,12 +19,12 @@ public class OptionsController extends UIController
     private String ffPath;
     private String pjsPath;
     private String pageReadyTimout;
-    private String makeShots;
+    private boolean makeShots;
     private String screenDir;
     private String checkPageJs;
     private String webDriverTag;
-    private String useFirefox;
-    private String usePhantomJs;
+    private boolean useFirefox;
+    private boolean usePhantomJs;
 
     private OptionsController()
     {
@@ -40,9 +40,9 @@ public class OptionsController extends UIController
         return ffPath;
     }
 
-    public String getMakeShots()
+    public boolean getMakeShots()
     {
-        return makeShots;
+        return Boolean.valueOf(makeShots);
     }
 
     public String getPageReadyTimeout()
@@ -75,12 +75,12 @@ public class OptionsController extends UIController
         return webDriverTag;
     }
 
-    public String isUseFirefox()
+    public boolean isUseFirefox()
     {
         return useFirefox;
     }
 
-    public String isUsePhantomJs()
+    public boolean isUsePhantomJs()
     {
         return usePhantomJs;
     }
@@ -94,12 +94,12 @@ public class OptionsController extends UIController
         ffPath = (String)stream.readObject();
         pjsPath = (String)stream.readObject();
         pageReadyTimout = (String)stream.readObject();
-        makeShots = (String)stream.readObject();
+        makeShots = stream.readBoolean();
+        useFirefox = stream.readBoolean();
+        usePhantomJs = stream.readBoolean();
         screenDir = (String)stream.readObject();
         checkPageJs = (String)stream.readObject();
         webDriverTag = (String)stream.readObject();
-        useFirefox = (String)stream.readObject();
-        usePhantomJs = (String)stream.readObject();
     }
 
     public void setCheckPageJs(String checkPageJs)
@@ -112,7 +112,7 @@ public class OptionsController extends UIController
         this.ffPath = ffPath;
     }
 
-    public void setMakeShots(String makeShots)
+    public void setMakeShots(boolean makeShots)
     {
         this.makeShots = makeShots;
     }
@@ -142,12 +142,12 @@ public class OptionsController extends UIController
         this.screenDir = screenDir;
     }
 
-    public void setUseFirefox(String useFirefox)
+    public void setUseFirefox(boolean useFirefox)
     {
         this.useFirefox = useFirefox;
     }
 
-    public void setUsePhantomJs(String usePhantomJs)
+    public void setUsePhantomJs(boolean usePhantomJs)
     {
         this.usePhantomJs = usePhantomJs;
     }
@@ -166,12 +166,12 @@ public class OptionsController extends UIController
         stream.writeObject(ffPath);
         stream.writeObject(pjsPath);
         stream.writeObject(pageReadyTimout);
-        stream.writeObject(makeShots);
+        stream.writeBoolean(makeShots);
+        stream.writeBoolean(useFirefox);
+        stream.writeBoolean(usePhantomJs);
         stream.writeObject(screenDir);
         stream.writeObject(checkPageJs);
         stream.writeObject(webDriverTag);
-        stream.writeObject(useFirefox);
-        stream.writeObject(usePhantomJs);
     }
 
     @Override

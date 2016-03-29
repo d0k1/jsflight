@@ -43,6 +43,13 @@
     	saveShotOnHashChange: true,
     	saveDomOnHashChange: true, 
     	autostart : true,
+	attributes_to_store : ['__did', 'href'],
+	id_exclusions : ['gwt-debug-body', 'gwt-uid'],
+	scrollHelperFunction : function(element, paths) {
+		if(element.className.indexOf('popup') != -1){
+            		paths.splice(0,0,"//*[@class='"+element.className+"']");
+        	}
+	},
     	propertyProvider:function(prop){
     		prop['customProp'] = (new Date()).getTime();
     	}

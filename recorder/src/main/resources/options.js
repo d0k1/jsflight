@@ -44,12 +44,15 @@ jsflight.options = {
     	return true;
     },
     propertyProvider : function(prop) {
+    },
+    scrollHelperFunction: function(element, paths) {
     }
+
 };
 
 /* =================================================================================================================================== */
-/*Regex to test id exclusion */
-jsflight.exclusion_regexp = new RegExp(jsflight.options.id_exclusions.join('|'));
+/*Regex to test id exclusion. Initialized at parseOptions */
+jsflight.exclusion_regexp;
 
 
 
@@ -103,6 +106,16 @@ jsflight.parseOptions = function(options) {
 
     if (options.track_duration)
         jsflight.options.track_duration = options.track_duration;
+
+    if (options.attributes_to_store)
+        jsflight.options.attributes_to_store = options.attributes_to_store;
+
+    if(options.id_exclusions)
+        jsflight.options.id_exclusions = options.id_exclusions;
+        jsflight.exclusion_regexp = new RegExp(jsflight.options.id_exclusions.join('|'))
+
+    if(options.scrollHelperFunction)
+        jsflight.options.scrollHelperFunction = options.scrollHelperFunction
 };
 
 

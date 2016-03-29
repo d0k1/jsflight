@@ -54,13 +54,17 @@ public class CliConfig
     @Parameter(names = { "-pt", "--pagereadytimout" }, description = "Timeout for page to get ready")
     private String pageReadyTimeout = "30";
 
+    @Parameter(names = { "-wl", "--weblookuppath" }, description = "Path to web lookup script")
+    private String webLookUpScriptPath = "scripts/weblookup.groovy";
+
     @Parameter(names = { "-h", "--help" }, description = "Show this help")
     private boolean help = false;
 
     @Parameter(names = { "-js1", "--jmeterpreprocesstep" }, description = "Script to preprocess jmeter's sample")
     private String jmeterStepPreprocess;
 
-    @Parameter(names = { "-js2", "--jmeterpreprocesscenario" }, description = "Script to preprocess whole jmeter scenario")
+    @Parameter(names = { "-js2",
+            "--jmeterpreprocesscenario" }, description = "Script to preprocess whole jmeter scenario")
     private String jmeterScenarioPreprocess;
 
     public String getFfPath()
@@ -68,9 +72,24 @@ public class CliConfig
         return ffPath;
     }
 
+    public String getFinishStep()
+    {
+        return finishStep;
+    }
+
     public String getJmeterRecordingName()
     {
         return jmeterRecordingName;
+    }
+
+    public String getJmeterScenarioPreprocess()
+    {
+        return jmeterScenarioPreprocess;
+    }
+
+    public String getJmeterStepPreprocess()
+    {
+        return jmeterStepPreprocess;
     }
 
     public String getJmxTemplatePath()
@@ -113,6 +132,16 @@ public class CliConfig
         return pathToScreenShots;
     }
 
+    public String getStartStep()
+    {
+        return startStep;
+    }
+
+    public String getWebLookupScriptPath()
+    {
+        return webLookUpScriptPath;
+    }
+
     public boolean isEnableRecording()
     {
         return enableRecording;
@@ -123,35 +152,23 @@ public class CliConfig
         return headless;
     }
 
-    public boolean isUseFifefox()
+    public boolean isUseFirefox()
     {
         return useFifefox;
     }
 
-    public boolean isUsePhantomJS()
+    public boolean isUsePhantomJs()
     {
         return usePhantomJS;
+    }
+
+    public void setFinishStep(String finishStep)
+    {
+        this.finishStep = finishStep;
     }
 
     public boolean showHelp()
     {
         return help;
     }
-
-	public String getStartStep() {
-		return startStep;
-	}
-
-	public String getFinishStep() {
-		return finishStep;
-	}
-
-    public String getJmeterStepPreprocess() {
-        return jmeterStepPreprocess;
-    }
-
-    public String getJmeterScenarioPreprocess() {
-        return jmeterScenarioPreprocess;
-    }
-
 }

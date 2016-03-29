@@ -1,16 +1,46 @@
 package com.focusit.jsflight.player.ui;
 
-import com.focusit.jmeter.JMeterRecorder;
-import com.focusit.jmeter.JMeterScriptProcessor;
-import com.focusit.jsflight.player.controller.*;
-import com.focusit.jsflight.player.input.FileInput;
-import com.focusit.jsflight.player.scenario.UserScenario;
-import com.focusit.jsflight.player.webdriver.SeleniumDriver;
-import com.focusit.jsflight.player.webdriver.SeleniumDriverConfig;
-import com.jgoodies.forms.layout.ColumnSpec;
-import com.jgoodies.forms.layout.FormLayout;
-import com.jgoodies.forms.layout.FormSpecs;
-import com.jgoodies.forms.layout.RowSpec;
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.io.File;
+import java.io.IOException;
+import java.util.Date;
+
+import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
+import javax.swing.DefaultCellEditor;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.JTabbedPane;
+import javax.swing.JTable;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import javax.swing.JToolBar;
+import javax.swing.SwingConstants;
+import javax.swing.event.CellEditorListener;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+import javax.swing.table.AbstractTableModel;
+
+import org.apache.commons.io.FileUtils;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rsyntaxtextarea.folding.FoldParserManager;
@@ -20,16 +50,22 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.*;
-import javax.swing.event.CellEditorListener;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
-import javax.swing.table.AbstractTableModel;
-import java.awt.*;
-import java.awt.event.*;
-import java.io.IOException;
-import java.util.Date;
+import com.focusit.jmeter.JMeterRecorder;
+import com.focusit.jmeter.JMeterScriptProcessor;
+import com.focusit.jsflight.player.controller.IUIController;
+import com.focusit.jsflight.player.controller.InputController;
+import com.focusit.jsflight.player.controller.JMeterController;
+import com.focusit.jsflight.player.controller.OptionsController;
+import com.focusit.jsflight.player.controller.PostProcessController;
+import com.focusit.jsflight.player.controller.ScenarioController;
+import com.focusit.jsflight.player.controller.WebLookupController;
+import com.focusit.jsflight.player.input.FileInput;
+import com.focusit.jsflight.player.scenario.UserScenario;
+import com.focusit.jsflight.player.webdriver.SeleniumDriver;
+import com.jgoodies.forms.layout.ColumnSpec;
+import com.jgoodies.forms.layout.FormLayout;
+import com.jgoodies.forms.layout.FormSpecs;
+import com.jgoodies.forms.layout.RowSpec;
 
 public class MainFrame
 {
@@ -782,22 +818,68 @@ public class MainFrame
         JButton button = new JButton("Browse");
         toolBar_1.add(button);
 
+        button.addMouseListener(new MouseAdapter()
+        {
+            @Override
+            public void mouseClicked(MouseEvent e)
+            {
+                JFileChooser fileChooser = new JFileChooser();
+                int returnValue = fileChooser.showOpenDialog(null);
+                if (returnValue == JFileChooser.APPROVE_OPTION)
+                {
+                    String selectedFile = fileChooser.getSelectedFile().getAbsolutePath();
+                    lookupFilename.setText(selectedFile);
+                }
+            }
+        });
+
         JButton button_1 = new JButton("Load");
         toolBar_1.add(button_1);
+
+        button_1.addMouseListener(new MouseAdapter()
+        {
+            @Override
+            public void mouseClicked(MouseEvent e)
+            {
+                try
+                {
+                    lookupScriptArea.setText(FileInput.getContentInString(lookupFilename.getText()));
+                }
+                catch (IOException e1)
+                {
+                    throw new RuntimeException(e1);
+                }
+            }
+        });
 
         JButton button_2 = new JButton("Save");
         toolBar_1.add(button_2);
 
+        button_2.addMouseListener(new MouseAdapter()
+        {
+            @Override
+            public void mouseClicked(MouseEvent e)
+            {
+                try
+                {
+                    FileUtils.writeStringToFile(new File("weblookup.groovy"), lookupScriptArea.getText());
+                }
+                catch (IOException e1)
+                {
+                    throw new RuntimeException(e1);
+                }
+            }
+        });
+
         JButton button_3 = new JButton("Reset");
         toolBar_1.add(button_3);
-
-        JButton button_4 = new JButton("Run");
-        toolBar_1.add(button_4);
 
         JScrollPane scrollPane_4 = new JScrollPane();
         webLookupPanel.add(scrollPane_4, BorderLayout.CENTER);
 
         lookupScriptArea = new RSyntaxTextArea();
+        lookupScriptArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_GROOVY);
+        lookupScriptArea.setCodeFoldingEnabled(true);
         scrollPane_4.setViewportView(lookupScriptArea);
 
         JPanel optionsPanel = new JPanel();
@@ -1053,13 +1135,11 @@ public class MainFrame
         ffPath.setText(OptionsController.getInstance().getFfPath());
         pjsPath.setText(OptionsController.getInstance().getPjsPath());
         pageReadyTimeoutField.setText(OptionsController.getInstance().getPageReadyTimeout());
-        makeShots.setSelected(OptionsController.getInstance().getMakeShots() != null
-                ? OptionsController.getInstance().getMakeShots().equalsIgnoreCase("true") : false);
+        makeShots.setSelected(OptionsController.getInstance().getMakeShots());
         screenDirTextField.setText(OptionsController.getInstance().getScreenDir());
         checkPageJs.setText(OptionsController.getInstance().getCheckPageJs());
         webDriverTag.setText(OptionsController.getInstance().getWebDriverTag());
 
-        SeleniumDriverConfig.get().updateByOptions(OptionsController.getInstance());
     }
 
     private void initUIFromPostProcessorController()
@@ -1115,14 +1195,12 @@ public class MainFrame
         OptionsController.getInstance().setFfPath(ffPath.getText());
         OptionsController.getInstance().setPjsPath(pjsPath.getText());
         OptionsController.getInstance().setPageReadyTimeout(pageReadyTimeoutField.getText());
-        OptionsController.getInstance().setMakeShots("" + makeShots.isSelected());
+        OptionsController.getInstance().setMakeShots(makeShots.isSelected());
         OptionsController.getInstance().setScreenDir(screenDirTextField.getText());
         OptionsController.getInstance().setCheckPageJs(checkPageJs.getText());
         OptionsController.getInstance().setWebDriverTag(webDriverTag.getText());
-        OptionsController.getInstance().setUseFirefox(String.valueOf(useFirefoxButton.isSelected()));
-        OptionsController.getInstance().setUsePhantomJs(String.valueOf(usePhantomButton.isSelected()));
-
-        SeleniumDriverConfig.get().updateByOptions(OptionsController.getInstance());
+        OptionsController.getInstance().setUseFirefox(useFirefoxButton.isSelected());
+        OptionsController.getInstance().setUsePhantomJs(usePhantomButton.isSelected());
     }
 
     private void updatePostProcessController()

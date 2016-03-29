@@ -15,7 +15,7 @@ jsflight.getElementXPath = function(element) {
 };
 
 jsflight.checkIdIsNotExcluded = function(id){
-  return !jsflight.options.exclusion_regexp.test(id);
+  return !jsflight.exclusion_regexp.test(id);
 };
 
 jsflight.getElementXpathId = function(element){
@@ -24,6 +24,9 @@ jsflight.getElementXpathId = function(element){
         var attr = element.attributes;
         var idr = element.id;
         var tag = element.tagName.toLowerCase();
+        if(jsflight.options.scrollHelperFunction){
+            jsflight.options.scrollHelperFunction(element, paths)
+        }
         if(!idr && tag == "input"){
             paths.push("//"+tag);    
         }

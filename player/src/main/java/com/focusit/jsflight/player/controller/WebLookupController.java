@@ -20,6 +20,11 @@ public class WebLookupController extends UIController
     {
     }
 
+    public String getFilename()
+    {
+        return filename;
+    }
+
     public String getScript()
     {
         return script;
@@ -28,9 +33,14 @@ public class WebLookupController extends UIController
     @Override
     public void load(String file) throws Exception
     {
-    	ObjectInputStream stream = getInputStream(file);
+        ObjectInputStream stream = getInputStream(file);
         script = (String)stream.readObject();
         setFilename((String)stream.readObject());
+    }
+
+    public void setFilename(String filename)
+    {
+        this.filename = filename;
     }
 
     public void setScript(String script)
@@ -41,7 +51,7 @@ public class WebLookupController extends UIController
     @Override
     public void store(String file) throws Exception
     {
-    	ObjectOutputStream stream = getOutputStream(file);
+        ObjectOutputStream stream = getOutputStream(file);
         stream.writeObject(script);
         stream.writeObject(getFilename());
     }
@@ -51,13 +61,5 @@ public class WebLookupController extends UIController
     {
         return "weblookup";
     }
-
-	public String getFilename() {
-		return filename;
-	}
-
-	public void setFilename(String filename) {
-		this.filename = filename;
-	}
 
 }
