@@ -14,12 +14,36 @@ jsflight.getElementXPath = function(element) {
         return jsflight.getElementTreeXPath(element);
 };
 
+jsflight.handleSingleAttribute = function(attribute, paths, elementAttributes){
+    if(elementAttributes.hasOwnProperty(attribute)){
+        paths.splice(0,0,"//*[@"+attribute+"='"+ elementAttributes.getNamedItem(attribute).nodeValue + "']");
+    }
+}
+
+jsflight.handleAttributeGroup = function(attributeGroup, paths, elementAttributes){
+    if(attributeGroup.length == 1){
+        jsflight.handleSingleAttribute(attributeGroup, paths, elementAttributes);
+        return;
+    }
+    var presentAttributes = [];
+    for(var ind = 0; ind < attributeGroup.length; ind++){
+        if(elementAttributes.hasOwnProperty(attributeGroup[ind])){
+            presentAttributes.splice(0,0, "@"+attributeGroup[ind]+"='" + elementAttributes.getNamedItem(attributeGroup[ind]).nodeValue + "'");
+        }
+    }
+    if(presentAttributes.length != 0){
+            paths.splice(0,0, "//*["+ presentAttributes.join(" and ") + "]");
+    }
+}
+
 jsflight.checkIdIsNotExcluded = function(id){
   return !jsflight.exclusion_regexp.test(id);
 };
 
-jsflight.getElementXpathId = function(element){
-    var paths = [];
+/**
+ * Function handles an element storing xpath elements to paths array
+ */
+jsflight.handleElement = function(element, paths){
     for (; element && element.nodeType == 1; element = element.parentNode) {
         var attr = element.attributes;
         var idr = element.id;
@@ -30,18 +54,35 @@ jsflight.getElementXpathId = function(element){
         if(!idr && tag == "input"){
             paths.push("//"+tag);    
         }
+        if(!idr && tag == 'img'){
+            paths.splice(0,0,"//"+tag);
+        }
         if(idr && jsflight.checkIdIsNotExcluded(idr)){
             paths.splice(0,0,"//*[@id='"+idr+"']");
         } else {
             var to_store = jsflight.options.attributes_to_store;
             for(i=0;i<to_store.length;i++){
-                if(attr.hasOwnProperty(to_store[i])){
-                    paths.splice(0,0,"//*[@"+to_store[i]+"='"+ attr.getNamedItem(to_store[i]).nodeValue + "']");
+                if(to_store[i] instanceof Array){
+                    jsflight.handleAttributeGroup(to_store[i], paths, attr);
+                }else {
+                    jsflight.handleSingleAttribute(to_store[i], paths, attr);
                 }
             }
         }
     }
-    return paths.join("");
+}
+
+jsflight.getDetachedElementXpathId = function(originalTargetElement, detachPointElement){
+    var paths = [];
+    jsflight.handleElement(originalTargetElement, paths);
+    jsflight.handleElement(detachPointElement, paths);
+    return paths.length == 1 ? "" : paths.join("");
+}
+
+jsflight.getElementXpathId = function(element){
+    var paths = [];
+    jsflight.handleElement(element, paths);
+    return paths.length == 1 ? "" : paths.join("");
 };
 
 jsflight.getElementTreeXPath = function(element) {

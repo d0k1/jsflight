@@ -5,6 +5,25 @@
 // jsflight namespace 
 var jsflight = jsflight || {};
 
+jsflight.checkTargetDetach = function(element){
+    if(!element || !element.parentNode || !element.tagName){
+        return false;
+    }
+    while(element.parentNode != null){
+        element = element.parentNode;
+    }
+    return !(element.tagName.toLowerCase === 'html')
+}
+
+jsflight.getDetachElement = function(event){
+    var targetPath = event.path;
+    for(var i=0; i< targetPath.length; i++){
+        if(!targetPath[i].parentNode){
+            return targetPath[i+1];
+        }
+    }
+}
+
 jsflight.getEventInfo = function(mouseEvent) {
     if (mouseEvent === undefined)
         mouseEvent = window.event;
@@ -32,13 +51,16 @@ jsflight.getEventInfo = function(mouseEvent) {
     result.ctrlKey = mouseEvent.ctrlKey;
     result.shiftKey = mouseEvent.shiftKey;
     result.metaKey = mouseEvent.metaKey;
-
     result.button = mouseEvent.button;
     result.hash = window.location.hash;
 
     result.target = jsflight.getElementXPath(mouseEvent.target);
     result.target1 = jsflight.getTargetId(mouseEvent);
     result.target2 = jsflight.getElementXpathId(mouseEvent.target);
+
+    if(!result.target2 && jsflight.checkTargetDetach(mouseEvent.target)){
+        result.target2 = jsflight.getDetachedElementXpathId(mouseEvent.target, jsflight.getDetachElement(mouseEvent));
+    }
 
     result.timestamp = Date.now();
 
@@ -62,7 +84,7 @@ jsflight.getEventInfo = function(mouseEvent) {
     			width : window.innerWidth,
     			height : window.innerHeight
     		};
-
+    
     result.agent = navigator.userAgent;
     result.image = mouseEvent.image;
     result.dom = mouseEvent.dom;

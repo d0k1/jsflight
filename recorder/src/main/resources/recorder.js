@@ -26,6 +26,7 @@ jsflight.startRecorder = function() {
         document.addEventListener('scroll', jsflight.TrackMouse);
         document.addEventListener('keypress', jsflight.TrackKeyboard);
         document.addEventListener('keyup', jsflight.TrackKeyboard);
+        document.addEventListener('keydown', jsflight.TrackKeyboard);
         window.addEventListener('hashchange', jsflight.TrackHash);
     } else {
         document.attachEvent('mousedown', jsflight.TrackMouse);
@@ -34,6 +35,7 @@ jsflight.startRecorder = function() {
         document.attachEvent('scroll', jsflight.TrackMouse);
         document.attachEvent('keypress', jsflight.TrackKeyboard);
         document.attachEvent('keyup', jsflight.TrackKeyboard);
+        document.attachEvent('keydown', jsflight.TrackKeyboard);
         window.attachEvent('hashchange', jsflight.TrackHash);
     }
     if (typeof (window.sessionStorage) == "undefined") {
@@ -68,6 +70,7 @@ jsflight.stopRecorder = function() {
         document.removeEventListener('scroll', jsflight.TrackMouse);
         document.removeEventListener('keypress', jsflight.TrackKeyboard);
         document.removeEventListener('keyup', jsflight.TrackKeyboard);
+        document.removeEventListener('keydown', jsflight.TrackKeyboard);
         window.removeEventListener('hashchange', jsflight.TrackHash);
     } else {
         document.detachEvent('mousedown', jsflight.TrackMouse);
@@ -76,6 +79,7 @@ jsflight.stopRecorder = function() {
         document.detachEvent('scroll', jsflight.TrackMouse);
         document.detachEvent('keypress', jsflight.TrackKeyboard);
         document.detachEvent('keyup', jsflight.TrackKeyboard);
+        document.detachEvent('keydown', jsflight.TrackKeyboard);
         window.detachEvent('hashchange', jsflight.TrackHash);
     }
 
