@@ -1,7 +1,6 @@
 package org.apache.jmeter.protocol.http.proxy;
 
 import com.focusit.jmeter.JMeterJSFlightBridge;
-import com.focusit.jmeter.JMeterProxyCounter;
 import com.focusit.jmeter.JMeterScriptProcessor;
 import org.apache.jmeter.protocol.http.control.HeaderManager;
 import org.apache.jmeter.protocol.http.parser.HTMLParseException;
@@ -292,9 +291,6 @@ public class JMeterProxy extends Thread
                 }
 
                 if(sampler!=null) {
-                    String name = JMeterProxyCounter.getInstance().counter.incrementAndGet() + ". " + sampler.getName();
-                    sampler.setName(name);
-
                     // TODO add ability to customize post processing of recorded samples
                     if (JMeterScriptProcessor.getInstance().processSampleDuringRecord(sampler, result)) {
                         if(!JMeterJSFlightBridge.getInstace().isCurrentStepEmpty()) {

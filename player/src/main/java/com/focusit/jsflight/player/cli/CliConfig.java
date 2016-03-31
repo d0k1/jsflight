@@ -64,7 +64,7 @@ public class CliConfig
     private String jmeterStepPreprocess;
 
     @Parameter(names = { "-js2",
-            "--jmeterpreprocesscenario" }, description = "Script to preprocess whole jmeter scenario")
+            "--jmeterpreprocesscenario" }, description = "Script to preprocess whole jmeter's scenario item just before saving to disk")
     private String jmeterScenarioPreprocess;
 
     public String getFfPath()
