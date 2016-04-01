@@ -1,1 +1,1 @@
-mvn -Dcp=lib/* exec:java -Dexec.mainClass=com.focusit.jsflight.player.Player -Dexec.args=""
+mvn -Dcp=./lib/ -Dsp=SerializationPolicy_4.6.0.gwt.rpc exec:java -Dexec.mainClass=com.focusit.jsflight.player.Player -Dexec.args=""

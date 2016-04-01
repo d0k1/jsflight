@@ -1,4 +1,105 @@
-if(!request.getUrl().toString().contains('192.168.225.142'))
+import com.google.gwt.user.server.rpc.*;
+
+def addPath(String s) throws Exception {
+	/*
+	def f = new File(s);
+	def u = f.toURL();
+	def urlClassLoader = java.lang.ClassLoader.getSystemClassLoader();
+	def urlClass = java.net.URLClassLoader.class;
+	java.lang.Class clsz[] = [java.net.URL.class];
+	Method method = urlClass.getDeclaredMethod("addURL", new Class[]{ });
+	method.setAccessible(true);
+	method.invoke(urlClassLoader, new Object[]{u});
+	*/
+	this.getClass().classLoader.rootLoader.addURL(new File(s).toURL());
+	System.err.println("Classpath modified " + Class.forName("com.google.gwt.user.server.rpc.RPC"));
+}
+
+def modifyClassPath(){
+	def cp = System.getProperty("cp");
+	if(ctx.getProperty('classpath')==null && cp!=null){
+		addPath(System.getProperty("cp"))
+		//ctx.addProperty('policy', SerializationPolicyLoader.loadFromStream(new FileInputStream(System.getProperty("sp")), null));
+		ctx.addProperty('classpath', new Object());
+	}
+}
+
+def isItAddAction(String body) {
+	modifyClassPath();
+
+	return body.contains('AddObjectAction');
+}
+
+def isItEditAction(String body) {
+	modifyClassPath();
+
+	return body.contains('EditObjectAction');
+}
+
+def isItDeleteAction(String body) {
+	modifyClassPath();
+
+	return body.contains('DeleteObjectAction');
+}
+
+def processBatch(def batch, clazz){
+	batch.getActions().each({
+		if(it.getClass().getName().equals(clazz)){
+			return it;
+		}
+	})
+
+	return null;
+}
+
+def getAddObjectActionResult(String response){
+	modifyClassPath();
+
+	def rpcRequest = RPC.decodeRequest(payload);
+	def test = rpcRequest.rpcRequest.getParameters()[0];
+	if(test.getClass().getName("net.customware.gwt.dispatch.shared.BatchAction")){
+		test = processBatch(test, "ru.naumen.core.shared.dispatch.AddObjectAction");
+	}
+
+	if(test.getClass().getName().equals("ru.naumen.core.shared.dispatch.AddObjectAction")){
+
+	}
+}
+
+def getEditObjectActionResult(String request){
+	modifyClassPath();
+
+	def rpcRequest = com.google.gwt.user.server.rpc.RPC.decodeRequest(payload);
+
+	def test = rpcRequest.rpcRequest.getParameters()[0];
+	if(test.getClass().getName("net.customware.gwt.dispatch.shared.BatchAction")){
+		test = processBatch(test, "ru.naumen.core.shared.dispatch.EditObjectAction");
+	}
+
+	if(!(test.getClass().getName().equals("ru.naumen.core.shared.dispatch.EditObjectAction"))){
+		return null;
+	}
+
+	return test.getUuid();
+}
+
+def getDeleteObjectActionResult(String request){
+	modifyClassPath();
+
+	def rpcRequest = com.google.gwt.user.server.rpc.RPC.decodeRequest(payload);
+	def test = rpcRequest.rpcRequest.getParameters()[0];
+	if(test.getClass().getName("net.customware.gwt.dispatch.shared.BatchAction")){
+		test = processBatch(test, "ru.naumen.core.shared.dispatch.DeleteObjectAction");
+	}
+
+	if(!(test.getClass().getName().equals("ru.naumen.core.shared.dispatch.DeleteObjectAction"))){
+		return null;
+	}
+
+	return test.getUUID()
+}
+
+if(!request.getUrl().toString().contains('sd40.naumen.ru'))
 {
 	System.out.println("Skipped " + request.getUrl()+" Response code " + response.getResponseCode());
 	return false;
@@ -44,6 +145,27 @@ if(request.getMethod().toLowerCase().equals('post')){
 	// comet can't be used at the moment
 	if(body.contains('WaitCometEventsAction')){
 		return false;
+	}
+
+	if((isItEditAction(body) || isItDeleteAction(body)))
+	{
+		def template = '';
+
+		if(isItEditAction(body)){
+			template = getEditObjectActionResult(body)
+		} else {
+			template = getDeleteObjectActionResult(body);
+		}
+
+		if(ctx.getTemplate(src) instanceof String) {
+			def tt = new String(template);
+			tt = 'clone.'+tt;
+			if(!ctx.getTemplate(src).equals(tt)) {
+				System.err.println('^^^^^^^^^^^^^^^^^^^^^^^^^ 2. ' + src + ' - ' + tt);
+				ctx.addTemplate(src, tt);
+			}
+		}
+		return;
 	}
 
 	String pattern = '(\\w+)\\$(\\d+)';
