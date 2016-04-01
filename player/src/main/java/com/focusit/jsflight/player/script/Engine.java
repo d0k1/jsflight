@@ -44,6 +44,17 @@ public class Engine
         compileScript(script);
     }
 
+    public boolean executeDuplicateHandlerScript(JSONObject currentEvent, JSONObject prevEvent)
+    {
+        Binding binding = new Binding();
+        binding.setVariable("current", currentEvent);
+        binding.setVariable("previous", prevEvent);
+        binding.setVariable("logger", LOG);
+        Script scr = scripts.get(script);
+        scr.setBinding(binding);
+        return (boolean)scr.run();
+    }
+
     public Object executeWebLookupScript(WebDriver wd, String target, JSONObject event)
     {
         Binding binding = new Binding();

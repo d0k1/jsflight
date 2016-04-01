@@ -57,6 +57,13 @@ public class CliConfig
     @Parameter(names = { "-wl", "--weblookuppath" }, description = "Path to web lookup script")
     private String webLookUpScriptPath = "scripts/weblookup.groovy";
 
+    @Parameter(names = { "-dh", "--duplicatehandler" }, description = "Path to duplicate events handler script")
+    private String duplicateHandlerScriptPath = "scripts/duplicateHandler.groovy";
+
+    @Parameter(names = { "-urc",
+            "--userandomchars" }, description = "Use random chars for keypress events instead of recorded ones")
+    private boolean useRandomChars = false;
+
     @Parameter(names = { "-h", "--help" }, description = "Show this help")
     private boolean help = false;
 
@@ -66,6 +73,11 @@ public class CliConfig
     @Parameter(names = { "-js2",
             "--jmeterpreprocesscenario" }, description = "Script to preprocess whole jmeter's scenario item just before saving to disk")
     private String jmeterScenarioPreprocess;
+
+    public String getDuplicateHandlerScriptPath()
+    {
+        return duplicateHandlerScriptPath;
+    }
 
     public String getFfPath()
     {
@@ -160,6 +172,11 @@ public class CliConfig
     public boolean isUsePhantomJs()
     {
         return usePhantomJS;
+    }
+
+    public boolean isUseRandomChars()
+    {
+        return useRandomChars;
     }
 
     public void setFinishStep(String finishStep)

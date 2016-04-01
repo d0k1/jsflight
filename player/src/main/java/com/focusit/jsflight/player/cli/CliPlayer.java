@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import com.focusit.jmeter.JMeterRecorder;
 import com.focusit.jmeter.JMeterScriptProcessor;
+import com.focusit.jsflight.player.controller.DuplicateHandlerController;
 import com.focusit.jsflight.player.controller.OptionsController;
 import com.focusit.jsflight.player.controller.WebLookupController;
 import com.focusit.jsflight.player.scenario.UserScenario;
@@ -64,7 +65,7 @@ public class CliPlayer
         }
         else
         {
-            scenario.play();
+            scenario.play(Integer.parseInt(config.getStartStep()), Integer.parseInt(config.getFinishStep()));
         }
     }
 
@@ -85,6 +86,7 @@ public class CliPlayer
                     new String(Files.readAllBytes(Paths.get(config.getJmeterScenarioPreprocess().trim())), "UTF-8"));
         }
 
+        //Init options, based on config
         OptionsController options = OptionsController.getInstance();
 
         options.setFfPath(config.getFfPath());
@@ -96,8 +98,14 @@ public class CliPlayer
         options.setUseFirefox(config.isUseFirefox());
         options.setUsePhantomJs(config.isUsePhantomJs());
         options.setPjsPath(config.getPjsPath());
+        options.setUseRandomChars(config.isUseRandomChars());
 
+        //Init weblookup script
         WebLookupController.getInstance()
                 .setScript(FileUtils.readFileToString(new File(config.getWebLookupScriptPath())));
+
+        //Init duplicate handler script
+        DuplicateHandlerController.getInstance()
+                .setScriptBody(FileUtils.readFileToString(new File(config.getDuplicateHandlerScriptPath())));
     }
 }

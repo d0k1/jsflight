@@ -7,7 +7,9 @@ package com.focusit.jsflight.player.constants;
 public interface EventType
 {
     String SCROLL_EMULATION = "scroll-emulation";
+    String CLICK = "click";
     String KEY_UP = "keyup";
+    String KEY_DOWN = "keydown";
     String MOUSEDOWN = "mousedown";
     String XHR = "xhr";
     String KEY_PRESS = "keypress";

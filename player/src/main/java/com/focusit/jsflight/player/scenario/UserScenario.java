@@ -3,6 +3,7 @@ package com.focusit.jsflight.player.scenario;
 import com.focusit.jmeter.JMeterJSFlightBridge;
 import com.focusit.jsflight.player.constants.EventType;
 import com.focusit.jsflight.player.context.PlayerContext;
+import com.focusit.jsflight.player.controller.DuplicateHandlerController;
 import com.focusit.jsflight.player.input.Events;
 import com.focusit.jsflight.player.input.FileInput;
 import com.focusit.jsflight.player.script.Engine;
@@ -86,12 +87,14 @@ public class UserScenario
         {
             if (isStepDuplicates(event))
             {
+                log.warn("Event duplicates prev");
                 return;
             }
             String eventType = event.getString("type");
 
             if (isEventIgnored(eventType) || isEventBad(event))
             {
+                log.warn("Event is ignored or bad");
                 return;
             }
 
@@ -102,7 +105,7 @@ public class UserScenario
             String target = getTargetForEvent(event);
 
             String type = event.getString("type");
-
+            log.info("Event type: {}", type);
             SeleniumDriver.waitPageReady(event);
 
             try
@@ -117,11 +120,13 @@ public class UserScenario
                     break;
 
                 case EventType.MOUSEDOWN:
+                case EventType.CLICK:
                     element = SeleniumDriver.findTargetWebElement(event, target);
                     SeleniumDriver.processMouseEvent(event, element);
                     SeleniumDriver.waitPageReady(event);
                     break;
                 case EventType.KEY_UP:
+                case EventType.KEY_DOWN:
                 case EventType.KEY_PRESS:
                     element = SeleniumDriver.findTargetWebElement(event, target);
                     SeleniumDriver.processKeyboardEvent(event, element);
@@ -204,7 +209,10 @@ public class UserScenario
     {
         JSONObject prev = getPrevEvent(event);
 
-        if (prev != null && prev.getString("type").equals(event.getString("type"))
+        if (prev != null
+                && new Engine(DuplicateHandlerController.getInstance().getScriptBody())
+                        .executeDuplicateHandlerScript(event, prev)
+                && prev.getString("type").equals(event.getString("type"))
                 && prev.getString("url").equals(event.getString("url"))
                 && getTargetForEvent(prev).equals(getTargetForEvent(event)))
         {
@@ -380,9 +388,11 @@ public class UserScenario
     private boolean isEventIgnored(String eventType)
     {
         return eventType.equalsIgnoreCase(EventType.XHR) || eventType.equalsIgnoreCase(EventType.HASH_CHANGE)
-                || (!eventType.equalsIgnoreCase(EventType.MOUSEDOWN) && !eventType.equalsIgnoreCase(EventType.KEY_PRESS)
-                        && !eventType.equalsIgnoreCase(EventType.KEY_UP))
+                || (!eventType.equalsIgnoreCase(EventType.CLICK) && !eventType.equalsIgnoreCase(EventType.KEY_PRESS)
+                        && !eventType.equalsIgnoreCase(EventType.KEY_UP)
+                        && !eventType.equalsIgnoreCase(EventType.KEY_DOWN)
                         && !eventType.equalsIgnoreCase(EventType.SCROLL_EMULATION)
-                        && !eventType.equalsIgnoreCase(EventType.MOUSEWHEEL);
+                        && !eventType.equalsIgnoreCase(EventType.MOUSEWHEEL)
+                        && !eventType.equalsIgnoreCase(EventType.MOUSEDOWN));
     }
 }

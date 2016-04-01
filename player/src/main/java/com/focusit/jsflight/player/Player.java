@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import com.beust.jcommander.JCommander;
 import com.focusit.jsflight.player.cli.CliConfig;
 import com.focusit.jsflight.player.cli.CliPlayer;
+import com.focusit.jsflight.player.controller.DuplicateHandlerController;
 import com.focusit.jsflight.player.controller.IUIController;
 import com.focusit.jsflight.player.controller.InputController;
 import com.focusit.jsflight.player.controller.JMeterController;
@@ -34,6 +35,7 @@ public class Player
             PostProcessController.getInstance().load(IUIController.defaultConfig);
             ScenarioController.getInstance().load(IUIController.defaultConfig);
             WebLookupController.getInstance().load(IUIController.defaultConfig);
+            DuplicateHandlerController.getInstance().load(IUIController.defaultConfig);
         }
         catch (Exception e)
         {

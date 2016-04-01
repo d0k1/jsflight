@@ -12,6 +12,9 @@ jsflight.checkTargetDetach = function(element){
     while(element.parentNode != null){
         element = element.parentNode;
     }
+    if(!element.tagName){
+        return false;
+    }
     return !(element.tagName.toLowerCase === 'html')
 }
 
