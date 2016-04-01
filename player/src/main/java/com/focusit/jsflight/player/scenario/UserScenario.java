@@ -1,16 +1,5 @@
 package com.focusit.jsflight.player.scenario;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.openqa.selenium.WebElement;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.focusit.jmeter.JMeterJSFlightBridge;
 import com.focusit.jsflight.player.constants.EventType;
 import com.focusit.jsflight.player.context.PlayerContext;
@@ -18,6 +7,16 @@ import com.focusit.jsflight.player.input.Events;
 import com.focusit.jsflight.player.input.FileInput;
 import com.focusit.jsflight.player.script.Engine;
 import com.focusit.jsflight.player.webdriver.SeleniumDriver;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.openqa.selenium.WebElement;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 /**
  * Recorded scenario encapsulation: parses file, plays the scenario by step, modifies the scenario, saves to a disk
@@ -42,11 +41,6 @@ public class UserScenario
     public static int getPosition()
     {
         return position;
-    }
-
-    public static String getPostProcessScenarioScript()
-    {
-        return postProcessScenarioScript;
     }
 
     public static String getScenarioFilename()
@@ -174,11 +168,6 @@ public class UserScenario
     public void deleteStep(int position)
     {
         events.remove(position);
-    }
-
-    public List<Boolean> getChecks()
-    {
-        return checks;
     }
 
     public JSONObject getPrevEvent(JSONObject event)
@@ -345,16 +334,6 @@ public class UserScenario
         return secs;
     }
 
-    public void postProcessStep()
-    {
-
-    }
-
-    public void preprocessStep()
-    {
-
-    }
-
     public void prev()
     {
         if (position > 0)
@@ -381,25 +360,6 @@ public class UserScenario
     public void saveScenario(String filename) throws IOException
     {
         FileInput.saveEvents(events, filename);
-    }
-
-    public void setChecks(List<Boolean> checks)
-    {
-        UserScenario.checks = checks;
-    }
-
-    public void setLastEvent(JSONObject event)
-    {
-        lastEvents.put(getTagForEvent(event), event);
-    }
-
-    public void setPosition(int position)
-    {
-        UserScenario.position = position;
-    }
-
-    public void setRawevents(Events rawevents)
-    {
     }
 
     public void skip()

@@ -1,1 +1,1 @@
-mvn exec:java -Dexec.mainClass=com.focusit.jsflight.player.Player -Dexec.args=""
+mvn -Dcp=lib/* exec:java -Dexec.mainClass=com.focusit.jsflight.player.Player -Dexec.args=""
