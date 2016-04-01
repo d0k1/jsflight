@@ -25,6 +25,7 @@ public class OptionsController extends UIController
     private String webDriverTag;
     private boolean useFirefox;
     private boolean usePhantomJs;
+    private boolean useRandomChars;
 
     private OptionsController()
     {
@@ -85,6 +86,11 @@ public class OptionsController extends UIController
         return usePhantomJs;
     }
 
+    public boolean isUseRandomChars()
+    {
+        return useRandomChars;
+    }
+
     @Override
     public void load(String file) throws Exception
     {
@@ -97,6 +103,7 @@ public class OptionsController extends UIController
         makeShots = stream.readBoolean();
         useFirefox = stream.readBoolean();
         usePhantomJs = stream.readBoolean();
+        useRandomChars = stream.readBoolean();
         screenDir = (String)stream.readObject();
         checkPageJs = (String)stream.readObject();
         webDriverTag = (String)stream.readObject();
@@ -152,6 +159,11 @@ public class OptionsController extends UIController
         this.usePhantomJs = usePhantomJs;
     }
 
+    public void setUseRandomChars(boolean useRandomChars)
+    {
+        this.useRandomChars = useRandomChars;
+    }
+
     public void setWebDriverTag(String webDriverTag)
     {
         this.webDriverTag = webDriverTag;
@@ -169,6 +181,7 @@ public class OptionsController extends UIController
         stream.writeBoolean(makeShots);
         stream.writeBoolean(useFirefox);
         stream.writeBoolean(usePhantomJs);
+        stream.writeBoolean(useRandomChars);
         stream.writeObject(screenDir);
         stream.writeObject(checkPageJs);
         stream.writeObject(webDriverTag);

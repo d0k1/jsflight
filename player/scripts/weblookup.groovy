@@ -24,9 +24,14 @@ if(event.type.equals('mousewheel'))
 		return webdriver.findElement(By.xpath('/html'));
 	}
 	JavascriptExecutor js = (JavascriptExecutor)webdriver;
+	try{
+		return webdriver.findElement(By.xpath("//*[@class='formtree']"));
+	} catch (Exception e){
+		logger.info("This is not a popup tree select")
+	}
 	StringBuilder xp = new StringBuilder("//*[@class='popupContent']");
 	WebElement element = webdriver.findElement(By.xpath(xp.toString()));
-     while(!Boolean.valueOf(js.executeScript('return arguments[0].childElementCount > 2', element)) )
+     while(!Boolean.valueOf(js.executeScript('return arguments[0].childElementCount > 20', element)) )
 	{ 	
 		logger.info(xp.toString())
 		element = webdriver.findElement(By.xpath(xp.toString()));
@@ -41,7 +46,7 @@ if(event.type.equals('mousewheel'))
 }
 
                               
-if(event.type.equals('mousedown')){
+if(event.type.equals('click') || event.type.equals('mousedown')){
 	List<String> presentElements = new ArrayList<>();
 	WebElement targetElement = null;
 	for (Iterator<String> iterator = elements.iterator(); iterator.hasNext();)

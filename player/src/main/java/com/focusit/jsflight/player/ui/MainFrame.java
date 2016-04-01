@@ -1,15 +1,45 @@
 package com.focusit.jsflight.player.ui;
 
-import com.focusit.jmeter.JMeterRecorder;
-import com.focusit.jmeter.JMeterScriptProcessor;
-import com.focusit.jsflight.player.controller.*;
-import com.focusit.jsflight.player.input.FileInput;
-import com.focusit.jsflight.player.scenario.UserScenario;
-import com.focusit.jsflight.player.webdriver.SeleniumDriver;
-import com.jgoodies.forms.layout.ColumnSpec;
-import com.jgoodies.forms.layout.FormLayout;
-import com.jgoodies.forms.layout.FormSpecs;
-import com.jgoodies.forms.layout.RowSpec;
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.io.File;
+import java.io.IOException;
+import java.util.Date;
+
+import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
+import javax.swing.DefaultCellEditor;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.JTabbedPane;
+import javax.swing.JTable;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import javax.swing.JToolBar;
+import javax.swing.SwingConstants;
+import javax.swing.event.CellEditorListener;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+import javax.swing.table.AbstractTableModel;
+
 import org.apache.commons.io.FileUtils;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
@@ -20,17 +50,23 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.*;
-import javax.swing.event.CellEditorListener;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
-import javax.swing.table.AbstractTableModel;
-import java.awt.*;
-import java.awt.event.*;
-import java.io.File;
-import java.io.IOException;
-import java.util.Date;
+import com.focusit.jmeter.JMeterRecorder;
+import com.focusit.jmeter.JMeterScriptProcessor;
+import com.focusit.jsflight.player.controller.DuplicateHandlerController;
+import com.focusit.jsflight.player.controller.IUIController;
+import com.focusit.jsflight.player.controller.InputController;
+import com.focusit.jsflight.player.controller.JMeterController;
+import com.focusit.jsflight.player.controller.OptionsController;
+import com.focusit.jsflight.player.controller.PostProcessController;
+import com.focusit.jsflight.player.controller.ScenarioController;
+import com.focusit.jsflight.player.controller.WebLookupController;
+import com.focusit.jsflight.player.input.FileInput;
+import com.focusit.jsflight.player.scenario.UserScenario;
+import com.focusit.jsflight.player.webdriver.SeleniumDriver;
+import com.jgoodies.forms.layout.ColumnSpec;
+import com.jgoodies.forms.layout.FormLayout;
+import com.jgoodies.forms.layout.FormSpecs;
+import com.jgoodies.forms.layout.RowSpec;
 
 public class MainFrame
 {
@@ -66,7 +102,10 @@ public class MainFrame
     private RSyntaxTextArea lookupScriptArea;
     private RSyntaxTextArea stepProcessScript;
     private RSyntaxTextArea scenarioProcessScript;
+    private RSyntaxTextArea duplicatesScriptArea;
     private JButton resetButton;
+    private JTextField duplicatesFilePath;
+    private JCheckBox useRandomCharsBox;
 
     /**
      * Create the application.
@@ -268,6 +307,7 @@ public class MainFrame
             updateWebLookupController();
             updateOptionsController();
             updateJMeterController();
+            updateDuplicateHandlerController();
 
             InputController.getInstance().store(IUIController.defaultConfig);
             JMeterController.getInstance().store(IUIController.defaultConfig);
@@ -275,6 +315,7 @@ public class MainFrame
             PostProcessController.getInstance().store(IUIController.defaultConfig);
             ScenarioController.getInstance().store(IUIController.defaultConfig);
             WebLookupController.getInstance().store(IUIController.defaultConfig);
+            DuplicateHandlerController.getInstance().store(IUIController.defaultConfig);
         }
         catch (Exception e)
         {
@@ -292,6 +333,20 @@ public class MainFrame
     {
         scenario.checkStep(position);
         model.fireTableDataChanged();
+    }
+
+    private void configureScriptTextArea(RSyntaxTextArea eventContent, RTextScrollPane scrollPane_2, String syntaxStyle)
+    {
+        eventContent.setSyntaxEditingStyle(syntaxStyle);
+        eventContent.getFoldManager().setCodeFoldingEnabled(true);
+        eventContent.setFont(new Font("Hack", Font.PLAIN, 14));
+        eventContent.setRows(3);
+        eventContent.setMarkOccurrences(true);
+        eventContent.setLineWrap(true);
+        eventContent.setWrapStyleWord(true);
+
+        scrollPane_2.setLineNumbersEnabled(true);
+        scrollPane_2.setFoldIndicatorEnabled(true);
     }
 
     /**
@@ -651,7 +706,7 @@ public class MainFrame
 
         eventContent = new RSyntaxTextArea();
         RTextScrollPane scrollPane_2 = new RTextScrollPane((Component)eventContent);
-        configureScriptTextArea(eventContent, scrollPane_2);
+        configureScriptTextArea(eventContent, scrollPane_2, SyntaxConstants.SYNTAX_STYLE_JSON);
 
         splitPane.setLeftComponent(panel_4);
         splitPane.setRightComponent(scrollPane_2);
@@ -721,19 +776,56 @@ public class MainFrame
         scriptFilename.setColumns(15);
 
         JButton btnBrowse_1 = new JButton("Browse");
+        btnBrowse_1.addMouseListener(new MouseAdapter()
+        {
+            @Override
+            public void mouseClicked(MouseEvent e)
+            {
+                JFileChooser fileChooser = new JFileChooser();
+                int returnValue = fileChooser.showOpenDialog(null);
+                if (returnValue == JFileChooser.APPROVE_OPTION)
+                {
+                    String selectedFile = fileChooser.getSelectedFile().getAbsolutePath();
+                    scriptFilename.setText(selectedFile);
+                }
+            }
+        });
         toolBar.add(btnBrowse_1);
 
         JButton btnLoad_1 = new JButton("Load");
-        btnLoad_1.addActionListener(new ActionListener()
+        btnLoad_1.addMouseListener(new MouseAdapter()
         {
             @Override
-            public void actionPerformed(ActionEvent e)
+            public void mouseClicked(MouseEvent e)
             {
+                try
+                {
+                    scriptArea.setText(FileInput.getContentInString(scriptFilename.getText()));
+                }
+                catch (IOException e1)
+                {
+                    throw new RuntimeException(e1);
+                }
             }
         });
         toolBar.add(btnLoad_1);
 
         JButton btnSave = new JButton("Save");
+        btnSave.addMouseListener(new MouseAdapter()
+        {
+            @Override
+            public void mouseClicked(MouseEvent e)
+            {
+                try
+                {
+                    FileUtils.writeStringToFile(new File("scripts/postprocess.groovy"), scriptArea.getText());
+                }
+                catch (IOException e1)
+                {
+                    throw new RuntimeException(e1);
+                }
+            }
+        });
         toolBar.add(btnSave);
 
         JButton btnReset = new JButton("Reset");
@@ -755,7 +847,7 @@ public class MainFrame
 
         scriptArea = new RSyntaxTextArea();
         scrollPane_3.setViewportView(scriptArea);
-        configureScriptTextArea(scriptArea, scrollPane_3);
+        configureScriptTextArea(scriptArea, scrollPane_3, SyntaxConstants.SYNTAX_STYLE_GROOVY);
 
         JPanel webLookupPanel = new JPanel();
         tabbedPane.addTab("Web lookup", null, webLookupPanel, null);
@@ -818,7 +910,7 @@ public class MainFrame
             {
                 try
                 {
-                    FileUtils.writeStringToFile(new File("weblookup.groovy"), lookupScriptArea.getText());
+                    FileUtils.writeStringToFile(new File("scripts/weblookup.groovy"), lookupScriptArea.getText());
                 }
                 catch (IOException e1)
                 {
@@ -835,7 +927,7 @@ public class MainFrame
 
         lookupScriptArea = new RSyntaxTextArea();
         scrollPane_4.setViewportView(lookupScriptArea);
-        configureScriptTextArea(lookupScriptArea, scrollPane_4);
+        configureScriptTextArea(lookupScriptArea, scrollPane_4, SyntaxConstants.SYNTAX_STYLE_GROOVY);
 
         JPanel optionsPanel = new JPanel();
         tabbedPane.addTab("Options", null, optionsPanel, null);
@@ -935,6 +1027,12 @@ public class MainFrame
         webDriverTag.setText("uuid");
         webDriverTag.setColumns(10);
         optionsPanel.add(webDriverTag, "4, 20, fill, default");
+
+        JLabel useRandomCharsLabel = new JLabel("Use random chars instead of recorded chars");
+        optionsPanel.add(useRandomCharsLabel, "2, 22, right, fill");
+
+        useRandomCharsBox = new JCheckBox("");
+        optionsPanel.add(useRandomCharsBox, "4, 22");
 
         jmeterPanel = new JPanel();
         tabbedPane.addTab("JMeter", null, jmeterPanel, null);
@@ -1046,7 +1144,7 @@ public class MainFrame
 
         stepProcessScript = new RSyntaxTextArea();
         scrollPane_5.setViewportView(stepProcessScript);
-        configureScriptTextArea(stepProcessScript, scrollPane_5);
+        configureScriptTextArea(stepProcessScript, scrollPane_5, SyntaxConstants.SYNTAX_STYLE_GROOVY);
 
         JLabel lblScenarioProcessor = new JLabel("Scenario processor");
         jmeterPanel.add(lblScenarioProcessor, "2, 8, right, top");
@@ -1060,7 +1158,85 @@ public class MainFrame
 
         scenarioProcessScript = new RSyntaxTextArea();
         scrollPane_6.setViewportView(scenarioProcessScript);
-        configureScriptTextArea(scenarioProcessScript, scrollPane_6);
+        configureScriptTextArea(scenarioProcessScript, scrollPane_6, SyntaxConstants.SYNTAX_STYLE_GROOVY);
+
+        JPanel duplicatesPanel = new JPanel();
+        tabbedPane.addTab("Duplicate handler", null, duplicatesPanel, null);
+        duplicatesPanel.setLayout(new BorderLayout(0, 0));
+
+        JToolBar duplicatesToolBar = new JToolBar();
+        duplicatesPanel.add(duplicatesToolBar, BorderLayout.NORTH);
+
+        JLabel duplicatesScriptLabel = new JLabel("Script");
+        duplicatesToolBar.add(duplicatesScriptLabel);
+
+        duplicatesFilePath = new JTextField();
+        duplicatesToolBar.add(duplicatesFilePath);
+        duplicatesFilePath.setColumns(10);
+
+        JButton dupsBrowseBtn = new JButton("Browse");
+        duplicatesToolBar.add(dupsBrowseBtn);
+
+        dupsBrowseBtn.addMouseListener(new MouseAdapter()
+        {
+            @Override
+            public void mouseClicked(MouseEvent e)
+            {
+                JFileChooser fileChooser = new JFileChooser();
+                int returnValue = fileChooser.showOpenDialog(null);
+                if (returnValue == JFileChooser.APPROVE_OPTION)
+                {
+                    String selectedFile = fileChooser.getSelectedFile().getAbsolutePath();
+                    duplicatesFilePath.setText(selectedFile);
+                }
+            }
+        });
+
+        JButton dupsLoadBtn = new JButton("Load");
+        duplicatesToolBar.add(dupsLoadBtn);
+
+        dupsLoadBtn.addMouseListener(new MouseAdapter()
+        {
+            @Override
+            public void mouseClicked(MouseEvent e)
+            {
+                try
+                {
+                    duplicatesScriptArea.setText(FileInput.getContentInString(duplicatesFilePath.getText()));
+                }
+                catch (IOException e1)
+                {
+                    throw new RuntimeException(e1);
+                }
+            }
+        });
+
+        JButton dupsSaveBtn = new JButton("Save");
+        duplicatesToolBar.add(dupsSaveBtn);
+
+        dupsSaveBtn.addMouseListener(new MouseAdapter()
+        {
+            @Override
+            public void mouseClicked(MouseEvent e)
+            {
+                try
+                {
+                    FileUtils.writeStringToFile(new File("scripts/duplicateHandler.groovy"),
+                            duplicatesScriptArea.getText());
+                }
+                catch (IOException e1)
+                {
+                    throw new RuntimeException(e1);
+                }
+            }
+        });
+
+        RTextScrollPane duplicatesScrollPanel = new RTextScrollPane();
+        duplicatesPanel.add(duplicatesScrollPanel, BorderLayout.CENTER);
+
+        duplicatesScriptArea = new RSyntaxTextArea();
+        duplicatesScrollPanel.setViewportView(duplicatesScriptArea);
+        configureScriptTextArea(duplicatesScriptArea, duplicatesScrollPanel, SyntaxConstants.SYNTAX_STYLE_GROOVY);
 
         initUIFromControllers();
     }
@@ -1072,6 +1248,13 @@ public class MainFrame
         initUIFromPostProcessorController();
         initUIFromWebLookupController();
         initUIFromInitController();
+        initUIFromDuplicateHandlerController();
+    }
+
+    private void initUIFromDuplicateHandlerController()
+    {
+        duplicatesFilePath.setText(DuplicateHandlerController.getInstance().getScriptFileName());
+        duplicatesScriptArea.setText(DuplicateHandlerController.getInstance().getScriptBody());
     }
 
     private void initUIFromInitController()
@@ -1096,6 +1279,7 @@ public class MainFrame
         screenDirTextField.setText(OptionsController.getInstance().getScreenDir());
         checkPageJs.setText(OptionsController.getInstance().getCheckPageJs());
         webDriverTag.setText(OptionsController.getInstance().getWebDriverTag());
+        useRandomCharsBox.setSelected(OptionsController.getInstance().isUseRandomChars());
 
     }
 
@@ -1134,6 +1318,13 @@ public class MainFrame
         }
     }
 
+    private void updateDuplicateHandlerController()
+    {
+        DuplicateHandlerController controller = DuplicateHandlerController.getInstance();
+        controller.setScriptFileName(duplicatesFilePath.getText());
+        controller.setScriptBody(duplicatesScriptArea.getText());
+    }
+
     private void updateInputController()
     {
         InputController.getInstance().setFilename(filenameField.getText());
@@ -1158,6 +1349,7 @@ public class MainFrame
         OptionsController.getInstance().setWebDriverTag(webDriverTag.getText());
         OptionsController.getInstance().setUseFirefox(useFirefoxButton.isSelected());
         OptionsController.getInstance().setUsePhantomJs(usePhantomButton.isSelected());
+        OptionsController.getInstance().setUseRandomChars(useRandomCharsBox.isSelected());
     }
 
     private void updatePostProcessController()
@@ -1170,18 +1362,5 @@ public class MainFrame
     {
         WebLookupController.getInstance().setFilename(lookupFilename.getText());
         WebLookupController.getInstance().setScript(lookupScriptArea.getText());
-    }
-
-    private void configureScriptTextArea(RSyntaxTextArea eventContent, RTextScrollPane scrollPane_2){
-        eventContent.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JSON);
-        eventContent.getFoldManager().setCodeFoldingEnabled(true);
-        eventContent.setFont(new Font("Hack", Font.PLAIN, 14));
-        eventContent.setRows(3);
-        eventContent.setMarkOccurrences(true);
-        eventContent.setLineWrap(true);
-        eventContent.setWrapStyleWord(true);
-
-        scrollPane_2.setLineNumbersEnabled(true);
-        scrollPane_2.setFoldIndicatorEnabled(true);
     }
 }
