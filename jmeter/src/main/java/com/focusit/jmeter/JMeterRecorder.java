@@ -54,6 +54,7 @@ public class JMeterRecorder
         JMeterUtils.setProperty("saveservice_properties", File.separator + "saveservice.properties");
         JMeterUtils.setProperty("user_properties", File.separator + "user.properties");
         JMeterUtils.setProperty("upgrade_properties", File.separator + "upgrade.properties");
+        JMeterUtils.setProperty("system_properties", File.separator + "system.properties");
         JMeterUtils.setLocale(Locale.ENGLISH);
 
         JMeterUtils.setProperty("proxy.cert.directory", new File("").getAbsolutePath());

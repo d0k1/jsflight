@@ -50,6 +50,7 @@ public class Engine
         binding.setVariable("current", currentEvent);
         binding.setVariable("previous", prevEvent);
         binding.setVariable("logger", LOG);
+        binding.setVariable("classloader", shell.getClassLoader());
         Script scr = scripts.get(script);
         scr.setBinding(binding);
         return (boolean)scr.run();
@@ -62,6 +63,7 @@ public class Engine
         binding.setVariable("target", target);
         binding.setVariable("event", event);
         binding.setVariable("logger", LOG);
+        binding.setVariable("classloader", shell.getClassLoader());
         Script scr = scripts.get(script);
         scr.setBinding(binding);
         return scr.run();
@@ -83,6 +85,7 @@ public class Engine
         Binding binding = new Binding();
         binding.setVariable("context", context);
         binding.setVariable("events", events);
+        binding.setVariable("classloader", shell.getClassLoader());
         Script s = scripts.get(script);
         s.setBinding(binding);
         s.run();
@@ -114,6 +117,7 @@ public class Engine
         binding.setVariable("step", step);
         binding.setVariable("pre", pre);
         binding.setVariable("post", !pre);
+        binding.setVariable("classloader", shell.getClassLoader());
         Script s = scripts.get(stepScript);
         s.setBinding(binding);
         s.run();
@@ -167,6 +171,7 @@ public class Engine
         Binding binding = new Binding();
         binding.setVariable("context", context);
         binding.setVariable("events", new ArrayList<>(events));
+        binding.setVariable("classloader", shell.getClassLoader());
         Script s = scripts.get(script);
         s.setBinding(binding);
         s.run();

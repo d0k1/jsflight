@@ -1,44 +1,14 @@
 import com.google.gwt.user.server.rpc.*;
 
-def addPath(String s) throws Exception {
-	/*
-	def f = new File(s);
-	def u = f.toURL();
-	def urlClassLoader = java.lang.ClassLoader.getSystemClassLoader();
-	def urlClass = java.net.URLClassLoader.class;
-	java.lang.Class clsz[] = [java.net.URL.class];
-	Method method = urlClass.getDeclaredMethod("addURL", new Class[]{ });
-	method.setAccessible(true);
-	method.invoke(urlClassLoader, new Object[]{u});
-	*/
-	this.getClass().classLoader.rootLoader.addURL(new File(s).toURL());
-	System.err.println("Classpath modified " + Class.forName("com.google.gwt.user.server.rpc.RPC"));
-}
-
-def modifyClassPath(){
-	def cp = System.getProperty("cp");
-	if(ctx.getProperty('classpath')==null && cp!=null){
-		addPath(System.getProperty("cp"))
-		//ctx.addProperty('policy', SerializationPolicyLoader.loadFromStream(new FileInputStream(System.getProperty("sp")), null));
-		ctx.addProperty('classpath', new Object());
-	}
-}
-
 def isItAddAction(String body) {
-	modifyClassPath();
-
 	return body.contains('AddObjectAction');
 }
 
 def isItEditAction(String body) {
-	modifyClassPath();
-
 	return body.contains('EditObjectAction');
 }
 
 def isItDeleteAction(String body) {
-	modifyClassPath();
-
 	return body.contains('DeleteObjectAction');
 }
 
@@ -53,8 +23,6 @@ def processBatch(def batch, clazz){
 }
 
 def getAddObjectActionResult(String response){
-	modifyClassPath();
-
 	def rpcRequest = RPC.decodeRequest(payload);
 	def test = rpcRequest.rpcRequest.getParameters()[0];
 	if(test.getClass().getName("net.customware.gwt.dispatch.shared.BatchAction")){
@@ -67,8 +35,6 @@ def getAddObjectActionResult(String response){
 }
 
 def getEditObjectActionResult(String request){
-	modifyClassPath();
-
 	def rpcRequest = com.google.gwt.user.server.rpc.RPC.decodeRequest(payload);
 
 	def test = rpcRequest.rpcRequest.getParameters()[0];
