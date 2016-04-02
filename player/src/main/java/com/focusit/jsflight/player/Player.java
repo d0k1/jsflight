@@ -3,6 +3,7 @@ package com.focusit.jsflight.player;
 import java.awt.EventQueue;
 import java.lang.Thread.UncaughtExceptionHandler;
 
+import org.apache.jorphan.logging.LoggingManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,6 +50,10 @@ public class Player
             jc.usage();
             System.exit(0);
         }
+
+        LoggingManager.setPriority(config.getJMeterLogLevel(), "jmeter");
+        LoggingManager.setPriority(config.getJMeterLogLevel(), "jorphan");
+
         if (config.isHeadLess())
         {
             try

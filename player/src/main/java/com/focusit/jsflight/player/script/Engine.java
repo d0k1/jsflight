@@ -1,5 +1,6 @@
 package com.focusit.jsflight.player.script;
 
+import com.focusit.jmeter.ScriptsClassLoader;
 import com.focusit.jsflight.player.context.PlayerContext;
 import com.focusit.jsflight.player.scenario.UserScenario;
 import groovy.lang.Binding;

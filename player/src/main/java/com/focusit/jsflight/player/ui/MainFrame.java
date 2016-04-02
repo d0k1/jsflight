@@ -339,7 +339,7 @@ public class MainFrame
     {
         eventContent.setSyntaxEditingStyle(syntaxStyle);
         eventContent.getFoldManager().setCodeFoldingEnabled(true);
-        eventContent.setFont(new Font("Hack", Font.PLAIN, 14));
+        eventContent.setFont(new Font("Hack", Font.PLAIN, 16));
         eventContent.setRows(3);
         eventContent.setMarkOccurrences(true);
         eventContent.setLineWrap(true);

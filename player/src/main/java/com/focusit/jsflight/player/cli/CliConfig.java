@@ -1,10 +1,13 @@
 package com.focusit.jsflight.player.cli;
 
 import com.beust.jcommander.Parameter;
+import org.apache.log.Priority;
 
 public class CliConfig
 {
     public static final String DEFAULT_RECORDING_NAME = "test.jmx";
+
+
 
     @Parameter(names = { "-hl", "--headless" }, description = "Launching in headless mode")
     private boolean headless = false;
@@ -187,5 +190,9 @@ public class CliConfig
     public boolean showHelp()
     {
         return help;
+    }
+
+    public String getJMeterLogLevel() {
+        return "INFO";
     }
 }

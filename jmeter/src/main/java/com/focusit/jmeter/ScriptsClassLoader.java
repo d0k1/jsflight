@@ -1,4 +1,4 @@
-package com.focusit.jsflight.player.script;
+package com.focusit.jmeter;
 
 import groovy.lang.GroovyClassLoader;
 import org.slf4j.Logger;

@@ -27,7 +27,7 @@ public class JMeterScriptProcessor {
 
     private static Script compiledProcessScript;
 
-    private static final GroovyShell shell = new GroovyShell();
+    private static final GroovyShell shell = new GroovyShell(new ScriptsClassLoader(JMeterScriptProcessor.class.getClassLoader()));
 
     private static final Logger log = LoggerFactory.getLogger(JMeterScriptProcessor.class);
 
@@ -82,6 +82,7 @@ public class JMeterScriptProcessor {
         binding.setVariable("response", result);
         binding.setVariable("ctx", JMeterRecorderContext.getInstance());
         binding.setVariable("jsflight", JMeterJSFlightBridge.getInstace());
+        binding.setVariable("classloader", shell.getClassLoader());
 
         compiledRecordingScript.setBinding(binding);
         boolean isOk = true;
@@ -110,6 +111,7 @@ public class JMeterScriptProcessor {
         binding.setVariable("ctx", JMeterRecorderContext.getInstance());
         binding.setVariable("jsflight", JMeterJSFlightBridge.getInstace());
         binding.setVariable("vars", userVariables);
+        binding.setVariable("classloader", shell.getClassLoader());
 
         compiledProcessScript.setBinding(binding);
         compiledProcessScript.run();
