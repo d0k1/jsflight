@@ -182,6 +182,11 @@ public class JMeterRecorder
         ctrl.startProxy();
     }
 
+    public void setProxyPort(int proxyPort) throws IOException
+    {
+        ctrl.setPort(proxyPort);
+    }
+
     public void stopRecording()
     {
         ctrl.stopProxy();

@@ -159,6 +159,7 @@ if(request.getMethod().toLowerCase().equals('post')){
 					ctx.addTemplate(src, tt);
 				}
 			}
+			body = body.replace(template, '${'+src+'}');
 		})
 	}
 
