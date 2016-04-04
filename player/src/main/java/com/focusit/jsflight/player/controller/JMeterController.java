@@ -31,8 +31,17 @@ public class JMeterController extends UIController
     }
 
     private void syncScripts(){
-        JMeterScriptProcessor.getInstance().setRecordingScript(getStepProcessorScript());
-        JMeterScriptProcessor.getInstance().setProcessScript(getScenarioProcessorScript());
+        if(JMeterScriptProcessor.getInstance().getRecordingScript()!=null && !JMeterScriptProcessor.getInstance().getRecordingScript().equals(getStepProcessorScript())) {
+            JMeterScriptProcessor.getInstance().setRecordingScript(getStepProcessorScript());
+        } else if(JMeterScriptProcessor.getInstance().getRecordingScript()==null){
+            JMeterScriptProcessor.getInstance().setRecordingScript(getStepProcessorScript());
+        }
+
+        if(JMeterScriptProcessor.getInstance().getProcessScript()!=null && !JMeterScriptProcessor.getInstance().getProcessScript().equals(getScenarioProcessorScript())) {
+            JMeterScriptProcessor.getInstance().setProcessScript(getScenarioProcessorScript());
+        } else if (JMeterScriptProcessor.getInstance().getProcessScript()==null){
+            JMeterScriptProcessor.getInstance().setProcessScript(getScenarioProcessorScript());
+        }
     }
 
     @Override

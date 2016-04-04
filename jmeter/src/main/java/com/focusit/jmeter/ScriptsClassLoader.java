@@ -1,11 +1,10 @@
 package com.focusit.jmeter;
 
 import groovy.lang.GroovyClassLoader;
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.DirectoryStream;
 import java.nio.file.FileSystems;
@@ -21,8 +20,11 @@ import java.util.zip.ZipFile;
  * Created by dkirpichenkov on 01.04.16.
  */
 public class ScriptsClassLoader extends ClassLoader {
-    private static final Map<String, Class> classes = new ConcurrentHashMap<>();
+    private final Object NO_CLASS_DEF_FOUND = new Object();
+    private static final Map<String, Object> classes = new ConcurrentHashMap<>();
     private static final Logger log = LoggerFactory.getLogger(ScriptsClassLoader.class);
+
+    private final static boolean prefetchClasses = System.getProperty("prefetchClasses") != null;
 
     public ScriptsClassLoader(ClassLoader parent) {
         super(new GroovyClassLoader(parent));
@@ -37,10 +39,11 @@ public class ScriptsClassLoader extends ClassLoader {
         String dir = System.getProperty("cp");
 
         if(classes.get(className)!=null){
-            return classes.get(className);
+            if(classes.get(className)==NO_CLASS_DEF_FOUND) {
+                throw new ClassNotFoundException();
+            }
+            return (Class) classes.get(className);
         }
-
-        //log.info("Loading "+className);
 
         Class result = null;
         try {
@@ -54,6 +57,9 @@ public class ScriptsClassLoader extends ClassLoader {
             return result;
         }
 
+        classes.put(className, NO_CLASS_DEF_FOUND);
+        log.info("Loading "+className);
+
         if(dir!=null && dir.trim().length()>0) {
             try (DirectoryStream<Path> stream = Files.newDirectoryStream(FileSystems.getDefault().getPath(dir), "*.jar")) {
                 for (Path entry1 : stream) {
@@ -65,30 +71,37 @@ public class ScriptsClassLoader extends ClassLoader {
                         if (!entry.isDirectory() && entry.getName().endsWith(".class")) {
                             // This ZipEntry represents a class. Now, what class does it represent?
                             String clazz = entry.getName().replace('/', '.'); // including ".class"
-                            if (clazz.equals(className + ".class")) {
+                            if (clazz.equals(className + ".class") || prefetchClasses) {
                                 InputStream classstream = zipFile.getInputStream(entry);
-                                ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
-                                int nextValue = classstream.read();
-                                while (-1 != nextValue) {
-                                    byteStream.write(nextValue);
-                                    nextValue = classstream.read();
-                                }
                                 byte classByte[];
-                                classByte = byteStream.toByteArray();
-                                result = defineClass(className, classByte, 0, classByte.length, null);
+                                classByte = IOUtils.toByteArray(classstream);
+                                try
+                                {
+                                    result = defineClass(className, classByte, 0, classByte.length, null);
 
-                                log.info("Loaded "+className);
+                                    log.info("Loaded " + className);
 
-                                classes.put(className, result);
-                                return result;
+                                    classes.put(className, result);
+
+                                    if (!prefetchClasses) {
+                                        return result;
+                                    }
+                                } catch (Exception e) {
+                                    log.error("Can't load "+className);
+                                }
                             }
                         }
                     }
                 }
-            } catch (IOException e) {
+            } catch (Exception e) {
                 log.error(e.toString(), e);
             }
         }
-        throw new ClassNotFoundException();
+
+        if(classes.get(className)==NO_CLASS_DEF_FOUND) {
+            throw new ClassNotFoundException();
+        }
+
+        return (Class) classes.get(className);
      }
 }

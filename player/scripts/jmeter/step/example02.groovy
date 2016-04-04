@@ -97,42 +97,12 @@ if( request.getUrl().toString().contains('/remote_logging')  || request.getUrl()
 	return false;
 }
 
-def counter = com.focusit.jmeter.JMeterProxyCounter.getInstance().counter.incrementAndGet();
+def makeTemplateInRequest(def request){
+	def body = request.getUrl().toString();
 
-
-System.out.println("Proceed " + request.getUrl()+" Response code " + response.getResponseCode());
-
-if(!request.getMethod().toLowerCase().equals('post')) {
-	request.setName(request.getName());
-}
-
-// check if request is post and countains desired patterms
-if(request.getMethod().toLowerCase().equals('post')){
-	def raw = request.getPropertyAsString('HTTPsampler.Arguments');
-	def rraw = java.util.regex.Pattern.compile('(ru\\.naumen\\..*?)[/|\\s]');
-	def ract = java.util.regex.Pattern.compile('.*\\.(.*Action)');
-
-	def mraw = rraw.matcher(raw);
-
-	def actions = "";
-
-	while(mraw.find()){
-		def item = mraw.group(1);
-		def mact = ract.matcher(item);
-		if(mact.find()) {
-			item = mact.group(1);
-			actions += (item + " ");
-		} else {
-			System.err.println('@@@@@@@@@@@@@@ '+item+' regex '+ract.toString());
-		}
+	if(request.getMethod().toLowerCase().equals('post')) {
+		body = request.getPropertyAsString('HTTPsampler.Arguments');
 	}
-	actions = actions.trim();
-	if(actions.length()>0) {
-		request.setName("" + counter + '. ' + actions);
-	}
-
-	// request processing
-	def body = request.getPropertyAsString('HTTPsampler.Arguments');
 
 	// comet can't be used at the moment
 	if(body.contains('WaitCometEventsAction')){
@@ -183,17 +153,63 @@ if(request.getMethod().toLowerCase().equals('post')){
 		body = body.replace(template, '${'+src+'}');
 		m = r.matcher(body);
 	}
-	def arg = request.getArguments().getArgument(0);
-	if(arg!=null){
-		arg.setValue(body);
+
+	if(request.getMethod().toLowerCase().equals('post')) {
+		def arg = request.getArguments().getArgument(0);
+		if (arg != null) {
+			arg.setValue(body);
+		}
+	}
+	if(request.getMethod().toLowerCase().equals('get')){
+		request.setUrl(body);
 	}
 
-	def res = new String(response.getResponseData(), "UTF-8");
+	return body;
+}
+
+def counter = com.focusit.jmeter.JMeterProxyCounter.getInstance().counter.incrementAndGet();
+
+System.out.println("Proceed " + request.getUrl()+" Response code " + response.getResponseCode());
+
+if(!request.getMethod().toLowerCase().equals('post')) {
+	request.setName(request.getName());
+}
+
+// check if request is post and countains desired patterms
+if(request.getMethod().toLowerCase().equals('post')){
+	def raw = request.getPropertyAsString('HTTPsampler.Arguments');
+	def rraw = java.util.regex.Pattern.compile('(ru\\.naumen\\..*?)[/|\\s]');
+	def ract = java.util.regex.Pattern.compile('.*\\.(.*Action)');
+
+	def mraw = rraw.matcher(raw);
+
+	def actions = "";
+
+	while(mraw.find()){
+		def item = mraw.group(1);
+		def mact = ract.matcher(item);
+		if(mact.find()) {
+			item = mact.group(1);
+			actions += (item + " ");
+		} else {
+			System.err.println('@@@@@@@@@@@@@@ '+item+' regex '+ract.toString());
+		}
+	}
+	actions = actions.trim();
+	if(actions.length()>0) {
+		request.setName("" + counter + '. ' + actions);
+		System.err.println('Request renamed to '+request.getName());
+	}
+
+	// request processing
+	def body = makeTemplateInRequest(request);
 	System.out.println('-----------------request-'+body);
-	System.err.println('-----------------response:'+res);
 
 	// response processing
 	// probably it might be better to parse response only in some conditions
+	def res = new String(response.getResponseData(), "UTF-8");
+	System.err.println('-----------------response:'+res);
+
 	def rr = java.util.regex.Pattern.compile('AddObjectAction\\/\\d+\\|.*Fqn\\/\\d+\\|(\\w+)(\\$\\w+)?\\|');
 	def mm = rr.matcher(body);
 

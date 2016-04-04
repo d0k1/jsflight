@@ -44,6 +44,11 @@ public class JMeterScriptProcessor {
     }
 
     public static void setRecordingScript(String recordingScript) {
+
+        if(JMeterScriptProcessor.recordingScript!=null && JMeterScriptProcessor.recordingScript.equals(recordingScript)){
+            return;
+        }
+
         JMeterScriptProcessor.recordingScript = recordingScript;
         try {
             JMeterScriptProcessor.compiledRecordingScript = shell.parse(recordingScript);
@@ -57,6 +62,11 @@ public class JMeterScriptProcessor {
     }
 
     public static void setProcessScript(String processScript) {
+
+        if(JMeterScriptProcessor.processScript!=null && JMeterScriptProcessor.processScript.equals(processScript)) {
+            return;
+        }
+
         JMeterScriptProcessor.processScript = processScript;
         try {
             JMeterScriptProcessor.compiledProcessScript = shell.parse(processScript);
