@@ -21,6 +21,7 @@ jsflight.startRecorder = function() {
 
     if (document.addEventListener) {
         document.addEventListener('click', jsflight.TrackMouse);
+        document.addEventListener('mousedown', jsflight.TrackMouse);
         document.addEventListener('mousemove', jsflight.TrackMouse);
         document.addEventListener('mousewheel', jsflight.TrackMouse);
         document.addEventListener('scroll', jsflight.TrackMouse);
@@ -30,6 +31,7 @@ jsflight.startRecorder = function() {
         window.addEventListener('hashchange', jsflight.TrackHash);
     } else {
         document.attachEvent('click', jsflight.TrackMouse);
+        document.attachEvent('mousedown', jsflight.TrackMouse);
         document.attachEvent('mousemove', jsflight.TrackMouse);
         document.attachEvent('mousewheel', jsflight.TrackMouse);
         document.attachEvent('scroll', jsflight.TrackMouse);
@@ -65,6 +67,7 @@ jsflight.stopRecorder = function() {
     jsflight.stopTimers();
     if (document.removeEventListener) {
         document.removeEventListener('click', jsflight.TrackMouse);
+        document.removeEventListener('mousedown', jsflight.TrackMouse);
         document.removeEventListener('mousemove', jsflight.TrackMouse);
         document.removeEventListener('mousewheel', jsflight.TrackMouse);
         document.removeEventListener('scroll', jsflight.TrackMouse);
@@ -74,6 +77,7 @@ jsflight.stopRecorder = function() {
         window.removeEventListener('hashchange', jsflight.TrackHash);
     } else {
         document.detachEvent('click', jsflight.TrackMouse);
+        document.detachEvent('mousedown', jsflight.TrackMouse);
         document.detachEvent('mousemove', jsflight.TrackMouse);
         document.detachEvent('mousewheel', jsflight.TrackMouse);
         document.detachEvent('scroll', jsflight.TrackMouse);
