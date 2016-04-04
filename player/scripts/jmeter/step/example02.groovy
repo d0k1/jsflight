@@ -1,4 +1,97 @@
-if(!request.getUrl().toString().contains('192.168.225.142'))
+import com.google.gwt.user.server.rpc.RPC;
+
+def isItAddAction(String body) {
+	return body.contains('AddObjectAction');
+}
+
+def isItEditAction(String body) {
+	return body.contains('EditObjectAction') || body.contains('EditObjectsAction');
+}
+
+def isItDeleteAction(String body) {
+	return body.contains('DeleteObjectAction') || body.contains('DeleteObjectsAction');
+}
+
+def processBatch(def batch, def clazz){
+	batch.getActions().each({
+		if(it.getClass().getName().contains(clazz)){
+			return it;
+		}
+	})
+
+	return null;
+}
+
+def getAddObjectActionResult(String response){
+	def rpcRequest = RPC.decodeRequest(response);
+	def test = rpcRequest.rpcRequest.getParameters()[0];
+	if(test.getClass().getName().contains("BatchAction")){
+		test = processBatch(test, "AddObjectAction");
+	}
+
+	if(test.getClass().getName().contains("AddObjectAction")){
+
+	}
+}
+
+def getEditObjectActionResult(String request){
+	def result = [];
+
+	def rpcRequest = com.google.gwt.user.server.rpc.RPC.decodeRequest(request);
+
+	def test = rpcRequest.getParameters()[0];
+	if(test.getClass().getName().contains("BatchAction")){
+		test = processBatch(test, "EditObjectAction");
+		if(test==null) {
+			test = processBatch(test, "EditObjectsAction");
+		}
+	}
+
+	if(test.getClass().getName().contains("EditObjectAction")){
+		result << test.getUuid();
+	}
+
+	if(test.getClass().getName().contains("EditObjectsAction")){
+		result.addAll(test.getUuids() as Set);
+	}
+
+	return result;
+}
+
+def getDeleteObjectActionResult(String request){
+	def result = [];
+
+	def rpcRequest = com.google.gwt.user.server.rpc.RPC.decodeRequest(request);
+	def test = rpcRequest.getParameters()[0];
+	if(test.getClass().getName().contains("BatchAction")){
+		test = processBatch(test, "DeleteObjectAction");
+		if(test==null){
+			test = processBatch(test, "DeleteObjectsAction");
+		}
+	}
+
+	if(test.getClass().getName().contains("DeleteObjectAction")){
+		result << test.getUUID();
+	}
+
+	if(test.getClass().getName().contains("DeleteObjectsAction")){
+		result.addAll(test.getUuids() as Set);
+	}
+
+	return result;
+}
+
+java.lang.Thread.currentThread().setContextClassLoader(classloader);
+
+baseurl = System.getProperty("baseurl");
+
+if( baseurl!=null && baseurl.trim().length()>0 && !request.getUrl().toString().contains(baseurl))
+{
+	System.out.println("Skipped " + request.getUrl()+" Response code " + response.getResponseCode());
+	return false;
+}
+
+if( request.getUrl().toString().contains('/remote_logging')  || request.getUrl().toString().contains('/comet'))
 {
 	System.out.println("Skipped " + request.getUrl()+" Response code " + response.getResponseCode());
 	return false;
@@ -46,6 +139,29 @@ if(request.getMethod().toLowerCase().equals('post')){
 		return false;
 	}
 
+	if((isItEditAction(body) || isItDeleteAction(body)))
+	{
+		def templates = [];
+		if(isItEditAction(body)){
+			templates.addAll(getEditObjectActionResult(body))
+		} else {
+			templates.addAll(getDeleteObjectActionResult(body));
+		}
+
+		templates.each({ template->
+			def src = template.replace('$', '.');
+
+			if(ctx.getTemplate(src) instanceof String || ctx.getTemplate(src)==null) {
+				def tt = new String(template);
+				tt = 'clone.'+tt;
+				if(ctx.getTemplate(src)==null||!ctx.getTemplate(src).equals(tt)) {
+					System.err.println('^^^^^^^^^^^^^^^^^^^^^^^^^ 2. ' + src + ' - ' + tt);
+					ctx.addTemplate(src, tt);
+				}
+			}
+		})
+	}
+
 	String pattern = '(\\w+)\\$(\\d+)';
 	def r = java.util.regex.Pattern.compile(pattern);
 	def m = r.matcher(body);
@@ -62,28 +178,23 @@ if(request.getMethod().toLowerCase().equals('post')){
 			System.err.println('**************************** 1. '+src+' - '+tt);
 			ctx.addTemplate(src, tt);
 		}
-		if((body.contains('EditObjectAction') || body.contains('DeleteObjectAction')) && (ctx.getTemplate(src) instanceof String)){
-			def tt = new String(template);
-			tt = 'clone.'+tt;
-			if(!ctx.getTemplate(src).equals(tt)) {
-				System.err.println('**************************** 2. ' + src + ' - ' + tt);
-				ctx.addTemplate(src, tt);
-			}
-		}
+
 		body = body.replace(template, '${'+src+'}');
 		m = r.matcher(body);
 	}
-	if(request.getArguments().getArgument(0)!=null){
-		request.getArguments().getArgument(0).setValue(body);
+	def arg = request.getArguments().getArgument(0);
+	if(arg!=null){
+		arg.setValue(body);
 	}
+
+	def res = new String(response.getResponseData(), "UTF-8");
 	System.out.println('-----------------request-'+body);
+	System.err.println('-----------------response:'+res);
 
 	// response processing
 	// probably it might be better to parse response only in some conditions
 	def rr = java.util.regex.Pattern.compile('AddObjectAction\\/\\d+\\|.*Fqn\\/\\d+\\|(\\w+)(\\$\\w+)?\\|');
 	def mm = rr.matcher(body);
-
-	def res = new String(response.getResponseData(), "UTF-8");
 
 	if(mm.find()) {
 		r = java.util.regex.Pattern.compile('('+mm.group(1)+')\\$(\\d+)');

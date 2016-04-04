@@ -1,23 +1,22 @@
 package com.focusit.jsflight.player.script;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
+import com.focusit.jmeter.ScriptsClassLoader;
+import com.focusit.jsflight.player.context.PlayerContext;
+import com.focusit.jsflight.player.scenario.UserScenario;
+import groovy.lang.Binding;
+import groovy.lang.GroovyShell;
+import groovy.lang.Script;
+import groovy.text.SimpleTemplateEngine;
 import org.json.JSONObject;
 import org.openqa.selenium.WebDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.focusit.jsflight.player.context.PlayerContext;
-import com.focusit.jsflight.player.scenario.UserScenario;
-
-import groovy.lang.Binding;
-import groovy.lang.GroovyShell;
-import groovy.lang.Script;
-import groovy.text.SimpleTemplateEngine;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Engine that runs groovy scripts or GString templates
@@ -30,16 +29,18 @@ public class Engine
     private static final Logger LOG = LoggerFactory.getLogger(Engine.class);
     private static final ConcurrentHashMap<Object, Object> context = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<String, Script> scripts = new ConcurrentHashMap<>();
-    private static final GroovyShell shell = new GroovyShell();
-    private final String script;
+    private GroovyShell shell;
+    private String script;
 
     public Engine()
     {
+        shell = new GroovyShell(new ScriptsClassLoader(this.getClass().getClassLoader()));
         this.script = null;
     }
 
     public Engine(String script)
     {
+        this();
         this.script = script;
         compileScript(script);
     }
@@ -50,6 +51,7 @@ public class Engine
         binding.setVariable("current", currentEvent);
         binding.setVariable("previous", prevEvent);
         binding.setVariable("logger", LOG);
+        binding.setVariable("classloader", shell.getClassLoader());
         Script scr = scripts.get(script);
         scr.setBinding(binding);
         return (boolean)scr.run();
@@ -62,6 +64,7 @@ public class Engine
         binding.setVariable("target", target);
         binding.setVariable("event", event);
         binding.setVariable("logger", LOG);
+        binding.setVariable("classloader", shell.getClassLoader());
         Script scr = scripts.get(script);
         scr.setBinding(binding);
         return scr.run();
@@ -83,6 +86,7 @@ public class Engine
         Binding binding = new Binding();
         binding.setVariable("context", context);
         binding.setVariable("events", events);
+        binding.setVariable("classloader", shell.getClassLoader());
         Script s = scripts.get(script);
         s.setBinding(binding);
         s.run();
@@ -114,6 +118,7 @@ public class Engine
         binding.setVariable("step", step);
         binding.setVariable("pre", pre);
         binding.setVariable("post", !pre);
+        binding.setVariable("classloader", shell.getClassLoader());
         Script s = scripts.get(stepScript);
         s.setBinding(binding);
         s.run();
@@ -167,6 +172,7 @@ public class Engine
         Binding binding = new Binding();
         binding.setVariable("context", context);
         binding.setVariable("events", new ArrayList<>(events));
+        binding.setVariable("classloader", shell.getClassLoader());
         Script s = scripts.get(script);
         s.setBinding(binding);
         s.run();
