@@ -45,8 +45,9 @@ if(event.type.equals('mousewheel'))
 	return null;
 }
 
+def applicableForSearch = ['click', 'mousedown','keypress','keydown']
                               
-if(event.type.equals('click') || event.type.equals('mousedown')){
+if(event.type in applicableForSearch ){
 	List<String> presentElements = new ArrayList<>();
 	WebElement targetElement = null;
 	for (Iterator<String> iterator = elements.iterator(); iterator.hasNext();)
