@@ -1,5 +1,16 @@
 package com.focusit.jsflight.player.scenario;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.openqa.selenium.WebElement;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.focusit.jmeter.JMeterJSFlightBridge;
 import com.focusit.jsflight.player.constants.EventType;
 import com.focusit.jsflight.player.context.PlayerContext;
@@ -8,16 +19,6 @@ import com.focusit.jsflight.player.input.Events;
 import com.focusit.jsflight.player.input.FileInput;
 import com.focusit.jsflight.player.script.Engine;
 import com.focusit.jsflight.player.webdriver.SeleniumDriver;
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.openqa.selenium.WebElement;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 
 /**
  * Recorded scenario encapsulation: parses file, plays the scenario by step, modifies the scenario, saves to a disk
@@ -209,12 +210,8 @@ public class UserScenario
     {
         JSONObject prev = getPrevEvent(event);
 
-        if (prev != null
-                && new Engine(DuplicateHandlerController.getInstance().getScriptBody())
-                        .executeDuplicateHandlerScript(event, prev)
-                && prev.getString("type").equals(event.getString("type"))
-                && prev.getString("url").equals(event.getString("url"))
-                && getTargetForEvent(prev).equals(getTargetForEvent(event)))
+        if (prev != null && new Engine(DuplicateHandlerController.getInstance().getScriptBody())
+                .executeDuplicateHandlerScript(event, prev))
         {
             return true;
         }
