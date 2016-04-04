@@ -99,6 +99,8 @@ jsflight.getEventInfo = function(mouseEvent) {
     result.deltaX = mouseEvent.deltaX;
     result.deltaY = mouseEvent.deltaY;
     result.deltaZ = mouseEvent.deltaZ;
+    
+    result.wheelDelta = mouseEvent.wheelDelta;
 
     if (jsflight.options.propertyProvider) {
         jsflight.options.propertyProvider(result);
