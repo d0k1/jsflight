@@ -1,8 +1,4 @@
-import org.openqa.selenium.*;
-import java.util.stream.Collectors;
-import org.apache.commons.lang3.StringUtils;
-import org.json.JSONArray;
-
+import org.json.JSONArray
 
 /**
  * Базовый скрипт определения дублей событий, нужен для корректного ввода текстом плеером, и обработки кликов в дерево

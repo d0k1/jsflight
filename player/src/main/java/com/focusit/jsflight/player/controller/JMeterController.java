@@ -12,13 +12,13 @@ public class JMeterController extends UIController
     private String stepProcessorScript = "";
     private String scenarioProcessorScript = "";
 
+    private JMeterController()
+    {
+    }
+
     public static JMeterController getInstance()
     {
         return instance;
-    }
-
-    private JMeterController()
-    {
     }
 
     @Override
@@ -31,15 +31,11 @@ public class JMeterController extends UIController
     }
 
     private void syncScripts(){
-        if(JMeterScriptProcessor.getInstance().getRecordingScript()!=null && !JMeterScriptProcessor.getInstance().getRecordingScript().equals(getStepProcessorScript())) {
-            JMeterScriptProcessor.getInstance().setRecordingScript(getStepProcessorScript());
-        } else if(JMeterScriptProcessor.getInstance().getRecordingScript()==null){
+        if(getStepProcessorScript()!=null) {
             JMeterScriptProcessor.getInstance().setRecordingScript(getStepProcessorScript());
         }
 
-        if(JMeterScriptProcessor.getInstance().getProcessScript()!=null && !JMeterScriptProcessor.getInstance().getProcessScript().equals(getScenarioProcessorScript())) {
-            JMeterScriptProcessor.getInstance().setProcessScript(getScenarioProcessorScript());
-        } else if (JMeterScriptProcessor.getInstance().getProcessScript()==null){
+        if(getScenarioProcessorScript()!=null) {
             JMeterScriptProcessor.getInstance().setProcessScript(getScenarioProcessorScript());
         }
     }

@@ -1,14 +1,9 @@
 package com.focusit.jsflight.player.input;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
+
+import java.util.*;
 
 /**
  * Sorted list of recorded events

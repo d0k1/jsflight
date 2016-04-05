@@ -1,45 +1,15 @@
 package com.focusit.jsflight.player.ui;
 
-import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.Font;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.io.File;
-import java.io.IOException;
-import java.util.Date;
-
-import javax.swing.BoxLayout;
-import javax.swing.ButtonGroup;
-import javax.swing.DefaultCellEditor;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JFileChooser;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JRadioButton;
-import javax.swing.JScrollPane;
-import javax.swing.JSplitPane;
-import javax.swing.JTabbedPane;
-import javax.swing.JTable;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
-import javax.swing.JToolBar;
-import javax.swing.SwingConstants;
-import javax.swing.event.CellEditorListener;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
-import javax.swing.table.AbstractTableModel;
-
+import com.focusit.jmeter.JMeterRecorder;
+import com.focusit.jmeter.JMeterScriptProcessor;
+import com.focusit.jsflight.player.controller.*;
+import com.focusit.jsflight.player.input.FileInput;
+import com.focusit.jsflight.player.scenario.UserScenario;
+import com.focusit.jsflight.player.webdriver.SeleniumDriver;
+import com.jgoodies.forms.layout.ColumnSpec;
+import com.jgoodies.forms.layout.FormLayout;
+import com.jgoodies.forms.layout.FormSpecs;
+import com.jgoodies.forms.layout.RowSpec;
 import org.apache.commons.io.FileUtils;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
@@ -50,28 +20,23 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.focusit.jmeter.JMeterRecorder;
-import com.focusit.jmeter.JMeterScriptProcessor;
-import com.focusit.jsflight.player.controller.DuplicateHandlerController;
-import com.focusit.jsflight.player.controller.IUIController;
-import com.focusit.jsflight.player.controller.InputController;
-import com.focusit.jsflight.player.controller.JMeterController;
-import com.focusit.jsflight.player.controller.OptionsController;
-import com.focusit.jsflight.player.controller.PostProcessController;
-import com.focusit.jsflight.player.controller.ScenarioController;
-import com.focusit.jsflight.player.controller.WebLookupController;
-import com.focusit.jsflight.player.input.FileInput;
-import com.focusit.jsflight.player.scenario.UserScenario;
-import com.focusit.jsflight.player.webdriver.SeleniumDriver;
-import com.jgoodies.forms.layout.ColumnSpec;
-import com.jgoodies.forms.layout.FormLayout;
-import com.jgoodies.forms.layout.FormSpecs;
-import com.jgoodies.forms.layout.RowSpec;
+import javax.swing.*;
+import javax.swing.event.CellEditorListener;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+import javax.swing.table.AbstractTableModel;
+import java.awt.*;
+import java.awt.event.*;
+import java.io.File;
+import java.io.IOException;
+import java.util.Date;
 
 public class MainFrame
 {
 
     private static final Logger log = LoggerFactory.getLogger(MainFrame.class);
+    private final ButtonGroup buttonGroup = new ButtonGroup();
     private UserScenario scenario = new UserScenario();
     private AbstractTableModel model;
     private JFrame frmJsflightrecorderPlayer;
@@ -88,7 +53,6 @@ public class MainFrame
     private RSyntaxTextArea scriptArea;
     private JRadioButton usePhantomButton;
     private JRadioButton useFirefoxButton;
-    private final ButtonGroup buttonGroup = new ButtonGroup();
     private JCheckBox makeShots;
     private JPanel jmeterPanel;
     private JTextField screenDirTextField;

@@ -10,14 +10,14 @@
 	<parent>
 		<groupId>com.github.d0k1</groupId>
 		<artifactId>jsflight</artifactId>
-		<version>3.6</version>
+		<version>3.8</version>
 	</parent>
 
 	<dependencies>
 		<dependency>
 			<groupId>com.github.d0k1.jsflight</groupId>
 			<artifactId>recorder</artifactId>
-			<version>3.6</version>
+			<version>3.8</version>
 		</dependency>
 
 		<dependency>
@@ -49,9 +49,9 @@
 	</repositories>
 
 	<scm>
-		<url>https://github.com/d0k1/JSFlightRecorder</url>
-		<connection>scm:git:git://git@github.com:d0k1/JSFlightRecorder.git</connection>
-		<developerConnection>scm:git:git@github.com:d0k1/JSFlightRecorder.git</developerConnection>
+		<url>https://github.com/d0k1/jsflight</url>
+		<connection>scm:git:git://git@github.com:d0k1/jsflight.git</connection>
+		<developerConnection>scm:git:git@github.com:d0k1/jsflight.git</developerConnection>
 	</scm>
 
 	<build>

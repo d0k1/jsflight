@@ -1,3 +1,5 @@
+import com.focusit.script.jmeter.JMeterJSFlightBridge
+
 boolean accesKeyFound = false;
 
 def getRPCRequestClassName(String request){
@@ -29,9 +31,9 @@ if(sample.getMethod().toLowerCase().equals('post')) {
         if(name!=null) {
             String counter = sample.getName().split(" ")[0].trim();
             sample.setName("" + counter + " " + name);
-            System.err.println(Thread.currentThread().getName()+":"+'Request ' + sample.getName() + ' renamed to ' + name + ' hash ' + System.identityHashCode(sample));
+            logger.error(Thread.currentThread().getName()+":"+'Request ' + sample.getName() + ' renamed to ' + name + ' hash ' + System.identityHashCode(sample));
         } else {
-            System.err.println(Thread.currentThread().getName()+":"+'Request ' + sample.getName() + ' is not gwt-prc ' + ' hash ' + System.identityHashCode(sample)+'.'+raw);
+            logger.error(Thread.currentThread().getName()+":"+'Request ' + sample.getName() + ' is not gwt-prc ' + ' hash ' + System.identityHashCode(sample)+'.'+raw);
         }
     }
 }
@@ -46,7 +48,7 @@ for(String key : sample.getArguments().getArgumentsAsMap().keySet()) {
 }
 
 if(!accesKeyFound) {
-    if (com.focusit.jmeter.JMeterJSFlightBridge.getInstace().getSourceEvent((org.apache.jmeter.protocol.http.sampler.HTTPSamplerBase)sample) != null)
+    if (JMeterJSFlightBridge.getInstace().getSourceEvent((org.apache.jmeter.protocol.http.sampler.HTTPSamplerBase)sample) != null)
     {
         def cookies = new org.apache.jmeter.protocol.http.control.CookieManager();
         cookies.setName("HTTP Cookie Manager");
@@ -55,8 +57,8 @@ if(!accesKeyFound) {
         cookies.setProperty(org.apache.jmeter.testelement.TestElement.TEST_CLASS, "CookieManager");
         tree.add(cookies);
 
-        String cooks = "employee=" + com.focusit.jmeter.JMeterJSFlightBridge.getInstace()
-                .getSourceEvent((org.apache.jmeter.protocol.http.sampler.HTTPSamplerBase)sample).getString(com.focusit.jmeter.JMeterJSFlightBridge.TAG_FIELD);
+        String cooks = "employee=" + JMeterJSFlightBridge.getInstace()
+                .getSourceEvent((org.apache.jmeter.protocol.http.sampler.HTTPSamplerBase)sample).getString(JMeterJSFlightBridge.TAG_FIELD);
 
         String pattern = 'employee=(\\w+)\\$(\\d+)';
         def r = java.util.regex.Pattern.compile(pattern);
@@ -75,7 +77,7 @@ if(!accesKeyFound) {
     }
     else
     {
-        System.err.println("No tag found for sampler " + sample.getName());
+        logger.error("No tag found for sampler " + sample.getName());
     }
 }
 
@@ -100,10 +102,10 @@ srcs.each({
         // add just an user defined variable
         vars.addArgument(new org.apache.jmeter.config.Argument(it, template));
 
-        System.err.println('???????????? Added variable '+it+' for '+sample.getName());
+        logger.error('???????????? Added variable '+it+' for '+sample.getName());
         ctx.getProperty(vars_key).remove(it);
     } else if(template instanceof org.apache.jmeter.protocol.http.sampler.HTTPSamplerBase){
-        System.err.println('++++++++++++++ template '+template.getName()+' sample '+sample.getName());
+        logger.error('++++++++++++++ template '+template.getName()+' sample '+sample.getName());
         if(template.equals(sample)) {
             def ree = new org.apache.jmeter.extractor.RegexExtractor();
             ree.setProperty(org.apache.jmeter.testelement.TestElement.GUI_CLASS, "RegexExtractorGui");
@@ -125,10 +127,10 @@ srcs.each({
 
             ctx.getProperty(vars_key).remove(it);
 
-            System.err.println('???????????? Added regex extractor to ' + sample.getName())
+            logger.error('???????????? Added regex extractor to ' + sample.getName())
         }
     } else {
-            System.err.println('Source '+ it+' template '+template.getName()+' sample '+sample.getName());
+        logger.error('Source '+ it+' template '+template.getName()+' sample '+sample.getName());
     }
 })
 

@@ -1,7 +1,9 @@
 package com.focusit.jmeter;
 
+import com.focusit.script.ScriptEngine;
+import com.focusit.script.jmeter.JMeterJSFlightBridge;
+import com.focusit.script.jmeter.JMeterRecorderContext;
 import groovy.lang.Binding;
-import groovy.lang.GroovyShell;
 import groovy.lang.Script;
 import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.protocol.http.sampler.HTTPSamplerBase;
@@ -16,20 +18,11 @@ import org.slf4j.LoggerFactory;
  */
 public class JMeterScriptProcessor {
     private final static JMeterScriptProcessor instance = new JMeterScriptProcessor();
-
+    private static final Logger log = LoggerFactory.getLogger(JMeterScriptProcessor.class);
     // script called at recording phase. Can skip sample
     private static String recordingScript;
     // script callled at storing phase. Can skip sample
     private static String processScript;
-
-    // And compiled version of that scripts.
-    private static Script compiledRecordingScript;
-
-    private static Script compiledProcessScript;
-
-    private static final GroovyShell shell = new GroovyShell(new ScriptsClassLoader(JMeterScriptProcessor.class.getClassLoader()));
-
-    private static final Logger log = LoggerFactory.getLogger(JMeterScriptProcessor.class);
 
     private JMeterScriptProcessor(){
 
@@ -44,17 +37,7 @@ public class JMeterScriptProcessor {
     }
 
     public static void setRecordingScript(String recordingScript) {
-
-        if(JMeterScriptProcessor.recordingScript!=null && JMeterScriptProcessor.recordingScript.equals(recordingScript)){
-            return;
-        }
-
         JMeterScriptProcessor.recordingScript = recordingScript;
-        try {
-            JMeterScriptProcessor.compiledRecordingScript = shell.parse(recordingScript);
-        } catch (Exception ex) {
-            log.error(ex.toString(), ex);
-        }
     }
 
     public static String getProcessScript() {
@@ -62,17 +45,7 @@ public class JMeterScriptProcessor {
     }
 
     public static void setProcessScript(String processScript) {
-
-        if(JMeterScriptProcessor.processScript!=null && JMeterScriptProcessor.processScript.equals(processScript)) {
-            return;
-        }
-
         JMeterScriptProcessor.processScript = processScript;
-        try {
-            JMeterScriptProcessor.compiledProcessScript = shell.parse(processScript);
-        } catch (Exception ex) {
-            log.error(ex.toString(), ex);
-        }
     }
 
     /**
@@ -83,25 +56,32 @@ public class JMeterScriptProcessor {
      * @return is sample ok
      */
     public boolean processSampleDuringRecord(HTTPSamplerBase sampler, SampleResult result) {
-        if(compiledRecordingScript==null) {
-            return true;
-        }
-
         Binding binding = new Binding();
+        binding.setVariable("logger", log);
         binding.setVariable("request", sampler);
         binding.setVariable("response", result);
         binding.setVariable("ctx", JMeterRecorderContext.getInstance());
         binding.setVariable("jsflight", JMeterJSFlightBridge.getInstace());
-        binding.setVariable("classloader", shell.getClassLoader());
+        binding.setVariable("classloader", ScriptEngine.getInstance().getClassLoader());
 
-        compiledRecordingScript.setBinding(binding);
         boolean isOk = true;
-        Object scriptResult = compiledRecordingScript.run();
+
+        Script s = ScriptEngine.getInstance().getThreadBindedScript(recordingScript);
+        if(s==null){
+            log.error(Thread.currentThread().getName()+":"+"Sample "+sampler.getName()+"No script found. default result "+isOk);
+            return isOk;
+        }
+        s.setBinding(binding);
+        log.info(Thread.currentThread().getName()+":"+"running "+sampler.getName()+" compiled script");
+        Object scriptResult = s.run();
 
         if(scriptResult!=null && scriptResult instanceof Boolean){
             isOk = (boolean) scriptResult;
+        } else {
+            log.error(Thread.currentThread().getName()+":"+"Sample "+sampler.getName()+" script result UNDEFINED shifted to"+isOk);
         }
 
+        log.error(Thread.currentThread().getName()+":"+"Sample "+sampler.getName()+" script result "+isOk);
         return isOk;
     }
 
@@ -111,18 +91,19 @@ public class JMeterScriptProcessor {
      * @param tree HashTree (XML like data structure) that represents exact recorded sample
      */
     public void processScenario(HTTPSamplerBase sample, HashTree tree, Arguments userVariables) {
-        if (compiledProcessScript==null) {
-            return;
-        }
-
         Binding binding = new Binding();
+        binding.setVariable("logger", log);
         binding.setVariable("sample", sample);
         binding.setVariable("tree", tree);
         binding.setVariable("ctx", JMeterRecorderContext.getInstance());
         binding.setVariable("jsflight", JMeterJSFlightBridge.getInstace());
         binding.setVariable("vars", userVariables);
-        binding.setVariable("classloader", shell.getClassLoader());
+        binding.setVariable("classloader", ScriptEngine.getInstance().getClassLoader());
 
+        Script compiledProcessScript = ScriptEngine.getInstance().getScript(processScript);
+        if(compiledProcessScript==null){
+            return;
+        }
         compiledProcessScript.setBinding(binding);
         compiledProcessScript.run();
     }

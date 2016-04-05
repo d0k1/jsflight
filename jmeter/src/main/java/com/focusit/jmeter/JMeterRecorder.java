@@ -1,5 +1,6 @@
 package com.focusit.jmeter;
 
+import com.focusit.script.jmeter.JMeterRecorderContext;
 import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.protocol.http.control.HeaderManager;
 import org.apache.jmeter.protocol.http.control.RecordingController;
@@ -18,7 +19,10 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
 
 /**
  * Interface to control jmeter proxy recorder
