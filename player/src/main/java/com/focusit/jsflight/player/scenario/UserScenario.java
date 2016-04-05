@@ -1,24 +1,23 @@
 package com.focusit.jsflight.player.scenario;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-
+import com.focusit.jsflight.player.constants.EventType;
+import com.focusit.jsflight.player.controller.DuplicateHandlerController;
+import com.focusit.jsflight.player.input.Events;
+import com.focusit.jsflight.player.input.FileInput;
+import com.focusit.jsflight.player.script.PlayerScriptProcessor;
+import com.focusit.jsflight.player.webdriver.SeleniumDriver;
+import com.focusit.script.jmeter.JMeterJSFlightBridge;
+import com.focusit.script.player.PlayerContext;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.focusit.jmeter.JMeterJSFlightBridge;
-import com.focusit.jsflight.player.constants.EventType;
-import com.focusit.jsflight.player.context.PlayerContext;
-import com.focusit.jsflight.player.controller.DuplicateHandlerController;
-import com.focusit.jsflight.player.input.Events;
-import com.focusit.jsflight.player.input.FileInput;
-import com.focusit.jsflight.player.script.Engine;
-import com.focusit.jsflight.player.webdriver.SeleniumDriver;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 /**
  * Recorded scenario encapsulation: parses file, plays the scenario by step, modifies the scenario, saves to a disk
@@ -28,10 +27,8 @@ import com.focusit.jsflight.player.webdriver.SeleniumDriver;
  */
 public class UserScenario
 {
-    private static volatile int position = 0;
-
     private static final Logger log = LoggerFactory.getLogger(UserScenario.class);
-
+    private static volatile int position = 0;
     private static List<JSONObject> events = new ArrayList<>();
 
     private static String postProcessScenarioScript = "";
@@ -80,9 +77,9 @@ public class UserScenario
     {
         PlayerContext.getInstance().setCurrentScenarioStep(getStepAt(position));
 
-        new Engine().runStepPrePostScript(this, position, true);
+        new PlayerScriptProcessor().runStepPrePostScript(this, position, true);
         JSONObject event = events.get(position);
-        event = new Engine().runStepTemplating(event);
+        event = new PlayerScriptProcessor().runStepTemplating(event);
         boolean error = false;
         try
         {
@@ -154,7 +151,7 @@ public class UserScenario
             if (!error)
             {
                 updatePrevEvent(event);
-                new Engine().runStepPrePostScript(this, position, false);
+                new PlayerScriptProcessor().runStepPrePostScript(this, position, false);
             }
         }
     }
@@ -210,8 +207,7 @@ public class UserScenario
     {
         JSONObject prev = getPrevEvent(event);
 
-        if (prev != null && new Engine(DuplicateHandlerController.getInstance().getScriptBody())
-                .executeDuplicateHandlerScript(event, prev))
+        if (prev != null && new PlayerScriptProcessor().executeDuplicateHandlerScript(DuplicateHandlerController.getInstance().getScriptBody(), event, prev))
         {
             return true;
         }
@@ -320,7 +316,7 @@ public class UserScenario
     {
         if (!postProcessScenarioScript.isEmpty())
         {
-            new Engine(postProcessScenarioScript).postProcessScenario(events);
+            new PlayerScriptProcessor().postProcessScenario(postProcessScenarioScript, events);
         }
         checks = new ArrayList<>(events.size());
         for (int i = 0; i < events.size(); i++)
@@ -358,8 +354,8 @@ public class UserScenario
 
     public void runPostProcessor(String script)
     {
-        Engine engine = new Engine(script);
-        engine.testPostProcess(events);
+        PlayerScriptProcessor engine = new PlayerScriptProcessor();
+        engine.testPostProcess(script, events);
     }
 
     public void saveScenario(String filename) throws IOException

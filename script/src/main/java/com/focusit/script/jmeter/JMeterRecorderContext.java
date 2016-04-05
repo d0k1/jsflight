@@ -1,4 +1,4 @@
-package com.focusit.jmeter;
+package com.focusit.script.jmeter;
 
 import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;

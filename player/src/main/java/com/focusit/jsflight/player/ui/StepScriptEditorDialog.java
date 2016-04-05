@@ -1,16 +1,10 @@
 package com.focusit.jsflight.player.ui;
 
-import java.awt.Color;
-import java.awt.Component;
-
-import javax.swing.DefaultCellEditor;
-import javax.swing.JButton;
-import javax.swing.JTable;
-import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
-import javax.swing.table.TableCellEditor;
-
 import com.focusit.jsflight.player.scenario.UserScenario;
+
+import javax.swing.*;
+import javax.swing.table.TableCellEditor;
+import java.awt.*;
 
 public class StepScriptEditorDialog extends DefaultCellEditor implements TableCellEditor
 {

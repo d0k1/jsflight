@@ -1,28 +1,13 @@
 package com.focusit.jsflight.player.webdriver;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-
+import com.focusit.jsflight.player.constants.EventType;
+import com.focusit.jsflight.player.controller.OptionsController;
+import com.focusit.jsflight.player.controller.WebLookupController;
+import com.focusit.jsflight.player.scenario.UserScenario;
+import com.focusit.jsflight.player.script.PlayerScriptProcessor;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.json.JSONObject;
-import org.openqa.selenium.By;
-import org.openqa.selenium.Dimension;
-import org.openqa.selenium.JavascriptExecutor;
-import org.openqa.selenium.Keys;
-import org.openqa.selenium.NoSuchElementException;
-import org.openqa.selenium.OutputType;
-import org.openqa.selenium.Proxy;
-import org.openqa.selenium.TakesScreenshot;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebDriverException;
-import org.openqa.selenium.WebElement;
+import org.openqa.selenium.*;
 import org.openqa.selenium.firefox.FirefoxBinary;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxProfile;
@@ -33,11 +18,15 @@ import org.openqa.selenium.remote.DesiredCapabilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.focusit.jsflight.player.constants.EventType;
-import com.focusit.jsflight.player.controller.OptionsController;
-import com.focusit.jsflight.player.controller.WebLookupController;
-import com.focusit.jsflight.player.scenario.UserScenario;
-import com.focusit.jsflight.player.script.Engine;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 /**
  * Selenium webdriver helper: runs a browser, sends events, make screenshots
@@ -47,45 +36,12 @@ import com.focusit.jsflight.player.script.Engine;
  */
 public class SeleniumDriver
 {
-    private static class CharStringGenerator implements StringGenerator
-    {
-
-        @Override
-        public String getAsString(char ch) throws UnsupportedEncodingException
-        {
-            return new String(new byte[] { (byte)ch }, StandardCharsets.UTF_8);
-        }
-
-    }
-
-    private static class RandomStringGenerator implements StringGenerator
-    {
-
-        @Override
-        public String getAsString(char ch)
-        {
-            return RandomStringUtils.randomAlphanumeric(1);
-        }
-
-    }
-
-    private interface StringGenerator
-    {
-        String getAsString(char ch) throws UnsupportedEncodingException;
-    }
-
     private static final String SET_ELEMENT_VISIBLE_JS = "var e = document.evaluate('%s' ,document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null ).singleNodeValue; if(e!== null) {e.style.visibility='visible';};";
-
     private static final Logger log = LoggerFactory.getLogger(SeleniumDriver.class);
-
     private static OptionsController config = OptionsController.getInstance();
-
     private static HashMap<String, WebDriver> drivers = new HashMap<>();
-
     private static HashMap<String, String> tabsWindow = new HashMap<>();
-
     private static HashMap<String, String> lastUrls = new HashMap<>();
-
     private static StringGenerator stringGen;
 
     public static void closeWebDrivers()
@@ -106,7 +62,7 @@ public class SeleniumDriver
         catch (NoSuchElementException e)
         {
             log.info("failed looking for {}. trying to restore xpath");
-            return (WebElement)new Engine(WebLookupController.getInstance().getScript()).executeWebLookupScript(wd,
+            return (WebElement)new PlayerScriptProcessor().executeWebLookupScript(WebLookupController.getInstance().getScript(), wd,
                     target, event);
         }
     }
@@ -285,7 +241,7 @@ public class SeleniumDriver
     public static void processMouseWheel(JSONObject event, String target)
     {
         WebDriver wd = getDriverForEvent(event);
-        WebElement el = (WebElement)new Engine(WebLookupController.getInstance().getScript()).executeWebLookupScript(wd,
+        WebElement el = (WebElement)new PlayerScriptProcessor().executeWebLookupScript(WebLookupController.getInstance().getScript(), wd,
                 target, event);
         //Web lookup script MUST return /html element if scroll occurs not in a popup
         if (!el.getTagName().equalsIgnoreCase("html"))
@@ -570,5 +526,32 @@ public class SeleniumDriver
             }
         }
         throw new NoSuchElementException("UI didn`t show up. =(");
+    }
+
+    private interface StringGenerator
+    {
+        String getAsString(char ch) throws UnsupportedEncodingException;
+    }
+
+    private static class CharStringGenerator implements StringGenerator
+    {
+
+        @Override
+        public String getAsString(char ch) throws UnsupportedEncodingException
+        {
+            return new String(new byte[] { (byte)ch }, StandardCharsets.UTF_8);
+        }
+
+    }
+
+    private static class RandomStringGenerator implements StringGenerator
+    {
+
+        @Override
+        public String getAsString(char ch)
+        {
+            return RandomStringUtils.randomAlphanumeric(1);
+        }
+
     }
 }

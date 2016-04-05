@@ -1,13 +1,10 @@
 package com.focusit.jsflight.player.cli;
 
 import com.beust.jcommander.Parameter;
-import org.apache.log.Priority;
 
 public class CliConfig
 {
     public static final String DEFAULT_RECORDING_NAME = "test.jmx";
-
-
 
     @Parameter(names = { "-hl", "--headless" }, description = "Launching in headless mode")
     private boolean headless = false;
@@ -90,6 +87,11 @@ public class CliConfig
     public String getFinishStep()
     {
         return finishStep;
+    }
+
+    public void setFinishStep(String finishStep)
+    {
+        this.finishStep = finishStep;
     }
 
     public String getJmeterRecordingName()
@@ -180,11 +182,6 @@ public class CliConfig
     public boolean isUseRandomChars()
     {
         return useRandomChars;
-    }
-
-    public void setFinishStep(String finishStep)
-    {
-        this.finishStep = finishStep;
     }
 
     public boolean showHelp()

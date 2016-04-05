@@ -1,7 +1,7 @@
 package org.apache.jmeter.protocol.http.proxy;
 
-import com.focusit.jmeter.JMeterJSFlightBridge;
 import com.focusit.jmeter.JMeterScriptProcessor;
+import com.focusit.script.jmeter.JMeterJSFlightBridge;
 import org.apache.jmeter.protocol.http.control.HeaderManager;
 import org.apache.jmeter.protocol.http.parser.HTMLParseException;
 import org.apache.jmeter.protocol.http.sampler.HTTPSamplerBase;
@@ -14,6 +14,7 @@ import org.apache.jorphan.logging.LoggingManager;
 import org.apache.jorphan.util.JMeterException;
 import org.apache.jorphan.util.JOrphanUtils;
 import org.apache.log.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.*;
 import java.io.*;
@@ -38,7 +39,7 @@ import java.util.Map;
 public class JMeterProxy extends Thread
 {
     private static final Logger log = LoggingManager.getLoggerForClass();
-
+    private static final org.slf4j.Logger logger = LoggerFactory.getLogger(JMeterProxy.class);
     private static final byte[] CRLF_BYTES = { 0x0d, 0x0a };
     private static final String CRLF_STRING = "\r\n";
 
@@ -69,6 +70,30 @@ public class JMeterProxy extends Thread
         log.info("Proxy will remove the headers: " + removeList);
     }
 
+    // Use with SSL connection
+    private OutputStream outStreamClient = null;
+    /** Socket to client. */
+    private Socket clientSocket = null;
+    /** Target to receive the generated sampler. */
+    private JMeterProxyControl target;
+    /** Whether or not to capture the HTTP headers. */
+    private boolean captureHttpHeaders;
+    /** Reference to Deamon's Map of url string to page character encoding of that page */
+    private Map<String, String> pageEncodings;
+    /** Reference to Deamon's Map of url string to character encoding for the form */
+    private Map<String, String> formEncodings;
+    private String port; // For identifying log messages
+    private KeyStore keyStore; // keystore for SSL keys; fixed at config except for dynamic host key generation
+    private String keyPassword;
+
+    /**
+     * Default constructor - used by newInstance call in Daemon
+     */
+    public JMeterProxy()
+    {
+        port = "";
+    }
+
     private static SampleResult generateErrorResult(SampleResult result, HttpRequestHdr request, Exception e,
             String msg)
     {
@@ -84,37 +109,6 @@ public class JMeterProxy extends Thread
         result.setSuccessful(false);
         result.setResponseMessage(e.getMessage() + msg);
         return result;
-    }
-
-    // Use with SSL connection
-    private OutputStream outStreamClient = null;
-
-    /** Socket to client. */
-    private Socket clientSocket = null;
-
-    /** Target to receive the generated sampler. */
-    private JMeterProxyControl target;
-
-    /** Whether or not to capture the HTTP headers. */
-    private boolean captureHttpHeaders;
-    /** Reference to Deamon's Map of url string to page character encoding of that page */
-    private Map<String, String> pageEncodings;
-
-    /** Reference to Deamon's Map of url string to character encoding for the form */
-    private Map<String, String> formEncodings;
-
-    private String port; // For identifying log messages
-
-    private KeyStore keyStore; // keystore for SSL keys; fixed at config except for dynamic host key generation
-
-    private String keyPassword;
-
-    /**
-     * Default constructor - used by newInstance call in Daemon
-     */
-    public JMeterProxy()
-    {
-        port = "";
     }
 
     /**
@@ -223,6 +217,7 @@ public class JMeterProxy extends Thread
             {
                 log.debug(port + "Execute sample: " + sampler.getMethod() + " " + sampler.getUrl());
             }
+            logger.info(Thread.currentThread().getName()+":"+"Received "+sampler.getName());
             result = sampler.sample();
 
             // Find the page encoding and possibly encodings for forms in the page
@@ -291,9 +286,9 @@ public class JMeterProxy extends Thread
                 }
 
                 if(sampler!=null) {
-                    // TODO add ability to customize post processing of recorded samples
+                    logger.error(Thread.currentThread().getName() + ":" + "//////////// Scripting " + sampler.getName() + " hash " + System.identityHashCode(sampler));
                     if (JMeterScriptProcessor.getInstance().processSampleDuringRecord(sampler, result)) {
-                        if(!JMeterJSFlightBridge.getInstace().isCurrentStepEmpty()) {
+                        if (!JMeterJSFlightBridge.getInstace().isCurrentStepEmpty()) {
                             // save link to JSFlight event
                             JMeterJSFlightBridge.getInstace().addSampler(sampler);
                         }
@@ -301,10 +296,11 @@ public class JMeterProxy extends Thread
                         target.deliverSampler(sampler,
                                 children.isEmpty() ? null : (TestElement[]) children.toArray(new TestElement[children.size()]),
                                 result);
-
-                        System.err.println(Thread.currentThread().getName()+":"+"//////////// Delivered "+sampler.getName()+" hash "+System.identityHashCode(sampler));
+                        logger.error(Thread.currentThread().getName() + ":" + "//////////// Scripted Delivered " + sampler.getName() + " hash " + System.identityHashCode(sampler));
                     }
                 }
+
+                //System.err.println(Thread.currentThread().getName()+":"+"//////////// Delivered "+sampler.getName()+" hash "+System.identityHashCode(sampler));
             }
             try
             {
@@ -317,6 +313,8 @@ public class JMeterProxy extends Thread
             if (sampler != null)
             {
                 sampler.threadFinished(); // Needed for HTTPSampler2
+
+                logger.info(Thread.currentThread().getName()+":"+"Finally dead "+sampler.getName());
             }
         }
     }

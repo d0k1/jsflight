@@ -1,6 +1,10 @@
-import org.openqa.selenium.*;
-import java.util.stream.Collectors;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.StringUtils
+import org.openqa.selenium.By
+import org.openqa.selenium.JavascriptExecutor
+import org.openqa.selenium.NoSuchElementException
+import org.openqa.selenium.WebElement
+
+import java.util.stream.Collectors
 
 /**
  * Базовый скрипт поиска элементов

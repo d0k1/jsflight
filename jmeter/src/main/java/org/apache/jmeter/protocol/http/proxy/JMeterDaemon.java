@@ -1,5 +1,10 @@
 package org.apache.jmeter.protocol.http.proxy;
 
+import org.apache.jmeter.gui.Stoppable;
+import org.apache.jorphan.logging.LoggingManager;
+import org.apache.jorphan.util.JOrphanUtils;
+import org.apache.log.Logger;
+
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.net.ServerSocket;
@@ -8,11 +13,6 @@ import java.net.SocketException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-
-import org.apache.jmeter.gui.Stoppable;
-import org.apache.jorphan.logging.LoggingManager;
-import org.apache.jorphan.util.JOrphanUtils;
-import org.apache.log.Logger;
 
 /**
  * Copy past of org.apache.jmeter.protocol.http.proxy.Daemon
@@ -30,7 +30,7 @@ public class JMeterDaemon  extends Thread implements Stoppable {
      * interval is the longest time that the Daemon will have to wait after
      * being told to stop.
      */
-    private static final int ACCEPT_TIMEOUT = 1000;
+    private static final int ACCEPT_TIMEOUT = 20000;
 
     /** The port to listen on. */
     private int daemonPort;

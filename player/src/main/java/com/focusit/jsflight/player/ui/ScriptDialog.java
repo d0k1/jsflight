@@ -1,18 +1,14 @@
 package com.focusit.jsflight.player.ui;
 
-import java.awt.BorderLayout;
-import java.awt.FlowLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
-import javax.swing.JButton;
-import javax.swing.JDialog;
-import javax.swing.JPanel;
-import javax.swing.border.EmptyBorder;
-
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rtextarea.RTextScrollPane;
+
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 public class ScriptDialog extends JDialog
 {
@@ -85,14 +81,14 @@ public class ScriptDialog extends JDialog
         return editor;
     }
 
-    public String getNewValue()
-    {
-        return this.scriptArea.getText();
-    }
-
     public void setEditor(StepScriptEditorDialog editor)
     {
         this.editor = editor;
+    }
+
+    public String getNewValue()
+    {
+        return this.scriptArea.getText();
     }
 
     public void setOldValue(String value)

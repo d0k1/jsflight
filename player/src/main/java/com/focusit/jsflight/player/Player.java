@@ -1,26 +1,18 @@
 package com.focusit.jsflight.player;
 
-import java.awt.EventQueue;
-import java.lang.Thread.UncaughtExceptionHandler;
-
+import com.beust.jcommander.JCommander;
+import com.focusit.jsflight.player.cli.CliConfig;
+import com.focusit.jsflight.player.cli.CliPlayer;
+import com.focusit.jsflight.player.controller.*;
+import com.focusit.jsflight.player.ui.ExceptionDialog;
+import com.focusit.jsflight.player.ui.MainFrame;
+import com.focusit.jsflight.player.webdriver.SeleniumDriver;
 import org.apache.jorphan.logging.LoggingManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.beust.jcommander.JCommander;
-import com.focusit.jsflight.player.cli.CliConfig;
-import com.focusit.jsflight.player.cli.CliPlayer;
-import com.focusit.jsflight.player.controller.DuplicateHandlerController;
-import com.focusit.jsflight.player.controller.IUIController;
-import com.focusit.jsflight.player.controller.InputController;
-import com.focusit.jsflight.player.controller.JMeterController;
-import com.focusit.jsflight.player.controller.OptionsController;
-import com.focusit.jsflight.player.controller.PostProcessController;
-import com.focusit.jsflight.player.controller.ScenarioController;
-import com.focusit.jsflight.player.controller.WebLookupController;
-import com.focusit.jsflight.player.ui.ExceptionDialog;
-import com.focusit.jsflight.player.ui.MainFrame;
-import com.focusit.jsflight.player.webdriver.SeleniumDriver;
+import java.awt.*;
+import java.lang.Thread.UncaughtExceptionHandler;
 
 public class Player
 {
