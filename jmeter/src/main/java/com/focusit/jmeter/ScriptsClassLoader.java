@@ -13,6 +13,7 @@ import java.nio.file.Path;
 import java.util.Enumeration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -23,6 +24,8 @@ public class ScriptsClassLoader extends ClassLoader {
     private final Object NO_CLASS_DEF_FOUND = new Object();
     private static final Map<String, Object> classes = new ConcurrentHashMap<>();
     private static final Logger log = LoggerFactory.getLogger(ScriptsClassLoader.class);
+
+    private static final ReentrantLock loadLock = new ReentrantLock(true);
 
     private final static boolean prefetchClasses = System.getProperty("prefetchClasses") != null;
 
@@ -57,47 +60,58 @@ public class ScriptsClassLoader extends ClassLoader {
             return result;
         }
 
-        classes.put(className, NO_CLASS_DEF_FOUND);
-        log.info("Loading "+className);
+        loadLock.lock();
+        try {
 
-        if(dir!=null && dir.trim().length()>0) {
-            try (DirectoryStream<Path> stream = Files.newDirectoryStream(FileSystems.getDefault().getPath(dir), "*.jar")) {
-                for (Path entry1 : stream) {
-                    String filejar = entry1.toAbsolutePath().toString();
-                    ZipFile zipFile = new ZipFile(filejar);
-                    Enumeration<? extends ZipEntry> entries = zipFile.entries();
-                    while (entries.hasMoreElements()) {
-                        ZipEntry entry = entries.nextElement();
-                        if (!entry.isDirectory() && entry.getName().endsWith(".class")) {
-                            // This ZipEntry represents a class. Now, what class does it represent?
-                            String clazz = entry.getName().replace('/', '.'); // including ".class"
-                            if (clazz.equals(className + ".class") || prefetchClasses) {
-                                InputStream classstream = zipFile.getInputStream(entry);
-                                byte classByte[];
-                                classByte = IOUtils.toByteArray(classstream);
-                                try
-                                {
-                                    result = defineClass(className, classByte, 0, classByte.length, null);
+            if(classes.get(className)!=null){
+                if(classes.get(className)==NO_CLASS_DEF_FOUND) {
+                    throw new ClassNotFoundException();
+                }
+                return (Class) classes.get(className);
+            }
 
-                                    log.info("Loaded " + className);
+            classes.put(className, NO_CLASS_DEF_FOUND);
+            //log.info("Loading " + className);
 
-                                    classes.put(className, result);
+            if (dir != null && dir.trim().length() > 0) {
+                try (DirectoryStream<Path> stream = Files.newDirectoryStream(FileSystems.getDefault().getPath(dir), "*.jar")) {
+                    for (Path entry1 : stream) {
+                        String filejar = entry1.toAbsolutePath().toString();
+                        ZipFile zipFile = new ZipFile(filejar);
+                        Enumeration<? extends ZipEntry> entries = zipFile.entries();
+                        while (entries.hasMoreElements()) {
+                            ZipEntry entry = entries.nextElement();
+                            if (!entry.isDirectory() && entry.getName().endsWith(".class")) {
+                                // This ZipEntry represents a class. Now, what class does it represent?
+                                String clazz = entry.getName().replace('/', '.'); // including ".class"
+                                if (clazz.equals(className + ".class") || prefetchClasses) {
+                                    InputStream classstream = zipFile.getInputStream(entry);
+                                    byte classByte[];
+                                    classByte = IOUtils.toByteArray(classstream);
+                                    try {
+                                        result = defineClass(className, classByte, 0, classByte.length, null);
 
-                                    if (!prefetchClasses) {
-                                        return result;
+                                        //log.info("Loaded " + className);
+
+                                        classes.put(className, result);
+
+                                        if (!prefetchClasses) {
+                                            return result;
+                                        }
+                                    } catch (Exception e) {
+                                        log.error("Can't load " + className);
                                     }
-                                } catch (Exception e) {
-                                    log.error("Can't load "+className);
                                 }
                             }
                         }
                     }
+                } catch (Exception e) {
+                    log.error(e.toString(), e);
                 }
-            } catch (Exception e) {
-                log.error(e.toString(), e);
             }
+        } finally {
+            loadLock.unlock();
         }
-
         if(classes.get(className)==NO_CLASS_DEF_FOUND) {
             throw new ClassNotFoundException();
         }

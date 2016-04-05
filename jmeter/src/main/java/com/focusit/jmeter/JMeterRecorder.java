@@ -18,9 +18,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 
 /**
  * Interface to control jmeter proxy recorder
@@ -107,20 +105,31 @@ public class JMeterRecorder
 
     public void saveScenario(String filename) throws IOException
     {
-        TestElement sample = recCtrl.next();
-        
-        while (sample != null)
-        {
+        TestElement sample1 = recCtrl.next();
+
+        List<TestElement> samples = new ArrayList<>();
+
+        while (sample1 != null) {
             // skip unknown nasty requests
-            if(sample instanceof HTTPSamplerBase){
-            	HTTPSamplerBase http = (HTTPSamplerBase) sample;
-            	if(http.getArguments().getArgumentCount()>0 && http.getArguments().getArgument(0).getValue().startsWith("0Q0O0M0K0I0"))
-            	{
-            		sample = recCtrl.next();
-            		continue;
-            	}
+            if (sample1 instanceof HTTPSamplerBase) {
+                HTTPSamplerBase http = (HTTPSamplerBase) sample1;
+                if (http.getArguments().getArgumentCount() > 0 && http.getArguments().getArgument(0).getValue().startsWith("0Q0O0M0K0I0")) {
+                    sample1 = recCtrl.next();
+                    continue;
+                }
             }
-            
+            samples.add(sample1);
+            sample1 = recCtrl.next();
+        }
+
+        Collections.sort(samples, (o1, o2) ->{
+            String num1 = o1.getName().split(" ")[0];
+            String num2 = o2.getName().split(" ")[0];
+            return ((Integer)Integer.parseInt(num1)).compareTo((Integer)Integer.parseInt(num2));
+        });
+
+        for(TestElement sample:samples)
+        {
             final List<TestElement> childs = new ArrayList<>();
             final List<JMeterProperty> keys = new ArrayList<>();
             sample.traverse(new TestElementTraverser()
@@ -170,7 +179,6 @@ public class JMeterRecorder
 
                 JMeterScriptProcessor.getInstance().processScenario(http, parent, vars);
             }
-            sample = recCtrl.next();
         }
 
         SaveService.saveTree(hashTree, new FileOutputStream(new File(filename)));

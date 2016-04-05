@@ -301,6 +301,8 @@ public class JMeterProxy extends Thread
                         target.deliverSampler(sampler,
                                 children.isEmpty() ? null : (TestElement[]) children.toArray(new TestElement[children.size()]),
                                 result);
+
+                        System.err.println(Thread.currentThread().getName()+":"+"//////////// Delivered "+sampler.getName()+" hash "+System.identityHashCode(sampler));
                     }
                 }
             }

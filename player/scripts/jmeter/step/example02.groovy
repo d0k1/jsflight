@@ -22,18 +22,6 @@ def processBatch(def batch, def clazz){
 	return null;
 }
 
-def getAddObjectActionResult(String response){
-	def rpcRequest = RPC.decodeRequest(response);
-	def test = rpcRequest.rpcRequest.getParameters()[0];
-	if(test.getClass().getName().contains("BatchAction")){
-		test = processBatch(test, "AddObjectAction");
-	}
-
-	if(test.getClass().getName().contains("AddObjectAction")){
-
-	}
-}
-
 def getEditObjectActionResult(String request){
 	def result = [];
 
@@ -87,26 +75,28 @@ baseurl = System.getProperty("baseurl");
 
 if( baseurl!=null && baseurl.trim().length()>0 && !request.getUrl().toString().contains(baseurl))
 {
-	System.out.println("Skipped " + request.getUrl()+" Response code " + response.getResponseCode());
+	System.out.println("Skipped " + request.getUrl()+" Response code " + response.getResponseCode()+' hash '+System.identityHashCode(request));
 	return false;
 }
 
 if( request.getUrl().toString().contains('/remote_logging')  || request.getUrl().toString().contains('/comet'))
 {
-	System.out.println("Skipped " + request.getUrl()+" Response code " + response.getResponseCode());
+	System.out.println("Skipped " + request.getUrl()+" Response code " + response.getResponseCode()+' hash '+System.identityHashCode(request));
 	return false;
 }
 
-def makeTemplateInRequest(def request){
-	def body = request.getUrl().toString();
+def makeTemplateInRequest(def request) {
+	def body = request.getQueryString();
 
 	if(request.getMethod().toLowerCase().equals('post')) {
 		body = request.getPropertyAsString('HTTPsampler.Arguments');
 	}
 
+	System.out.println('-----------------request-'+body);
+
 	// comet can't be used at the moment
 	if(body.contains('WaitCometEventsAction')){
-		return false;
+		return null;
 	}
 
 	if((isItEditAction(body) || isItDeleteAction(body)))
@@ -161,7 +151,8 @@ def makeTemplateInRequest(def request){
 		}
 	}
 	if(request.getMethod().toLowerCase().equals('get')){
-		request.setUrl(body);
+		request.parseArguments(body);
+		//request.setUrl(body);
 	}
 
 	return body;
@@ -169,41 +160,14 @@ def makeTemplateInRequest(def request){
 
 def counter = com.focusit.jmeter.JMeterProxyCounter.getInstance().counter.incrementAndGet();
 
-System.out.println("Proceed " + request.getUrl()+" Response code " + response.getResponseCode());
-
-if(!request.getMethod().toLowerCase().equals('post')) {
-	request.setName(request.getName());
-}
-
-// check if request is post and countains desired patterms
-if(request.getMethod().toLowerCase().equals('post')){
-	def raw = request.getPropertyAsString('HTTPsampler.Arguments');
-	def rraw = java.util.regex.Pattern.compile('(ru\\.naumen\\..*?)[/|\\s]');
-	def ract = java.util.regex.Pattern.compile('.*\\.(.*Action)');
-
-	def mraw = rraw.matcher(raw);
-
-	def actions = "";
-
-	while(mraw.find()){
-		def item = mraw.group(1);
-		def mact = ract.matcher(item);
-		if(mact.find()) {
-			item = mact.group(1);
-			actions += (item + " ");
-		} else {
-			System.err.println('@@@@@@@@@@@@@@ '+item+' regex '+ract.toString());
-		}
-	}
-	actions = actions.trim();
-	if(actions.length()>0) {
-		request.setName("" + counter + '. ' + actions);
-		System.err.println('Request renamed to '+request.getName());
-	}
+System.out.println(Thread.currentThread().getName()+":"+"Proceed " + request.getName()+" Response code " + response.getResponseCode()+' hash '+System.identityHashCode(request));
 
 	// request processing
 	def body = makeTemplateInRequest(request);
-	System.out.println('-----------------request-'+body);
+
+	if(body==null) {
+		return false;
+	}
 
 	// response processing
 	// probably it might be better to parse response only in some conditions
@@ -234,5 +198,6 @@ if(request.getMethod().toLowerCase().equals('post')){
 			res = res.replace(template, '${'+src+'}');
 		}
 	}
-}
+
+
 return true;

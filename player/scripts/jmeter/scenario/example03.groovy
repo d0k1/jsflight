@@ -1,5 +1,43 @@
 boolean accesKeyFound = false;
 
+def getRPCRequestClassName(String request){
+    def rpcRequest = com.google.gwt.user.server.rpc.RPC.decodeRequest(request);
+    def test = rpcRequest.getParameters()[0];
+
+    def actions = [];
+
+    if(test.getClass().getName().contains("BatchAction")){
+        test.getActions().each({
+            actions.add(it.getClass().getSimpleName());
+        })
+    } else if(test.getClass().getName().contains("Action")){
+        actions.add(test.getClass().getSimpleName());
+    }
+    if(actions.size()==0)
+        return null;
+
+    return actions.join(" ").trim();
+}
+
+java.lang.Thread.currentThread().setContextClassLoader(classloader);
+
+if(sample.getMethod().toLowerCase().equals('post')) {
+    def raw = sample.getPropertyAsString('HTTPsampler.Arguments');
+
+    if(raw!=null && raw.length()>0) {
+        String name = getRPCRequestClassName(raw as String);
+        if(name!=null) {
+            String counter = sample.getName().split(" ")[0].trim();
+            sample.setName("" + counter + " " + name);
+            System.err.println(Thread.currentThread().getName()+":"+'Request ' + sample.getName() + ' renamed to ' + name + ' hash ' + System.identityHashCode(sample));
+        } else {
+            System.err.println(Thread.currentThread().getName()+":"+'Request ' + sample.getName() + ' is not gwt-prc ' + ' hash ' + System.identityHashCode(sample)+'.'+raw);
+        }
+    }
+}
+
+
+
 for(String key : sample.getArguments().getArgumentsAsMap().keySet()) {
     if(key.equalsIgnoreCase("accessKey")){
         accesKeyFound = true;
