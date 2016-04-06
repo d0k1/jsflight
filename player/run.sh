@@ -1,1 +1,1 @@
-mvn -Dcp=./lib/ -Dsp=SerializationPolicy_4.6.0.gwt.rpc exec:java -Dexec.mainClass=com.focusit.jsflight.player.Player -Dexec.args=""
+java -Dcp=../external/player/liba -cp target/player-3.8.jar:target/player-3.8-jar-with-dependencies.jar com.focusit.jsflight.player.Player
