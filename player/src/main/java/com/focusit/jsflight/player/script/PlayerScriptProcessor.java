@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -71,6 +72,7 @@ public class PlayerScriptProcessor
         Binding binding = new Binding();
         //binding.setVariable("context", context);
         binding.setVariable("events", events);
+        binding.setVariable("logger", log);
         binding.setVariable("classloader", ScriptEngine.getInstance().getClassLoader());
         Script s = ScriptEngine.getInstance().getScript(script);
         s.setBinding(binding);
@@ -154,9 +156,11 @@ public class PlayerScriptProcessor
     public void testPostProcess(String script, List<JSONObject> events)
     {
         Binding binding = new Binding();
-//        binding.setVariable("context", context);
+        binding.setVariable("ctx", new ConcurrentHashMap<>());
         binding.setVariable("events", new ArrayList<>(events));
+        binding.setVariable("logger", log);
         binding.setVariable("classloader", ScriptEngine.getInstance().getClassLoader());
+
         Script s = ScriptEngine.getInstance().getScript(script);
         s.setBinding(binding);
         s.run();

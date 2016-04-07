@@ -2,8 +2,70 @@ import com.focusit.script.jmeter.JMeterJSFlightBridge
 
 boolean accesKeyFound = false;
 
+class Provider implements com.google.gwt.user.server.rpc.SerializationPolicyProvider {
+    com.google.gwt.user.server.rpc.SerializationPolicy name;
+    private com.focusit.script.jmeter.JMeterRecorderContext ctx;
+
+    Provider(request, ctx) {
+        this.ctx = ctx;
+        this.name = getPolicy(request as String);
+    }
+
+    com.google.gwt.user.server.rpc.SerializationPolicy getSerializationPolicy(String moduleBaseURL, String serializationPolicyStrongName) {
+        return name;
+    }
+
+    def getPolicy(String request){
+        def patternString = "/(\\w+)/\\|(\\w{32})\\|";
+        def r = java.util.regex.Pattern.compile(patternString);
+        def m = r.matcher(request);
+
+        String module = null;
+        String name = null;
+
+        if(m.find()){
+            module = m.group(1);
+            name = m.group(2);
+        }
+
+        if(module == null || name == null){
+            return null;
+        }
+
+        String policyPath = System.getProperty('policy');
+
+        if(policyPath==null) {
+            return null;
+        }
+        policyPath = policyPath + java.io.File.separatorChar+module+java.io.File.separatorChar+name+'.gwt.rpc';
+
+        def policy;
+
+        if(ctx.getProperty(policyPath)!=null){
+            return ctx.getProperty(policyPath);
+        }
+
+        def fis = null;
+        try {
+            fis =  new java.io.FileInputStream(new java.io.File(policyPath));
+            policy = com.google.gwt.user.server.rpc.SerializationPolicyLoader.loadFromStream(fis);
+            ctx.addProperty(policyPath, policy);
+
+            return policy;
+        } catch(Exception e){
+            logger.error(e.toString(), e);
+        } finally {
+            if(fis!=null){
+                fis.close();
+            }
+        }
+    }
+}
+
+
 def getRPCRequestClassName(String request){
-    def rpcRequest = com.google.gwt.user.server.rpc.RPC.decodeRequest(request);
+    def provider = new Provider(request, ctx);
+    def rpcRequest = com.google.gwt.user.server.rpc.RPC.decodeRequest(request, null as java.lang.Class, provider);
     def test = rpcRequest.getParameters()[0];
 
     def actions = [];
@@ -27,7 +89,14 @@ if(sample.getMethod().toLowerCase().equals('post')) {
     def raw = sample.getPropertyAsString('HTTPsampler.Arguments');
 
     if(raw!=null && raw.length()>0) {
-        String name = getRPCRequestClassName(raw as String);
+
+        String name = null;
+
+        try{
+            name = getRPCRequestClassName(raw as String)
+        } catch(Exception ex){
+            logger.error(ex.toString()+"\n\n"+raw+"\n\n", ex);
+        }
         if(name!=null) {
             String counter = sample.getName().split(" ")[0].trim();
             sample.setName("" + counter + " " + name);
