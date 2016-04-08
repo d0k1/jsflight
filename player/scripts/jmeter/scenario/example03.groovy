@@ -53,7 +53,7 @@ class Provider implements com.google.gwt.user.server.rpc.SerializationPolicyProv
 
             return policy;
         } catch(Exception e){
-            logger.error(e.toString(), e);
+            System.err.println(e.toString());
         } finally {
             if(fis!=null){
                 fis.close();
