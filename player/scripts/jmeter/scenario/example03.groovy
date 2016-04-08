@@ -16,7 +16,7 @@ class Provider implements com.google.gwt.user.server.rpc.SerializationPolicyProv
     }
 
     def getPolicy(String request){
-        def patternString = "/(\\w+)/\\|(\\w{32})\\|";
+        def patternString = ".*/(\\w+)[;/].*?\\|(\\w{32})\\|";
         def r = java.util.regex.Pattern.compile(patternString);
         def m = r.matcher(request);
 
