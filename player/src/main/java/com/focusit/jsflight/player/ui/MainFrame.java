@@ -532,14 +532,7 @@ public class MainFrame
         panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
 
         JButton CopyStepButton = new JButton("Copy step");
-        CopyStepButton.addActionListener(new ActionListener()
-        {
-            @Override
-            public void actionPerformed(ActionEvent e)
-            {
-                copyCurrentStep();
-            }
-        });
+        CopyStepButton.addActionListener(e -> copyCurrentStep());
         panel.add(CopyStepButton);
 
         JButton btnCheck = new JButton("Check");
@@ -563,17 +556,12 @@ public class MainFrame
             }
         });
         panel.add(btnPlay);
-        btnDel.addActionListener(new ActionListener()
-        {
-            @Override
-            public void actionPerformed(ActionEvent e)
+        btnDel.addActionListener(e -> {
+            for (int row : table.getSelectedRows())
             {
-                for (int row : table.getSelectedRows())
-                {
-                    scenario.deleteStep(row);
-                }
-                model.fireTableDataChanged();
+                scenario.deleteStep(row);
             }
+            model.fireTableDataChanged();
         });
         btnSkip.addMouseListener(new MouseAdapter()
         {
@@ -594,14 +582,7 @@ public class MainFrame
                 model.fireTableDataChanged();
             }
         });
-        btnPrev.addActionListener(new ActionListener()
-        {
-            @Override
-            public void actionPerformed(ActionEvent e)
-            {
-                scenario.prev();
-            }
-        });
+        btnPrev.addActionListener(e -> scenario.prev());
         btnRewind.addMouseListener(new MouseAdapter()
         {
             @Override
@@ -633,15 +614,20 @@ public class MainFrame
             @Override
             public void mouseClicked(MouseEvent e)
             {
-                UserScenario.setPostProcessScenarioScript(scriptArea.getText());
-                long secs = scenario.postProcessScenario();
-                statisticsLabel.setText(
-                        String.format("Events %d, duration %f sec", UserScenario.getStepsCount(), secs / 1000.0));
-                model = createEventTableModel();
-                table.setModel(model);
-                model.fireTableDataChanged();
-                setColumnWidths();
-                createTableEditor();
+                try {
+                    scenario.parseNextLine(InputController.getInstance().getFilename());
+                    scenario.setPostProcessScenarioScript(scriptArea.getText());
+                    long secs = scenario.postProcessScenario();
+                    statisticsLabel.setText(
+                            String.format("Events %d, duration %f sec", UserScenario.getStepsCount(), secs / 1000.0));
+                    model = createEventTableModel();
+                    table.setModel(model);
+                    model.fireTableDataChanged();
+                    setColumnWidths();
+                    createTableEditor();
+                } catch (IOException e1) {
+                    log.error(e1.toString(), e1);
+                }
             }
         });
 
@@ -751,6 +737,7 @@ public class MainFrame
                 {
                     String selectedFile = fileChooser.getSelectedFile().getAbsolutePath();
                     scriptFilename.setText(selectedFile);
+                    loadSelectedFile();
                 }
             }
         });
@@ -762,14 +749,7 @@ public class MainFrame
             @Override
             public void mouseClicked(MouseEvent e)
             {
-                try
-                {
-                    scriptArea.setText(FileInput.getContentInString(scriptFilename.getText()));
-                }
-                catch (IOException e1)
-                {
-                    throw new RuntimeException(e1);
-                }
+                loadSelectedFile();
             }
         });
         toolBar.add(btnLoad_1);
@@ -1203,6 +1183,21 @@ public class MainFrame
         configureScriptTextArea(duplicatesScriptArea, duplicatesScrollPanel, SyntaxConstants.SYNTAX_STYLE_GROOVY);
 
         initUIFromControllers();
+    }
+
+    private void loadSelectedFile() {
+        try
+        {
+            String content = FileInput.getContentInString(scriptFilename.getText());
+            if(content==null){
+                content="File is too big to show it";
+            }
+            scriptArea.setText(content);
+        }
+        catch (IOException e1)
+        {
+            throw new RuntimeException(e1);
+        }
     }
 
     private void initUIFromControllers()

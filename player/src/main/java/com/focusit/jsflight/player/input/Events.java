@@ -44,9 +44,16 @@ public class Events
 
     public List<JSONObject> parse(String content)
     {
+        if(content==null){
+            return null;
+        }
+
         JSONArray rawevents;
         Set<JSONObject> temp = new HashSet<>();
         rawevents = new JSONArray(content);
+
+        events.clear();
+
         for (int i = 0; i < rawevents.length(); i++)
         {
             String event = rawevents.get(i).toString();

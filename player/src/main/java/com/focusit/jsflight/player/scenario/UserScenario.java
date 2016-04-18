@@ -235,6 +235,16 @@ public class UserScenario
         PlayerContext.getInstance().reset();
     }
 
+    public void parseNextLine(String filename) throws IOException
+    {
+        events.clear();
+        List<JSONObject> result = new Events().parse(FileInput.getLineContent(filename));
+        if(result!=null) {
+            events.addAll(result);
+        }
+        //PlayerContext.getInstance().reset();
+    }
+
     public void play()
     {
         long begin = System.currentTimeMillis();
