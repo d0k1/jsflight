@@ -1,21 +1,24 @@
 package com.focusit.jsflight.player.script;
 
-import com.focusit.jsflight.player.scenario.UserScenario;
-import com.focusit.script.ScriptEngine;
-import com.focusit.script.player.PlayerContext;
-import groovy.lang.Binding;
-import groovy.lang.Script;
-import groovy.text.SimpleTemplateEngine;
-import org.json.JSONObject;
-import org.openqa.selenium.WebDriver;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.json.JSONObject;
+import org.openqa.selenium.WebDriver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.focusit.jsflight.player.controller.ScriptEventExectutionController;
+import com.focusit.jsflight.player.scenario.UserScenario;
+import com.focusit.script.ScriptEngine;
+import com.focusit.script.player.PlayerContext;
+
+import groovy.lang.Binding;
+import groovy.lang.Script;
+import groovy.text.SimpleTemplateEngine;
 
 /**
  * PlayerScriptProcessor that runs groovy scripts or GString templates
@@ -38,24 +41,30 @@ public class PlayerScriptProcessor
 
     public boolean executeDuplicateHandlerScript(String script, JSONObject currentEvent, JSONObject prevEvent)
     {
-        Binding binding = new Binding();
+        Binding binding = getBasicBinding();
         binding.setVariable("current", currentEvent);
         binding.setVariable("previous", prevEvent);
-        binding.setVariable("logger", log);
-        binding.setVariable("classloader", ScriptEngine.getInstance().getClassLoader());
         Script scr = ScriptEngine.getInstance().getScript(script);
         scr.setBinding(binding);
         return (boolean)scr.run();
     }
 
+    public void executeScriptEvent(JSONObject event)
+    {
+        Binding binging = getBasicBinding();
+        binging.setVariable("event", event);
+
+        Script scr = ScriptEngine.getInstance().getScript(ScriptEventExectutionController.getInstance().getScript());
+        scr.setBinding(binging);
+        scr.run();
+    }
+
     public Object executeWebLookupScript(String script, WebDriver wd, String target, JSONObject event)
     {
-        Binding binding = new Binding();
+        Binding binding = getBasicBinding();
         binding.setVariable("webdriver", wd);
         binding.setVariable("target", target);
         binding.setVariable("event", event);
-        binding.setVariable("logger", log);
-        binding.setVariable("classloader", ScriptEngine.getInstance().getClassLoader());
         Script scr = ScriptEngine.getInstance().getScript(script);
         scr.setBinding(binding);
         return scr.run();
@@ -69,11 +78,9 @@ public class PlayerScriptProcessor
      */
     public void postProcessScenario(String script, List<JSONObject> events)
     {
-        Binding binding = new Binding();
+        Binding binding = getBasicBinding();
         //binding.setVariable("context", context);
         binding.setVariable("events", events);
-        binding.setVariable("logger", log);
-        binding.setVariable("classloader", ScriptEngine.getInstance().getClassLoader());
         Script s = ScriptEngine.getInstance().getScript(script);
         s.setBinding(binding);
         s.run();
@@ -98,13 +105,12 @@ public class PlayerScriptProcessor
             return;
         }
 
-        Binding binding = new Binding();
+        Binding binding = getBasicBinding();
         binding.setVariable("context", PlayerContext.getInstance());
         binding.setVariable("scenario", scenario);
         binding.setVariable("step", step);
         binding.setVariable("pre", pre);
         binding.setVariable("post", !pre);
-        binding.setVariable("classloader", ScriptEngine.getInstance().getClassLoader());
         Script s = ScriptEngine.getInstance().getScript(script);
         s.setBinding(binding);
         s.run();
@@ -155,15 +161,21 @@ public class PlayerScriptProcessor
      */
     public void testPostProcess(String script, List<JSONObject> events)
     {
-        Binding binding = new Binding();
+        Binding binding = getBasicBinding();
         binding.setVariable("ctx", new ConcurrentHashMap<>());
         binding.setVariable("events", new ArrayList<>(events));
-        binding.setVariable("logger", log);
-        binding.setVariable("classloader", ScriptEngine.getInstance().getClassLoader());
 
         Script s = ScriptEngine.getInstance().getScript(script);
         s.setBinding(binding);
         s.run();
+    }
+
+    private Binding getBasicBinding()
+    {
+        Binding binding = new Binding();
+        binding.setVariable("logger", log);
+        binding.setVariable("classloader", ScriptEngine.getInstance().getClassLoader());
+        return binding;
     }
 
 }

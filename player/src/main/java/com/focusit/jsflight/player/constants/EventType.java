@@ -15,4 +15,5 @@ public interface EventType
     String KEY_PRESS = "keypress";
     String HASH_CHANGE = "hashchange";
     String MOUSEWHEEL = "mousewheel";
+    String SCRIPT = "script";
 }

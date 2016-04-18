@@ -289,8 +289,9 @@ public class SeleniumDriver
     }
 
     public static void waitPageReady(JSONObject event)
-    {
-        if (event.getString("type").equalsIgnoreCase(EventType.XHR))
+    {	
+    	String type = event.getString("type");
+        if (type.equalsIgnoreCase(EventType.XHR) || type.equalsIgnoreCase(EventType.SCRIPT))
         {
             return;
         }
