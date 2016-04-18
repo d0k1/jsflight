@@ -22,16 +22,18 @@ public class ScriptsClassLoader extends URLClassLoader {
     static {
         if(System.getProperty("cp")!=null){
             File f = new File(System.getProperty("cp"));
-            int size = f.listFiles().length;
-            urls = new URL[size];
-            int i = 0;
+            if(f!=null) {
+                int size = f.listFiles().length;
+                urls = new URL[size];
+                int i = 0;
 
-            try {
-                for(File file:f.listFiles()){
+                try {
+                    for (File file : f.listFiles()) {
                         urls[i++] = file.toURI().toURL();
+                    }
+                } catch (MalformedURLException e) {
+                    log.error(e.toString(), e);
                 }
-            } catch (MalformedURLException e) {
-                log.error(e.toString(), e);
             }
         }
     }
