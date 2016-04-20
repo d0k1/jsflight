@@ -97,18 +97,19 @@ public class JMeterProxy extends Thread
     private static SampleResult generateErrorResult(SampleResult result, HttpRequestHdr request, Exception e,
             String msg)
     {
-        if (result == null)
+        SampleResult sampleResult = result;
+        if (sampleResult == null)
         {
-            result = new SampleResult();
+            sampleResult = new SampleResult();
             ByteArrayOutputStream text = new ByteArrayOutputStream(200);
             e.printStackTrace(new PrintStream(text));
-            result.setResponseData(text.toByteArray());
-            result.setSamplerData(request.getFirstLine());
-            result.setSampleLabel(request.getUrl());
+            sampleResult.setResponseData(text.toByteArray());
+            sampleResult.setSamplerData(request.getFirstLine());
+            sampleResult.setSampleLabel(request.getUrl());
         }
-        result.setSuccessful(false);
-        result.setResponseMessage(e.getMessage() + msg);
-        return result;
+        sampleResult.setSuccessful(false);
+        sampleResult.setResponseMessage(e.getMessage() + msg);
+        return sampleResult;
     }
 
     /**
@@ -334,7 +335,7 @@ public class JMeterProxy extends Thread
      * @param _formEncodings
      *            reference to the Map of Deamon, with mappings from form action urls to encoding used
      */
-    void configure(Socket _clientSocket, JMeterProxyControl _target, Map<String, String> _pageEncodings,
+    public void configure(Socket _clientSocket, JMeterProxyControl _target, Map<String, String> _pageEncodings,
             Map<String, String> _formEncodings)
     {
         this.target = _target;
@@ -688,17 +689,6 @@ public class JMeterProxy extends Thread
         }
     }
 
-    /**
-     * Write output to the output stream, then flush and close the stream.
-     *
-     * @param inBytes
-     *            the bytes to write
-     * @param out
-     *            the output stream to write to
-     * @param forcedHTTPS if we changed the protocol to https
-     * @throws IOException
-     *             if an IOException occurs while writing
-     */
     private void writeToClient(SampleResult res, OutputStream out) throws IOException
     {
         try

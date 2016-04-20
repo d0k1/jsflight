@@ -207,9 +207,9 @@ public class UserScenario
     {
         JSONObject prev = getPrevEvent(event);
 
-        if (prev != null && new PlayerScriptProcessor().executeDuplicateHandlerScript(DuplicateHandlerController.getInstance().getScriptBody(), event, prev))
+        if (prev != null)
         {
-            return true;
+            return new PlayerScriptProcessor().executeDuplicateHandlerScript(DuplicateHandlerController.getInstance().getScriptBody(), event, prev);
         }
 
         return false;

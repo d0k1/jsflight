@@ -195,7 +195,7 @@ public class JMeterProxyControl extends GenericController {
         NONE             // cannot use keystore
     }
 
-    static final KeystoreMode KEYSTORE_MODE;
+    private static final KeystoreMode KEYSTORE_MODE;
 
     static {
         if (CERT_ALIAS != null) {
@@ -661,7 +661,7 @@ public class JMeterProxyControl extends GenericController {
         return null; // should not happen
     }
     // Package protected to allow test case access
-    boolean filterUrl(HTTPSamplerBase sampler) {
+    private boolean filterUrl(HTTPSamplerBase sampler) {
         String domain = sampler.getDomain();
         if (domain == null || domain.length() == 0) {
             return false;
@@ -693,7 +693,7 @@ public class JMeterProxyControl extends GenericController {
      * @param result the sample result to check
      * @return <code>true</code> means result will be kept
      */
-    boolean filterContentType(SampleResult result) {
+    private boolean filterContentType(SampleResult result) {
         String includeExp = getContentTypeInclude();
         String excludeExp = getContentTypeExclude();
         // If no expressions are specified, we let the sample pass
@@ -726,11 +726,7 @@ public class JMeterProxyControl extends GenericController {
 
         // Check if the exclude pattern is matched
         matched = testPattern(excludeExp, sampleContentType, false);
-        if(!matched) {
-            return false;
-        }
-
-        return true;
+        return matched==true;
     }
 
     /**

@@ -54,7 +54,7 @@ public class ScriptEngine {
             generalScripts.put(script, result);
         }
 
-        if(result == NO_SCRIPT) {
+        if(result.equals(NO_SCRIPT)) {
             return null;
         }
 
