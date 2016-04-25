@@ -1,5 +1,16 @@
 package com.focusit.jsflight.player.scenario;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.openqa.selenium.WebElement;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.focusit.jsflight.player.constants.EventType;
 import com.focusit.jsflight.player.controller.DuplicateHandlerController;
 import com.focusit.jsflight.player.input.Events;
@@ -8,16 +19,6 @@ import com.focusit.jsflight.player.script.PlayerScriptProcessor;
 import com.focusit.jsflight.player.webdriver.SeleniumDriver;
 import com.focusit.script.jmeter.JMeterJSFlightBridge;
 import com.focusit.script.player.PlayerContext;
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.openqa.selenium.WebElement;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 
 /**
  * Recorded scenario encapsulation: parses file, plays the scenario by step, modifies the scenario, saves to a disk
@@ -96,13 +97,20 @@ public class UserScenario
                 return;
             }
 
+            String type = event.getString("type");
+
+            if (type.equalsIgnoreCase(EventType.SCRIPT))
+            {
+                new PlayerScriptProcessor().executeScriptEvent(event);
+                return;
+            }
+
             SeleniumDriver.openEventUrl(event);
 
             WebElement element = null;
 
             String target = getTargetForEvent(event);
 
-            String type = event.getString("type");
             log.info("Event type: {}", type);
             SeleniumDriver.waitPageReady(event);
 
@@ -110,6 +118,7 @@ public class UserScenario
             {
                 switch (type)
                 {
+
                 case EventType.MOUSEWHEEL:
                     SeleniumDriver.processMouseWheel(event, target);
                     break;
@@ -238,8 +247,9 @@ public class UserScenario
     public void parseNextLine(String filename) throws IOException
     {
         events.clear();
-        List<JSONObject> result = new Events().parse(FileInput.getLineContent(filename));
-        if(result!=null) {
+        List<JSONObject> result = new Events().parse(FileInput.getContent(filename));
+        if (result != null)
+        {
             events.addAll(result);
         }
         //PlayerContext.getInstance().reset();
@@ -385,7 +395,8 @@ public class UserScenario
 
     private boolean isEventBad(JSONObject event)
     {
-        return !event.has("target") || event.get("target") == null || event.get("target") == JSONObject.NULL;
+        return event.getString("type").equals(EventType.SCRIPT) ? false
+                : !event.has("target") || event.get("target") == null || event.get("target") == JSONObject.NULL;
     }
 
     private boolean isEventIgnored(String eventType)
@@ -396,6 +407,7 @@ public class UserScenario
                         && !eventType.equalsIgnoreCase(EventType.KEY_DOWN)
                         && !eventType.equalsIgnoreCase(EventType.SCROLL_EMULATION)
                         && !eventType.equalsIgnoreCase(EventType.MOUSEWHEEL)
-                        && !eventType.equalsIgnoreCase(EventType.MOUSEDOWN));
+                        && !eventType.equalsIgnoreCase(EventType.MOUSEDOWN) 
+                        && !eventType.equals(EventType.SCRIPT));
     }
 }

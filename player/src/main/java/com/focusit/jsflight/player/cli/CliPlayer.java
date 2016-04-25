@@ -1,19 +1,21 @@
 package com.focusit.jsflight.player.cli;
 
-import com.focusit.jmeter.JMeterRecorder;
-import com.focusit.jmeter.JMeterScriptProcessor;
-import com.focusit.jsflight.player.controller.DuplicateHandlerController;
-import com.focusit.jsflight.player.controller.OptionsController;
-import com.focusit.jsflight.player.controller.WebLookupController;
-import com.focusit.jsflight.player.scenario.UserScenario;
-import org.apache.commons.io.FileUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+
+import org.apache.commons.io.FileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.focusit.jmeter.JMeterRecorder;
+import com.focusit.jmeter.JMeterScriptProcessor;
+import com.focusit.jsflight.player.controller.DuplicateHandlerController;
+import com.focusit.jsflight.player.controller.OptionsController;
+import com.focusit.jsflight.player.controller.ScriptEventExectutionController;
+import com.focusit.jsflight.player.controller.WebLookupController;
+import com.focusit.jsflight.player.scenario.UserScenario;
 
 public class CliPlayer
 {
@@ -107,5 +109,9 @@ public class CliPlayer
         //Init duplicate handler script
         DuplicateHandlerController.getInstance()
                 .setScriptBody(FileUtils.readFileToString(new File(config.getDuplicateHandlerScriptPath())));
+
+        //Init script events handler
+        ScriptEventExectutionController.getInstance()
+                .setScript(FileUtils.readFileToString(new File(config.getScriptEventHandlerScriptPath())));
     }
 }

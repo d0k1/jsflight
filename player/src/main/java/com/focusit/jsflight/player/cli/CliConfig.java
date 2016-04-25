@@ -60,6 +60,9 @@ public class CliConfig
     @Parameter(names = { "-dh", "--duplicatehandler" }, description = "Path to duplicate events handler script")
     private String duplicateHandlerScriptPath = "scripts/duplicateHandler.groovy";
 
+    @Parameter(names = { "-seh", "--scripteventhandler" }, description = "Path to script that handles script events")
+    private String scriptEventHandlerScriptPath = "scripts/scriptEventHandler.groovy";
+
     @Parameter(names = { "-urc",
             "--userandomchars" }, description = "Use random chars for keypress events instead of recorded ones")
     private boolean useRandomChars = false;
@@ -89,9 +92,9 @@ public class CliConfig
         return finishStep;
     }
 
-    public void setFinishStep(String finishStep)
+    public String getJMeterLogLevel()
     {
-        this.finishStep = finishStep;
+        return "INFO";
     }
 
     public String getJmeterRecordingName()
@@ -149,6 +152,11 @@ public class CliConfig
         return pathToScreenShots;
     }
 
+    public String getScriptEventHandlerScriptPath()
+    {
+        return scriptEventHandlerScriptPath;
+    }
+
     public String getStartStep()
     {
         return startStep;
@@ -184,12 +192,13 @@ public class CliConfig
         return useRandomChars;
     }
 
+    public void setFinishStep(String finishStep)
+    {
+        this.finishStep = finishStep;
+    }
+
     public boolean showHelp()
     {
         return help;
-    }
-
-    public String getJMeterLogLevel() {
-        return "INFO";
     }
 }

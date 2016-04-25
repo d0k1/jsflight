@@ -1,15 +1,45 @@
 package com.focusit.jsflight.player.ui;
 
-import com.focusit.jmeter.JMeterRecorder;
-import com.focusit.jmeter.JMeterScriptProcessor;
-import com.focusit.jsflight.player.controller.*;
-import com.focusit.jsflight.player.input.FileInput;
-import com.focusit.jsflight.player.scenario.UserScenario;
-import com.focusit.jsflight.player.webdriver.SeleniumDriver;
-import com.jgoodies.forms.layout.ColumnSpec;
-import com.jgoodies.forms.layout.FormLayout;
-import com.jgoodies.forms.layout.FormSpecs;
-import com.jgoodies.forms.layout.RowSpec;
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.io.File;
+import java.io.IOException;
+import java.util.Date;
+
+import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
+import javax.swing.DefaultCellEditor;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.JTabbedPane;
+import javax.swing.JTable;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import javax.swing.JToolBar;
+import javax.swing.SwingConstants;
+import javax.swing.event.CellEditorListener;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+import javax.swing.table.AbstractTableModel;
+
 import org.apache.commons.io.FileUtils;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
@@ -20,17 +50,24 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.*;
-import javax.swing.event.CellEditorListener;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
-import javax.swing.table.AbstractTableModel;
-import java.awt.*;
-import java.awt.event.*;
-import java.io.File;
-import java.io.IOException;
-import java.util.Date;
+import com.focusit.jmeter.JMeterRecorder;
+import com.focusit.jmeter.JMeterScriptProcessor;
+import com.focusit.jsflight.player.controller.DuplicateHandlerController;
+import com.focusit.jsflight.player.controller.IUIController;
+import com.focusit.jsflight.player.controller.InputController;
+import com.focusit.jsflight.player.controller.JMeterController;
+import com.focusit.jsflight.player.controller.OptionsController;
+import com.focusit.jsflight.player.controller.PostProcessController;
+import com.focusit.jsflight.player.controller.ScenarioController;
+import com.focusit.jsflight.player.controller.ScriptEventExectutionController;
+import com.focusit.jsflight.player.controller.WebLookupController;
+import com.focusit.jsflight.player.input.FileInput;
+import com.focusit.jsflight.player.scenario.UserScenario;
+import com.focusit.jsflight.player.webdriver.SeleniumDriver;
+import com.jgoodies.forms.layout.ColumnSpec;
+import com.jgoodies.forms.layout.FormLayout;
+import com.jgoodies.forms.layout.FormSpecs;
+import com.jgoodies.forms.layout.RowSpec;
 
 public class MainFrame
 {
@@ -70,6 +107,9 @@ public class MainFrame
     private JButton resetButton;
     private JTextField duplicatesFilePath;
     private JCheckBox useRandomCharsBox;
+    private JTextField scriptEventHandlerFilePath;
+
+    private RSyntaxTextArea scriptEventHandlerScriptArea;
 
     /**
      * Create the application.
@@ -272,6 +312,7 @@ public class MainFrame
             updateOptionsController();
             updateJMeterController();
             updateDuplicateHandlerController();
+            updateScriptEventHandlerController();
 
             InputController.getInstance().store(IUIController.defaultConfig);
             JMeterController.getInstance().store(IUIController.defaultConfig);
@@ -280,6 +321,7 @@ public class MainFrame
             ScenarioController.getInstance().store(IUIController.defaultConfig);
             WebLookupController.getInstance().store(IUIController.defaultConfig);
             DuplicateHandlerController.getInstance().store(IUIController.defaultConfig);
+            ScriptEventExectutionController.getInstance().store(IUIController.defaultConfig);
         }
         catch (Exception e)
         {
@@ -614,9 +656,10 @@ public class MainFrame
             @Override
             public void mouseClicked(MouseEvent e)
             {
-                try {
+                try
+                {
                     scenario.parseNextLine(InputController.getInstance().getFilename());
-                    scenario.setPostProcessScenarioScript(scriptArea.getText());
+                    UserScenario.setPostProcessScenarioScript(scriptArea.getText());
                     long secs = scenario.postProcessScenario();
                     statisticsLabel.setText(
                             String.format("Events %d, duration %f sec", UserScenario.getStepsCount(), secs / 1000.0));
@@ -625,7 +668,9 @@ public class MainFrame
                     model.fireTableDataChanged();
                     setColumnWidths();
                     createTableEditor();
-                } catch (IOException e1) {
+                }
+                catch (IOException e1)
+                {
                     log.error(e1.toString(), e1);
                 }
             }
@@ -1108,6 +1153,9 @@ public class MainFrame
         tabbedPane.addTab("Duplicate handler", null, duplicatesPanel, null);
         duplicatesPanel.setLayout(new BorderLayout(0, 0));
 
+        JPanel panel_9 = new JPanel();
+        duplicatesPanel.add(panel_9, BorderLayout.SOUTH);
+
         JToolBar duplicatesToolBar = new JToolBar();
         duplicatesPanel.add(duplicatesToolBar, BorderLayout.NORTH);
 
@@ -1182,22 +1230,92 @@ public class MainFrame
         duplicatesScrollPanel.setViewportView(duplicatesScriptArea);
         configureScriptTextArea(duplicatesScriptArea, duplicatesScrollPanel, SyntaxConstants.SYNTAX_STYLE_GROOVY);
 
-        initUIFromControllers();
-    }
+        JPanel ScriptEventPanel = new JPanel();
+        tabbedPane.addTab("Script event handler", null, ScriptEventPanel, null);
+        ScriptEventPanel.setLayout(new BorderLayout(0, 0));
 
-    private void loadSelectedFile() {
-        try
+        JToolBar scriptEventToolBar = new JToolBar();
+        ScriptEventPanel.add(scriptEventToolBar, BorderLayout.NORTH);
+
+        JLabel scriptEventHandlerPathLabel = new JLabel("Path to script");
+        scriptEventToolBar.add(scriptEventHandlerPathLabel);
+
+        scriptEventHandlerFilePath = new JTextField();
+        scriptEventToolBar.add(scriptEventHandlerFilePath);
+        scriptEventHandlerFilePath.setColumns(10);
+
+        JButton scriptEventHandlerBrowse = new JButton("Browse");
+        scriptEventToolBar.add(scriptEventHandlerBrowse);
+
+        scriptEventHandlerBrowse.addActionListener(new ActionListener()
         {
-            String content = FileInput.getContentInString(scriptFilename.getText());
-            if(content==null){
-                content="File is too big to show it";
+
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                JFileChooser fileChooser = new JFileChooser();
+                int returnValue = fileChooser.showOpenDialog(null);
+                if (returnValue == JFileChooser.APPROVE_OPTION)
+                {
+                    String selectedFile = fileChooser.getSelectedFile().getAbsolutePath();
+                    scriptEventHandlerFilePath.setText(selectedFile);
+                }
+
             }
-            scriptArea.setText(content);
-        }
-        catch (IOException e1)
+        });
+
+        JButton scriptEventHandlerLoad = new JButton("Load");
+        scriptEventToolBar.add(scriptEventHandlerLoad);
+
+        scriptEventHandlerLoad.addActionListener(new ActionListener()
         {
-            throw new RuntimeException(e1);
-        }
+
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                try
+                {
+                    scriptEventHandlerScriptArea
+                            .setText(FileInput.getContentInString(scriptEventHandlerFilePath.getText()));
+                }
+                catch (IOException e1)
+                {
+                    throw new RuntimeException(e1);
+                }
+            }
+        });
+
+        JButton scriptEventHandlerSave = new JButton("Save");
+        scriptEventToolBar.add(scriptEventHandlerSave);
+
+        scriptEventHandlerSave.addActionListener(new ActionListener()
+        {
+
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                try
+                {
+                    FileUtils.writeStringToFile(new File("scripts/scriptEventHandler.groovy"),
+                            scriptEventHandlerScriptArea.getText());
+                }
+                catch (IOException e1)
+                {
+                    throw new RuntimeException(e1);
+                }
+
+            }
+        });
+
+        RTextScrollPane scriptEventHandlerScrollPane = new RTextScrollPane();
+        ScriptEventPanel.add(scriptEventHandlerScrollPane, BorderLayout.CENTER);
+
+        scriptEventHandlerScriptArea = new RSyntaxTextArea();
+        scriptEventHandlerScrollPane.setViewportView(scriptEventHandlerScriptArea);
+        configureScriptTextArea(scriptEventHandlerScriptArea, scriptEventHandlerScrollPane,
+                SyntaxConstants.SYNTAX_STYLE_GROOVY);
+
+        initUIFromControllers();
     }
 
     private void initUIFromControllers()
@@ -1208,6 +1326,7 @@ public class MainFrame
         initUIFromWebLookupController();
         initUIFromInitController();
         initUIFromDuplicateHandlerController();
+        initUIFromScriptEventHandlerController();
     }
 
     private void initUIFromDuplicateHandlerController()
@@ -1248,6 +1367,12 @@ public class MainFrame
         scriptArea.setText(PostProcessController.getInstance().getScript());
     }
 
+    private void initUIFromScriptEventHandlerController()
+    {
+        scriptEventHandlerFilePath.setText(ScriptEventExectutionController.getInstance().getFilename());
+        scriptEventHandlerScriptArea.setText(ScriptEventExectutionController.getInstance().getScript());
+    }
+
     private void initUIFromWebLookupController()
     {
         lookupFilename.setText(WebLookupController.getInstance().getFilename());
@@ -1274,6 +1399,23 @@ public class MainFrame
         {
             log.error(e1.toString(), e1);
             throw e1;
+        }
+    }
+
+    private void loadSelectedFile()
+    {
+        try
+        {
+            String content = FileInput.getContentInString(scriptFilename.getText());
+            if (content == null)
+            {
+                content = "File is too big to show it";
+            }
+            scriptArea.setText(content);
+        }
+        catch (IOException e1)
+        {
+            throw new RuntimeException(e1);
         }
     }
 
@@ -1315,6 +1457,12 @@ public class MainFrame
     {
         PostProcessController.getInstance().setFilename(scriptFilename.getText());
         PostProcessController.getInstance().setScript(scriptArea.getText());
+    }
+
+    private void updateScriptEventHandlerController()
+    {
+        ScriptEventExectutionController.getInstance().setFilename(scriptFilename.getText());
+        ScriptEventExectutionController.getInstance().setScript(scriptEventHandlerScriptArea.getText());
     }
 
     private void updateWebLookupController()

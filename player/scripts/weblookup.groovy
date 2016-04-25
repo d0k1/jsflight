@@ -1,10 +1,6 @@
-import org.apache.commons.lang3.StringUtils
-import org.openqa.selenium.By
-import org.openqa.selenium.JavascriptExecutor
-import org.openqa.selenium.NoSuchElementException
-import org.openqa.selenium.WebElement
-
-import java.util.stream.Collectors
+import org.openqa.selenium.*;
+import java.util.stream.Collectors;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Базовый скрипт поиска элементов
@@ -14,6 +10,7 @@ import java.util.stream.Collectors
  * 		event - само событие
  * 		logger - лог
  */
+ 
 List<String> elements = Arrays.stream(target.split("//\\*"))
  						.filter{ element -> !element.isEmpty() }
                               .map{ element -> "//*" + element }
