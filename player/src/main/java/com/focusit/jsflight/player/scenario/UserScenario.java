@@ -37,12 +37,12 @@ public class UserScenario
     private static List<Boolean> checks = new ArrayList<>();
 
     private static HashMap<String, JSONObject> lastEvents = new HashMap<>();
-
+    
     public static int getPosition()
     {
         return position;
     }
-
+    
     public static String getScenarioFilename()
     {
         return "";
@@ -247,7 +247,7 @@ public class UserScenario
     public void parseNextLine(String filename) throws IOException
     {
         events.clear();
-        List<JSONObject> result = new Events().parse(FileInput.getContent(filename));
+        List<JSONObject> result = new Events().parse(FileInput.getLineContent(filename));
         if (result != null)
         {
             events.addAll(result);
@@ -256,7 +256,8 @@ public class UserScenario
     }
 
     public void play()
-    {
+    {	
+    	
         long begin = System.currentTimeMillis();
 
         log.info("playing the scenario");
