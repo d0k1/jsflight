@@ -43,6 +43,10 @@ public class ScriptEngine {
             return null;
         }
 
+        if(script.isEmpty()) {
+            return null;
+        }
+
         Script result = generalScripts.get(script);
 
         if(result==null){

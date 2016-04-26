@@ -226,6 +226,7 @@ public class UserScenario
 
     public void next()
     {
+
         position++;
         if (position == events.size())
         {

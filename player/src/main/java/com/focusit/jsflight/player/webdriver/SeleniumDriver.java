@@ -302,7 +302,6 @@ public class SeleniumDriver
             JavascriptExecutor js = (JavascriptExecutor)getDriverForEvent(event);
             while (sleeps < timeout)
             {
-                Thread.sleep(2000);
                 String CHECK_PAGE_READY_JS = "return (document.getElementById('state.dispatch')==null || document.getElementById('state.dispatch').getAttribute('value')==0) &&  (document.getElementById('state.context')==null ||  document.getElementById('state.context').getAttribute('value')=='ready');";
                 Object result = js.executeScript(CHECK_PAGE_READY_JS);
                 if (result != null && Boolean.parseBoolean(result.toString().toLowerCase()))
@@ -312,7 +311,6 @@ public class SeleniumDriver
                 Thread.sleep(1 * 1000);
                 sleeps += 1000;
             }
-            Thread.sleep(2 * 1000);
         }
         catch (InterruptedException e)
         {
@@ -377,7 +375,8 @@ public class SeleniumDriver
                 return driver;
             }
 
-            FirefoxProfile profile = new FirefoxProfile();
+            boolean useFirefox = config.isUseFirefox();
+            boolean usePhantomJs = config.isUsePhantomJs();
             DesiredCapabilities cap = new DesiredCapabilities();
             String proxyHost = config.getProxyHost();
             if (proxyHost.trim().length() > 0)
@@ -392,10 +391,9 @@ public class SeleniumDriver
                 proxy.setHttpProxy(host).setFtpProxy(host).setSslProxy(host);
                 cap.setCapability(CapabilityType.PROXY, proxy);
             }
-            boolean useFirefox = config.isUseFirefox();
-            boolean usePhantomJs = config.isUsePhantomJs();
             if (useFirefox)
             {
+                FirefoxProfile profile = new FirefoxProfile();
                 String ffPath = config.getFfPath();
                 if (ffPath != null && ffPath.trim().length() > 0)
                 {
@@ -420,14 +418,14 @@ public class SeleniumDriver
                     driver = new PhantomJSDriver(cap);
                 }
             }
-            try
-            {
-                Thread.sleep(3000);
-            }
-            catch (InterruptedException e)
-            {
-                log.error(e.toString(), e);
-            }
+//            try
+//            {
+//                Thread.sleep(3000);
+//            }
+//            catch (InterruptedException e)
+//            {
+//                log.error(e.toString(), e);
+//            }
 
             drivers.put(tag, driver);
             return driver;

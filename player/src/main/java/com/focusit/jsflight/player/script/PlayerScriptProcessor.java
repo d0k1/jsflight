@@ -1,24 +1,23 @@
 package com.focusit.jsflight.player.script;
 
+import com.focusit.jsflight.player.controller.ScriptEventExectutionController;
+import com.focusit.jsflight.player.scenario.UserScenario;
+import com.focusit.script.ScriptEngine;
+import com.focusit.script.player.PlayerContext;
+import groovy.lang.Binding;
+import groovy.lang.Script;
+import groovy.text.SimpleTemplateEngine;
+import org.json.JSONObject;
+import org.openqa.selenium.NoSuchElementException;
+import org.openqa.selenium.WebDriver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.json.JSONObject;
-import org.openqa.selenium.WebDriver;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.focusit.jsflight.player.controller.ScriptEventExectutionController;
-import com.focusit.jsflight.player.scenario.UserScenario;
-import com.focusit.script.ScriptEngine;
-import com.focusit.script.player.PlayerContext;
-
-import groovy.lang.Binding;
-import groovy.lang.Script;
-import groovy.text.SimpleTemplateEngine;
 
 /**
  * PlayerScriptProcessor that runs groovy scripts or GString templates
@@ -39,14 +38,26 @@ public class PlayerScriptProcessor
         this();
     }
 
+    /**
+     *
+     * @param script
+     * @param currentEvent
+     * @param prevEvent
+     * @return true if currentEvent duplicates prevEvent and should be skipped
+     */
     public boolean executeDuplicateHandlerScript(String script, JSONObject currentEvent, JSONObject prevEvent)
     {
         Binding binding = getBasicBinding();
         binding.setVariable("current", currentEvent);
         binding.setVariable("previous", prevEvent);
         Script scr = ScriptEngine.getInstance().getScript(script);
+
+        if(scr!=null) {
+            return false;
+        }
+
         scr.setBinding(binding);
-        return (boolean)scr.run();
+        return (boolean) scr.run();
     }
 
     public void executeScriptEvent(JSONObject event)
@@ -66,9 +77,13 @@ public class PlayerScriptProcessor
         binding.setVariable("target", target);
         binding.setVariable("event", event);
         Script scr = ScriptEngine.getInstance().getScript(script);
+
+        if(scr==null) {
+            throw new NoSuchElementException("no web lookup script provided");
+        }
+
         scr.setBinding(binding);
         return scr.run();
-
     }
 
     /**
@@ -82,6 +97,11 @@ public class PlayerScriptProcessor
         //binding.setVariable("context", context);
         binding.setVariable("events", events);
         Script s = ScriptEngine.getInstance().getScript(script);
+
+        if(s==null) {
+            return;
+        }
+
         s.setBinding(binding);
         s.run();
     }
@@ -112,6 +132,11 @@ public class PlayerScriptProcessor
         binding.setVariable("pre", pre);
         binding.setVariable("post", !pre);
         Script s = ScriptEngine.getInstance().getScript(script);
+
+        if(s==null) {
+            return;
+        }
+
         s.setBinding(binding);
         s.run();
     }
