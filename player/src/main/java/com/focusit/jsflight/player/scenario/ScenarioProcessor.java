@@ -14,12 +14,15 @@ import com.focusit.jsflight.player.webdriver.SeleniumDriver;
  * Class that really replays an event in given scenario and given selenium driver
  * Created by doki on 05.05.16.
  */
-public class ScenarioProcessor {
+public class ScenarioProcessor
+{
     private static final Logger LOG = LoggerFactory.getLogger(ScenarioProcessor.class);
 
-    private WebDriver getWebDriver(UserScenario scenario, SeleniumDriver seleniumDriver, JSONObject event){
+    private static WebDriver getWebDriver(UserScenario scenario, SeleniumDriver seleniumDriver, JSONObject event)
+    {
         boolean firefox = scenario.getConfiguration().getCommonConfiguration().isUseFirefox();
-        String path = firefox ? scenario.getConfiguration().getCommonConfiguration().getFfPath() : scenario.getConfiguration().getCommonConfiguration().getPjsPath();
+        String path = firefox ? scenario.getConfiguration().getCommonConfiguration().getFfPath()
+                : scenario.getConfiguration().getCommonConfiguration().getPjsPath();
         String proxyHost = scenario.getConfiguration().getCommonConfiguration().getProxyHost();
         String proxyPort = scenario.getConfiguration().getCommonConfiguration().getProxyPort();
         String display = scenario.getConfiguration().getCommonConfiguration().getFirefoxDisplay();
@@ -28,7 +31,8 @@ public class ScenarioProcessor {
         return theWebDriver;
     }
 
-    public void applyStep(UserScenario scenario, SeleniumDriver seleniumDriver, int position){
+    public void applyStep(UserScenario scenario, SeleniumDriver seleniumDriver, int position)
+    {
         scenario.getContext().setCurrentScenarioStep(scenario.getStepAt(position));
 
         new PlayerScriptProcessor().runStepPrePostScript(scenario, position, true);
@@ -37,7 +41,8 @@ public class ScenarioProcessor {
         boolean error = false;
         try
         {
-            if (scenario.isStepDuplicates(scenario.getConfiguration().getWebConfiguration().getDuplicationScript(), event))
+            if (scenario.isStepDuplicates(scenario.getConfiguration().getWebConfiguration().getDuplicationScript(),
+                    event))
             {
                 LOG.warn("Event duplicates prev");
                 return;
@@ -54,53 +59,59 @@ public class ScenarioProcessor {
 
             if (type.equalsIgnoreCase(EventType.SCRIPT))
             {
-                new PlayerScriptProcessor().executeScriptEvent(scenario.getConfiguration().getScriptEventConfiguration().getScript(), event);
+                new PlayerScriptProcessor().executeScriptEvent(
+                        scenario.getConfiguration().getScriptEventConfiguration().getScript(), event);
                 return;
             }
 
             WebDriver theWebDriver = getWebDriver(scenario, seleniumDriver, event);
 
-            int pageTimeoutMs = Integer.parseInt(scenario.getConfiguration().getCommonConfiguration().getPageReadyTimeout());
+            int pageTimeoutMs = Integer
+                    .parseInt(scenario.getConfiguration().getCommonConfiguration().getPageReadyTimeout());
             String checkPageJs = scenario.getConfiguration().getCommonConfiguration().getCheckPageJs();
             String maxElementGroovy = scenario.getConfiguration().getCommonConfiguration().getMaxElementGroovy();
             String lookupScript = scenario.getConfiguration().getWebConfiguration().getLookupScript();
             String uiShownScript = scenario.getConfiguration().getCommonConfiguration().getUiShownScript();
 
-            seleniumDriver.openEventUrl(theWebDriver, event, pageTimeoutMs, scenario.getConfiguration().getCommonConfiguration().getCheckPageJs(), uiShownScript);
+            seleniumDriver.openEventUrl(theWebDriver, event, pageTimeoutMs,
+                    scenario.getConfiguration().getCommonConfiguration().getCheckPageJs(), uiShownScript);
 
             WebElement element = null;
 
             String target = scenario.getTargetForEvent(event);
 
             LOG.info("Event type: {}", type);
-            seleniumDriver.waitPageReady(theWebDriver, event, pageTimeoutMs, scenario.getConfiguration().getCommonConfiguration().getCheckPageJs());
+            seleniumDriver.waitPageReady(theWebDriver, event, pageTimeoutMs,
+                    scenario.getConfiguration().getCommonConfiguration().getCheckPageJs());
 
             try
             {
                 switch (type)
                 {
-                    case EventType.MOUSEWHEEL:
-                        seleniumDriver.processMouseWheel(lookupScript, theWebDriver, event, target);
-                        break;
-                    case EventType.SCROLL_EMULATION:
-                        seleniumDriver.processScroll(theWebDriver, event, target, pageTimeoutMs, checkPageJs, maxElementGroovy);
-                        break;
+                case EventType.MOUSEWHEEL:
+                    seleniumDriver.processMouseWheel(lookupScript, theWebDriver, event, target);
+                    break;
+                case EventType.SCROLL_EMULATION:
+                    seleniumDriver.processScroll(theWebDriver, event, target, pageTimeoutMs, checkPageJs,
+                            maxElementGroovy);
+                    break;
 
-                    case EventType.MOUSEDOWN:
-                    case EventType.CLICK:
-                        element = seleniumDriver.findTargetWebElement(lookupScript, theWebDriver, event, target);
-                        seleniumDriver.processMouseEvent(theWebDriver, event, element);
-                        seleniumDriver.waitPageReady(theWebDriver, event, pageTimeoutMs, checkPageJs);
-                        break;
-                    case EventType.KEY_UP:
-                    case EventType.KEY_DOWN:
-                    case EventType.KEY_PRESS:
-                        element = seleniumDriver.findTargetWebElement(lookupScript, theWebDriver, event, target);
-                        seleniumDriver.processKeyboardEvent(theWebDriver, event, element, scenario.getConfiguration().getCommonConfiguration().isUseRandomChars());
-                        seleniumDriver.waitPageReady(theWebDriver, event, pageTimeoutMs, checkPageJs);
-                        break;
-                    default:
-                        break;
+                case EventType.MOUSEDOWN:
+                case EventType.CLICK:
+                    element = seleniumDriver.findTargetWebElement(lookupScript, theWebDriver, event, target);
+                    seleniumDriver.processMouseEvent(theWebDriver, event, element);
+                    seleniumDriver.waitPageReady(theWebDriver, event, pageTimeoutMs, checkPageJs);
+                    break;
+                case EventType.KEY_UP:
+                case EventType.KEY_DOWN:
+                case EventType.KEY_PRESS:
+                    element = seleniumDriver.findTargetWebElement(lookupScript, theWebDriver, event, target);
+                    seleniumDriver.processKeyboardEvent(theWebDriver, event, element,
+                            scenario.getConfiguration().getCommonConfiguration().isUseRandomChars());
+                    seleniumDriver.waitPageReady(theWebDriver, event, pageTimeoutMs, checkPageJs);
+                    break;
+                default:
+                    break;
                 }
             }
             catch (Exception e)
@@ -108,9 +119,13 @@ public class ScenarioProcessor {
                 LOG.error("Failed to process step: " + position, e);
             }
 
-            if(scenario.getConfiguration().getCommonConfiguration().getMakeShots()) {
-                seleniumDriver.makeAShot(theWebDriver, scenario.getConfiguration().getCommonConfiguration().getScreenDir());
+            if (scenario.getConfiguration().getCommonConfiguration().getMakeShots())
+            {
+                seleniumDriver.makeAShot(theWebDriver,
+                        scenario.getConfiguration().getCommonConfiguration().getScreenDir());
             }
+            seleniumDriver.releaseBrowser(theWebDriver,
+                    scenario.getConfiguration().getCommonConfiguration().getFormOrDialogXpath());
         }
         catch (Exception e)
         {
@@ -133,16 +148,10 @@ public class ScenarioProcessor {
 
         LOG.info("playing the scenario");
 
-        while (scenario.getPosition() < scenario.getStepsCount())
+        while (scenario.getPosition() < scenario.getStepsCount() - 1)
         {
             if (scenario.getPosition() > 0)
             {
-                JSONObject event = scenario.getStepAt(scenario.getPosition());
-                WebDriver theWebDriver = getWebDriver(scenario, seleniumDriver, event);
-                int pageTimeoutMs = Integer.parseInt(scenario.getConfiguration().getCommonConfiguration().getPageReadyTimeout());
-                String checkPageJs = scenario.getConfiguration().getCommonConfiguration().getCheckPageJs();
-
-                seleniumDriver.waitPageReady(theWebDriver, event, pageTimeoutMs, checkPageJs);
                 LOG.info("Step " + scenario.getPosition());
             }
             else
@@ -150,14 +159,18 @@ public class ScenarioProcessor {
                 LOG.info("Step 0");
             }
             applyStep(scenario, seleniumDriver, scenario.getPosition());
-            if(scenario.getPosition()+1<scenario.getStepsCount()) {
+            if (scenario.getPosition() + 1 < scenario.getStepsCount())
+            {
                 scenario.next();
-            } else {
+            }
+            else
+            {
                 break;
             }
         }
         scenario.next();
         LOG.info(String.format("Done(%d):playing", System.currentTimeMillis() - begin));
+        seleniumDriver.closeWebDrivers();
     }
 
     public void play(UserScenario scenario, SeleniumDriver seleniumDriver, int start, int finish)
@@ -182,12 +195,6 @@ public class ScenarioProcessor {
         {
             if (scenario.getPosition() > 0)
             {
-                JSONObject event = scenario.getStepAt(scenario.getPosition());
-                WebDriver theWebDriver = getWebDriver(scenario, seleniumDriver, event);
-                int pageTimeoutMs = Integer.parseInt(scenario.getConfiguration().getCommonConfiguration().getPageReadyTimeout());
-                String checkPageJs = scenario.getConfiguration().getCommonConfiguration().getCheckPageJs();
-
-                seleniumDriver.waitPageReady(theWebDriver, event, pageTimeoutMs, checkPageJs);
                 LOG.info("Step " + scenario.getPosition());
             }
             else
@@ -195,16 +202,18 @@ public class ScenarioProcessor {
                 LOG.info("Step 0");
             }
             applyStep(scenario, seleniumDriver, scenario.getPosition());
-            if(scenario.getPosition()+1<maxPosition)
+            if (scenario.getPosition() + 1 < maxPosition)
             {
                 scenario.next();
-            } else
+            }
+            else
             {
                 break;
             }
         }
         scenario.next();
         LOG.info(String.format("Done(%d):playing", System.currentTimeMillis() - begin));
+        seleniumDriver.closeWebDrivers();
     }
 
 }

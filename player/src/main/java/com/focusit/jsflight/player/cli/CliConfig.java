@@ -77,6 +77,10 @@ public class CliConfig
             "--jmeterpreprocesscenario" }, description = "Script to preprocess whole jmeter's scenario item just before saving to disk")
     private String jmeterScenarioPreprocess;
 
+    @Parameter(names = { "-fdxp",
+            "--formdialogxpath" }, description = "Xpath to detect if window has open form or dialog. If specified unused browser windows will be closed")
+    private String formDialogXpath = "";
+
     public String getDuplicateHandlerScriptPath()
     {
         return duplicateHandlerScriptPath;
@@ -90,6 +94,11 @@ public class CliConfig
     public String getFinishStep()
     {
         return finishStep;
+    }
+
+    public String getFormDialogXpath()
+    {
+        return formDialogXpath;
     }
 
     public String getJMeterLogLevel()

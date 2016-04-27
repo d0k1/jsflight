@@ -20,6 +20,7 @@ public class CommonConfiguration
     private boolean usePhantomJs;
     private boolean useRandomChars;
     private String firefoxDisplay;
+    private String formOrDialogXpath;
 
     private String checkPageJs;
     private String maxElementGroovy;
@@ -40,119 +41,9 @@ public class CommonConfiguration
         return checkPageJs;
     }
 
-    public void setCheckPageJs(String checkPageJs)
-    {
-        this.checkPageJs = checkPageJs;
-    }
-
     public String getFfPath()
     {
         return ffPath;
-    }
-
-    public void setFfPath(String ffPath)
-    {
-        this.ffPath = ffPath;
-    }
-
-    public boolean getMakeShots()
-    {
-        return Boolean.valueOf(makeShots);
-    }
-
-    public void setMakeShots(boolean makeShots)
-    {
-        this.makeShots = makeShots;
-    }
-
-    public String getPageReadyTimeout()
-    {
-        return pageReadyTimout;
-    }
-
-    public void setPageReadyTimeout(String pageReadyTimeout)
-    {
-        this.pageReadyTimout = pageReadyTimeout;
-    }
-
-    public String getPjsPath()
-    {
-        return pjsPath;
-    }
-
-    public void setPjsPath(String pjsPath)
-    {
-        this.pjsPath = pjsPath;
-    }
-
-    public String getProxyHost()
-    {
-        return proxyHost;
-    }
-
-    public void setProxyHost(String proxyHost)
-    {
-        this.proxyHost = proxyHost;
-    }
-
-    public String getProxyPort()
-    {
-        return proxyPort;
-    }
-
-    public void setProxyPort(String proxyPort)
-    {
-        this.proxyPort = proxyPort;
-    }
-
-    public String getScreenDir()
-    {
-        return screenDir;
-    }
-
-    public void setScreenDir(String screenDir)
-    {
-        this.screenDir = screenDir;
-    }
-
-    public String getWebDriverTag()
-    {
-        return webDriverTag;
-    }
-
-    public void setWebDriverTag(String webDriverTag)
-    {
-        this.webDriverTag = webDriverTag;
-    }
-
-    public boolean isUseFirefox()
-    {
-        return useFirefox;
-    }
-
-    public void setUseFirefox(boolean useFirefox)
-    {
-        this.useFirefox = useFirefox;
-    }
-
-    public boolean isUsePhantomJs()
-    {
-        return usePhantomJs;
-    }
-
-    public void setUsePhantomJs(boolean usePhantomJs)
-    {
-        this.usePhantomJs = usePhantomJs;
-    }
-
-    public boolean isUseRandomChars()
-    {
-        return useRandomChars;
-    }
-
-    public void setUseRandomChars(boolean useRandomChars)
-    {
-        this.useRandomChars = useRandomChars;
     }
 
     public String getFirefoxDisplay()
@@ -160,9 +51,9 @@ public class CommonConfiguration
         return firefoxDisplay;
     }
 
-    public void setFirefoxDisplay(String firefoxDisplay)
+    public boolean getMakeShots()
     {
-        this.firefoxDisplay = firefoxDisplay;
+        return Boolean.valueOf(makeShots);
     }
 
     public String getMaxElementGroovy()
@@ -170,29 +61,9 @@ public class CommonConfiguration
         return maxElementGroovy;
     }
 
-    public void setMaxElementGroovy(String maxElementGroovy)
+    public String getPageReadyTimeout()
     {
-        this.maxElementGroovy = maxElementGroovy;
-    }
-
-    public String getUiShownScript()
-    {
-        return uiShownScript;
-    }
-
-    public void setUiShownScript(String uiShownScript)
-    {
-        this.uiShownScript = uiShownScript;
-    }
-
-    public int getScrollTimeout()
-    {
-        return scrollTimeout;
-    }
-
-    public void setScrollTimeout(int scrollTimeout)
-    {
-        this.scrollTimeout = scrollTimeout;
+        return pageReadyTimout;
     }
 
     public int getPageShownTimeout()
@@ -200,9 +71,54 @@ public class CommonConfiguration
         return pageShownTimeout;
     }
 
-    public void setPageShownTimeout(int pageShownTimeout)
+    public String getPjsPath()
     {
-        this.pageShownTimeout = pageShownTimeout;
+        return pjsPath;
+    }
+
+    public String getProxyHost()
+    {
+        return proxyHost;
+    }
+
+    public String getProxyPort()
+    {
+        return proxyPort;
+    }
+
+    public String getScreenDir()
+    {
+        return screenDir;
+    }
+
+    public int getScrollTimeout()
+    {
+        return scrollTimeout;
+    }
+
+    public String getUiShownScript()
+    {
+        return uiShownScript;
+    }
+
+    public String getWebDriverTag()
+    {
+        return webDriverTag;
+    }
+
+    public boolean isUseFirefox()
+    {
+        return useFirefox;
+    }
+
+    public boolean isUsePhantomJs()
+    {
+        return usePhantomJs;
+    }
+
+    public boolean isUseRandomChars()
+    {
+        return useRandomChars;
     }
 
     public void loadDefaultValues()
@@ -229,5 +145,100 @@ public class CommonConfiguration
             setUiShownScript(
                     "return webdriver.findElement(org.openqa.selenium.By.xpath(\"//*[@id='gwt-debug-editProfile']\"));");
         }
+    }
+
+    public void setCheckPageJs(String checkPageJs)
+    {
+        this.checkPageJs = checkPageJs;
+    }
+
+    public void setFfPath(String ffPath)
+    {
+        this.ffPath = ffPath;
+    }
+
+    public void setFirefoxDisplay(String firefoxDisplay)
+    {
+        this.firefoxDisplay = firefoxDisplay;
+    }
+
+    public void setMakeShots(boolean makeShots)
+    {
+        this.makeShots = makeShots;
+    }
+
+    public void setMaxElementGroovy(String maxElementGroovy)
+    {
+        this.maxElementGroovy = maxElementGroovy;
+    }
+
+    public void setPageReadyTimeout(String pageReadyTimeout)
+    {
+        this.pageReadyTimout = pageReadyTimeout;
+    }
+
+    public void setPageShownTimeout(int pageShownTimeout)
+    {
+        this.pageShownTimeout = pageShownTimeout;
+    }
+
+    public void setPjsPath(String pjsPath)
+    {
+        this.pjsPath = pjsPath;
+    }
+
+    public void setProxyHost(String proxyHost)
+    {
+        this.proxyHost = proxyHost;
+    }
+
+    public void setProxyPort(String proxyPort)
+    {
+        this.proxyPort = proxyPort;
+    }
+
+    public void setScreenDir(String screenDir)
+    {
+        this.screenDir = screenDir;
+    }
+
+    public void setScrollTimeout(int scrollTimeout)
+    {
+        this.scrollTimeout = scrollTimeout;
+    }
+
+    public void setUiShownScript(String uiShownScript)
+    {
+        this.uiShownScript = uiShownScript;
+    }
+
+    public void setUseFirefox(boolean useFirefox)
+    {
+        this.useFirefox = useFirefox;
+    }
+
+    public void setUsePhantomJs(boolean usePhantomJs)
+    {
+        this.usePhantomJs = usePhantomJs;
+    }
+
+    public void setUseRandomChars(boolean useRandomChars)
+    {
+        this.useRandomChars = useRandomChars;
+    }
+
+    public void setWebDriverTag(String webDriverTag)
+    {
+        this.webDriverTag = webDriverTag;
+    }
+
+    public String getFormOrDialogXpath()
+    {
+        return formOrDialogXpath;
+    }
+
+    public void setFormOrDialogXpath(String formOrDialogXpath)
+    {
+        this.formOrDialogXpath = formOrDialogXpath;
     }
 }

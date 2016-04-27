@@ -10,15 +10,16 @@ public class CommonFileConfigHolder extends UIFileConfigHolder
     private static final long serialVersionUID = 1L;
 
     private final static CommonFileConfigHolder instance = new CommonFileConfigHolder();
-    private CommonConfiguration configuration;
-
-    private CommonFileConfigHolder()
-    {
-    }
 
     public static CommonFileConfigHolder getInstance()
     {
         return instance;
+    }
+
+    private CommonConfiguration configuration;
+
+    private CommonFileConfigHolder()
+    {
     }
 
     @Override
@@ -38,11 +39,17 @@ public class CommonFileConfigHolder extends UIFileConfigHolder
         configuration.setCheckPageJs((String)stream.readObject());
         configuration.setWebDriverTag((String)stream.readObject());
         configuration.setFirefoxDisplay((String)stream.readObject());
+        configuration.setFormOrDialogXpath((String)stream.readObject());
         configuration.setUiShownScript((String)stream.readObject());
         configuration.setScrollTimeout((Integer)stream.readObject());
         configuration.setPageShownTimeout((Integer)stream.readObject());
 
         configuration.loadDefaultValues();
+    }
+
+    public void setConfiguration(CommonConfiguration configuration)
+    {
+        this.configuration = configuration;
     }
 
     @Override
@@ -65,16 +72,12 @@ public class CommonFileConfigHolder extends UIFileConfigHolder
         stream.writeObject(configuration.getUiShownScript());
         stream.writeObject(configuration.getScrollTimeout());
         stream.writeObject(configuration.getPageShownTimeout());
+        stream.writeObject(configuration.getFormOrDialogXpath());
     }
 
     @Override
     protected String getControllerDataFilename()
     {
         return "options";
-    }
-
-    public void setConfiguration(CommonConfiguration configuration)
-    {
-        this.configuration = configuration;
     }
 }
