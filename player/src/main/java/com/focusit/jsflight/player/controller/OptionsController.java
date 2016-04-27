@@ -26,6 +26,7 @@ public class OptionsController extends UIController
     private boolean useFirefox;
     private boolean usePhantomJs;
     private boolean useRandomChars;
+    private String firefoxDisplay;
 
     private OptionsController()
     {
@@ -107,6 +108,7 @@ public class OptionsController extends UIController
         screenDir = (String)stream.readObject();
         checkPageJs = (String)stream.readObject();
         webDriverTag = (String)stream.readObject();
+        firefoxDisplay = (String)stream.readObject();
     }
 
     public void setCheckPageJs(String checkPageJs)
@@ -185,6 +187,7 @@ public class OptionsController extends UIController
         stream.writeObject(screenDir);
         stream.writeObject(checkPageJs);
         stream.writeObject(webDriverTag);
+        stream.writeObject(firefoxDisplay);
     }
 
     @Override
@@ -193,4 +196,11 @@ public class OptionsController extends UIController
         return "options";
     }
 
+    public String getFirefoxDisplay() {
+        return firefoxDisplay;
+    }
+
+    public void setFirefoxDisplay(String firefoxDisplay) {
+        this.firefoxDisplay = firefoxDisplay;
+    }
 }

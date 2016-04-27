@@ -73,6 +73,7 @@ public class MainFrame
     private JTextField scriptEventHandlerFilePath;
 
     private RSyntaxTextArea scriptEventHandlerScriptArea;
+    private JTextField firefoxDsiplay;
 
     /**
      * Create the application.
@@ -893,6 +894,8 @@ public class MainFrame
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC, }));
 
         JLabel lblFirefoxProxyHost = new JLabel("Proxy host");
@@ -985,6 +988,13 @@ public class MainFrame
 
         useRandomCharsBox = new JCheckBox("");
         optionsPanel.add(useRandomCharsBox, "4, 22");
+
+        JLabel lblFirefoxXdispay = new JLabel("Firefox XDispay");
+        optionsPanel.add(lblFirefoxXdispay, "2, 24, right, default");
+
+        firefoxDsiplay = new JTextField();
+        firefoxDsiplay.setColumns(10);
+        optionsPanel.add(firefoxDsiplay, "4, 24, fill, default");
 
         jmeterPanel = new JPanel();
         tabbedPane.addTab("JMeter", null, jmeterPanel, null);
@@ -1323,6 +1333,7 @@ public class MainFrame
         checkPageJs.setText(OptionsController.getInstance().getCheckPageJs());
         webDriverTag.setText(OptionsController.getInstance().getWebDriverTag());
         useRandomCharsBox.setSelected(OptionsController.getInstance().isUseRandomChars());
+        firefoxDsiplay.setText(OptionsController.getInstance().getFirefoxDisplay());
     }
 
     private void initUIFromPostProcessorController()
@@ -1415,6 +1426,7 @@ public class MainFrame
         OptionsController.getInstance().setUseFirefox(useFirefoxButton.isSelected());
         OptionsController.getInstance().setUsePhantomJs(usePhantomButton.isSelected());
         OptionsController.getInstance().setUseRandomChars(useRandomCharsBox.isSelected());
+        OptionsController.getInstance().setFirefoxDisplay(firefoxDsiplay.getText());
     }
 
     private void updatePostProcessController()

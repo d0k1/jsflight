@@ -373,7 +373,6 @@ public class SeleniumDriver
 
     private static WebDriver getDriverForEvent(JSONObject event)
     {
-
         String tag = UserScenario.getTagForEvent(event);
 
         WebDriver driver = drivers.get(tag);
@@ -405,15 +404,19 @@ public class SeleniumDriver
             {
                 FirefoxProfile profile = new FirefoxProfile();
                 String ffPath = config.getFfPath();
+                FirefoxBinary binary = null;
                 if (ffPath != null && ffPath.trim().length() > 0)
                 {
-                    FirefoxBinary binary = new FirefoxBinary(new File(ffPath));
-                    driver = new FirefoxDriver(binary, profile, cap);
+                    binary = new FirefoxBinary(new File(ffPath));
                 }
                 else
                 {
-                    driver = new FirefoxDriver(new FirefoxBinary(), profile, cap);
+                    binary = new FirefoxBinary();
                 }
+                if(OptionsController.getInstance().getFirefoxDisplay()!=null && !OptionsController.getInstance().getFirefoxDisplay().isEmpty()) {
+                    binary.setEnvironmentProperty("DISPLAY", OptionsController.getInstance().getFirefoxDisplay());
+                }
+                driver = new FirefoxDriver(binary, profile, cap);
             }
             else if (usePhantomJs)
             {
@@ -429,15 +432,6 @@ public class SeleniumDriver
                     driver = new PhantomJSDriver(cap);
                 }
             }
-//            try
-//            {
-//                Thread.sleep(3000);
-//            }
-//            catch (InterruptedException e)
-//            {
-//                log.error(e.toString(), e);
-//            }
-
             drivers.put(tag, driver);
             return driver;
         }
