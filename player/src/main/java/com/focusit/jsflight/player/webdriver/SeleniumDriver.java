@@ -36,7 +36,6 @@ import java.util.List;
  */
 public class SeleniumDriver
 {
-    private static final String SET_ELEMENT_VISIBLE_JS = "var e = document.evaluate('%s' ,document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null ).singleNodeValue; if(e!== null) {e.style.visibility='visible';};";
     private static final Logger log = LoggerFactory.getLogger(SeleniumDriver.class);
     private static OptionsController config = OptionsController.getInstance();
     private static HashMap<String, WebDriver> drivers = new HashMap<>();
@@ -89,7 +88,7 @@ public class SeleniumDriver
             File dir = new File(config.getScreenDir() + File.separator
                     + Paths.get(UserScenario.getScenarioFilename()).getFileName().toString());
 
-            if (!dir.mkdirs())
+            if (!dir.exists() && !dir.mkdirs())
             {
                 return;
             }
@@ -206,7 +205,18 @@ public class SeleniumDriver
 
             if (event.getInt("button") == 2)
             {
-                new Actions(wd).contextClick(element).perform();
+                try {
+                    new Actions(wd).contextClick(element).perform();
+                } catch (WebDriverException ex){
+                    try {
+                        log.warn("Error simulation right click. Retrying after 2 sec.");
+                        Thread.sleep(2000);
+
+                        new Actions(wd).contextClick(element).perform();
+                    } catch (Exception e) {
+                        log.error(e.toString(), e);
+                    }
+                }
             }
             else
             {
@@ -411,6 +421,7 @@ public class SeleniumDriver
                 if (pjsPath != null && pjsPath.trim().length() > 0)
                 {
                     cap.setCapability("phantomjs.binary.path", pjsPath);
+
                     driver = new PhantomJSDriver(cap);
                 }
                 else
