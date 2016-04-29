@@ -13,8 +13,20 @@
 		<module>recorder</module>
 		<module>jmeter</module>
 		<module>script</module>
+		<module>server</module>
 	</modules>
 
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>		
+		<boot.version>1.4.0.M2</boot.version>
+	</properties>
+
+	<parent>
+	   <groupId>org.springframework.boot</groupId>
+	   <artifactId>spring-boot-starter-parent</artifactId>
+	   <version>1.4.0.M2</version>
+	</parent>
+	
 	<dependencies>
 		<dependency>
 			<groupId>org.slf4j</groupId>
@@ -41,7 +53,14 @@
 			<artifactId>log4j</artifactId>
 			<version>1.2.17</version>
 		</dependency>
-	</dependencies>
+		<dependency>
+	        <groupId>org.springframework.boot</groupId>
+	        <artifactId>spring-boot-dependencies</artifactId>
+	        <type>pom</type>
+	        <version>${boot.version}</version>
+	        <scope>import</scope>
+	    </dependency>
+   	</dependencies>
 
 	<build>
 		<pluginManagement>
