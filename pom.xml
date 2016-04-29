@@ -52,13 +52,6 @@
 			<artifactId>log4j</artifactId>
 			<version>1.2.17</version>
 		</dependency>
-		<dependency>
-	        <groupId>org.springframework.boot</groupId>
-	        <artifactId>spring-boot-dependencies</artifactId>
-	        <type>pom</type>
-	        <version>${boot.version}</version>
-	        <scope>import</scope>
-	    </dependency>
    	</dependencies>
 
 	<build>
