@@ -29,7 +29,7 @@ import java.util.HashMap;
 import java.util.List;
 
 /**
- * Selenium webdriver helper: runs a browser, sends events, make screenshots
+ * Selenium webdriver proxy: runs a browser, sends events, make screenshots
  * 
  * @author Denis V. Kirpichenkov
  *
@@ -38,19 +38,120 @@ public class SeleniumDriver
 {
     private static final Logger log = LoggerFactory.getLogger(SeleniumDriver.class);
     private static OptionsController config = OptionsController.getInstance();
-    private static HashMap<String, WebDriver> drivers = new HashMap<>();
-    private static HashMap<String, String> tabsWindow = new HashMap<>();
-    private static HashMap<String, String> lastUrls = new HashMap<>();
-    private static StringGenerator stringGen;
+    private HashMap<String, WebDriver> drivers = new HashMap<>();
+    private HashMap<String, String> tabsWindow = new HashMap<>();
+    private HashMap<String, String> lastUrls = new HashMap<>();
+    private StringGenerator stringGen;
+    private UserScenario scenario;
 
-    public static void closeWebDrivers()
+    public SeleniumDriver(UserScenario scenario) {
+        this.scenario = scenario;
+    }
+
+    private static boolean checkElementPresent(WebDriver wd, String target)
+    {
+        try
+        {
+            wd.findElement(By.xpath(target));
+            return true;
+        }
+        catch (Exception e)
+        {
+            return false;
+        }
+
+    }
+
+    private static void ensureElementInWindow(WebDriver wd, WebElement element)
+    {
+        int windowHeight = wd.manage().window().getSize().getHeight();
+        int elementYCoord = element.getLocation().getY();
+        if (elementYCoord > windowHeight)
+        {
+            //Using division of the Y coordinate by 2 ensures target element visibility in the browser view
+            //anyway TODO think of not using hardcoded constants in scrolling
+            String scrollScript = "window.scrollTo(0, " + elementYCoord / 2 + ");";
+            ((JavascriptExecutor)wd).executeScript(scrollScript);
+        }
+    }
+
+    private static WebElement getMax(WebDriver wd)
+    {
+        List<WebElement> els = wd.findElements(By.xpath("//div[@id='gwt-debug-PopupListSelect']//div[@__idx]"));
+        els.sort((WebElement el1, WebElement el2) -> Integer.valueOf(el1.getAttribute("__idx"))
+                .compareTo(Integer.valueOf(el2.getAttribute("__idx"))));
+        return els.get(els.size() - 1);
+    }
+
+    private static void resizeForEvent(WebDriver wd, JSONObject event)
+    {
+        int w = 0;
+        int h = 0;
+        if (event.has("window.width"))
+        {
+            w = event.getInt("window.width");
+            h = event.getInt("window.height");
+        }
+        else
+        {
+            JSONObject window = event.getJSONObject("window");
+            w = window.getInt("width");
+            h = window.getInt("height");
+        }
+
+        if (w == 0)
+        {
+            w = 1000;
+        }
+
+        if (h == 0)
+        {
+            h = 1000;
+        }
+
+        wd.manage().window().setSize(new Dimension(w, h));
+    }
+
+    private static void scroll(JavascriptExecutor js, WebElement element)
+    {
+        js.executeScript("arguments[0].scrollIntoView(true)", element);
+    }
+
+    private static void waitUiShow(WebDriver wd)
+    {
+        long timeout = System.currentTimeMillis() + 20000L;
+        while (System.currentTimeMillis() < timeout)
+        {
+            try
+            {
+                wd.findElement(By.xpath("//*[@id='gwt-debug-editProfile']"));
+                log.debug("Yeeepeee UI showed up!");
+                return;
+            }
+            catch (NoSuchElementException e)
+            {
+                try
+                {
+                    Thread.sleep(500);
+                }
+                catch (InterruptedException e1)
+                {
+                    //Should never happen
+                    log.error(e1.toString(), e1);
+                }
+            }
+        }
+        throw new NoSuchElementException("UI didn`t show up. =(");
+    }
+
+    public void closeWebDrivers()
     {
         drivers.values().stream().forEach(WebDriver::close);
         drivers.clear();
         lastUrls.clear();
     }
 
-    public static WebElement findTargetWebElement(JSONObject event, String target)
+    public WebElement findTargetWebElement(JSONObject event, String target)
     {
         WebDriver wd = getDriverForEvent(event);
         try
@@ -66,27 +167,27 @@ public class SeleniumDriver
         }
     }
 
-    public static String getLastUrl(JSONObject event)
+    public String getLastUrl(JSONObject event)
     {
         String no_result = "";
-        String result = lastUrls.get(UserScenario.getTagForEvent(event));
+        String result = lastUrls.get(scenario.getTagForEvent(event));
         if (result == null)
         {
-            lastUrls.put(UserScenario.getTagForEvent(event), no_result);
+            lastUrls.put(scenario.getTagForEvent(event), no_result);
             result = no_result;
         }
 
         return result;
     }
 
-    public static void makeAShot(JSONObject event)
+    public void makeAShot(JSONObject event)
     {
         if (config.getMakeShots())
         {
             TakesScreenshot shoter = (TakesScreenshot)getDriverForEvent(event);
             byte[] shot = shoter.getScreenshotAs(OutputType.BYTES);
             File dir = new File(config.getScreenDir() + File.separator
-                    + Paths.get(UserScenario.getScenarioFilename()).getFileName().toString());
+                    + Paths.get(scenario.getScenarioFilename()).getFileName().toString());
 
             if (!dir.exists() && !dir.mkdirs())
             {
@@ -94,7 +195,7 @@ public class SeleniumDriver
             }
 
             try (FileOutputStream fos = new FileOutputStream(new String(dir.getAbsolutePath() + File.separator
-                    + String.format("%05d", UserScenario.getPosition()) + ".png")))
+                    + String.format("%05d", scenario.getPosition()) + ".png")))
             {
                 fos.write(shot);
             }
@@ -105,7 +206,7 @@ public class SeleniumDriver
         }
     }
 
-    public static void openEventUrl(JSONObject event)
+    public void openEventUrl(JSONObject event)
     {
         String event_url = event.getString("url");
         WebDriver wd = getDriverForEvent(event);
@@ -121,7 +222,7 @@ public class SeleniumDriver
         }
     }
 
-    public static void processKeyboardEvent(JSONObject event, WebElement element) throws UnsupportedEncodingException
+    public void processKeyboardEvent(JSONObject event, WebElement element) throws UnsupportedEncodingException
     {
         ensureStringGeneratorInitialized();
         if (event.getString("type").equalsIgnoreCase(EventType.KEY_PRESS))
@@ -196,7 +297,7 @@ public class SeleniumDriver
         }
     }
 
-    public static void processMouseEvent(JSONObject event, WebElement element)
+    public void processMouseEvent(JSONObject event, WebElement element)
     {
         WebDriver wd = getDriverForEvent(event);
         ensureElementInWindow(wd, element);
@@ -248,7 +349,7 @@ public class SeleniumDriver
         }
     }
 
-    public static void processMouseWheel(JSONObject event, String target)
+    public void processMouseWheel(JSONObject event, String target)
     {
         WebDriver wd = getDriverForEvent(event);
         WebElement el = (WebElement)new PlayerScriptProcessor().executeWebLookupScript(WebLookupController.getInstance().getScript(), wd,
@@ -265,7 +366,7 @@ public class SeleniumDriver
         }
     }
 
-    public static void processScroll(JSONObject event, String target)
+    public void processScroll(JSONObject event, String target)
     {
         WebDriver wd = getDriverForEvent(event);
         long timeout = System.currentTimeMillis() + 20000l;
@@ -288,18 +389,18 @@ public class SeleniumDriver
         throw new NoSuchElementException("Element was not found during scroll");
     }
 
-    public static void resetLastUrls()
+    public void resetLastUrls()
     {
         lastUrls.clear();
     }
 
-    public static void updateLastUrl(JSONObject event, String url)
+    public void updateLastUrl(JSONObject event, String url)
     {
-        lastUrls.put(UserScenario.getTagForEvent(event), url);
+        lastUrls.put(scenario.getTagForEvent(event), url);
     }
 
-    public static void waitPageReady(JSONObject event)
-    {	
+    public void waitPageReady(JSONObject event)
+    {
     	String type = event.getString("type");
         if (type.equalsIgnoreCase(EventType.XHR) || type.equalsIgnoreCase(EventType.SCRIPT))
         {
@@ -329,34 +430,7 @@ public class SeleniumDriver
         }
     }
 
-    private static boolean checkElementPresent(WebDriver wd, String target)
-    {
-        try
-        {
-            wd.findElement(By.xpath(target));
-            return true;
-        }
-        catch (Exception e)
-        {
-            return false;
-        }
-
-    }
-
-    private static void ensureElementInWindow(WebDriver wd, WebElement element)
-    {
-        int windowHeight = wd.manage().window().getSize().getHeight();
-        int elementYCoord = element.getLocation().getY();
-        if (elementYCoord > windowHeight)
-        {
-            //Using division of the Y coordinate by 2 ensures target element visibility in the browser view
-            //anyway TODO think of not using hardcoded constants in scrolling
-            String scrollScript = "window.scrollTo(0, " + elementYCoord / 2 + ");";
-            ((JavascriptExecutor)wd).executeScript(scrollScript);
-        }
-    }
-
-    private static void ensureStringGeneratorInitialized()
+    private void ensureStringGeneratorInitialized()
     {
         if (stringGen == null)
         {
@@ -371,9 +445,9 @@ public class SeleniumDriver
         }
     }
 
-    private static WebDriver getDriverForEvent(JSONObject event)
+    private WebDriver getDriverForEvent(JSONObject event)
     {
-        String tag = UserScenario.getTagForEvent(event);
+        String tag = scenario.getTagForEvent(event);
 
         WebDriver driver = drivers.get(tag);
 
@@ -463,73 +537,8 @@ public class SeleniumDriver
         }
     }
 
-    private static WebElement getMax(WebDriver wd)
-    {
-        List<WebElement> els = wd.findElements(By.xpath("//div[@id='gwt-debug-PopupListSelect']//div[@__idx]"));
-        els.sort((WebElement el1, WebElement el2) -> Integer.valueOf(el1.getAttribute("__idx"))
-                .compareTo(Integer.valueOf(el2.getAttribute("__idx"))));
-        return els.get(els.size() - 1);
-    }
-
-    private static void resizeForEvent(WebDriver wd, JSONObject event)
-    {
-        int w = 0;
-        int h = 0;
-        if (event.has("window.width"))
-        {
-            w = event.getInt("window.width");
-            h = event.getInt("window.height");
-        }
-        else
-        {
-            JSONObject window = event.getJSONObject("window");
-            w = window.getInt("width");
-            h = window.getInt("height");
-        }
-
-        if (w == 0)
-        {
-            w = 1000;
-        }
-
-        if (h == 0)
-        {
-            h = 1000;
-        }
-
-        wd.manage().window().setSize(new Dimension(w, h));
-    }
-
-    private static void scroll(JavascriptExecutor js, WebElement element)
-    {
-        js.executeScript("arguments[0].scrollIntoView(true)", element);
-    }
-
-    private static void waitUiShow(WebDriver wd)
-    {
-        long timeout = System.currentTimeMillis() + 20000L;
-        while (System.currentTimeMillis() < timeout)
-        {
-            try
-            {
-                wd.findElement(By.xpath("//*[@id='gwt-debug-editProfile']"));
-                log.debug("Yeeepeee UI showed up!");
-                return;
-            }
-            catch (NoSuchElementException e)
-            {
-                try
-                {
-                    Thread.sleep(500);
-                }
-                catch (InterruptedException e1)
-                {
-                    //Should never happen
-                    log.error(e1.toString(), e1);
-                }
-            }
-        }
-        throw new NoSuchElementException("UI didn`t show up. =(");
+    public void setScenario(UserScenario scenario) {
+        this.scenario = scenario;
     }
 
     private interface StringGenerator

@@ -4,6 +4,7 @@ import com.focusit.jmeter.JMeterRecorder;
 import com.focusit.jmeter.JMeterScriptProcessor;
 import com.focusit.jsflight.player.controller.*;
 import com.focusit.jsflight.player.input.FileInput;
+import com.focusit.jsflight.player.scenario.ScenarioProcessor;
 import com.focusit.jsflight.player.scenario.UserScenario;
 import com.focusit.jsflight.player.webdriver.SeleniumDriver;
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -75,6 +76,8 @@ public class MainFrame
     private RSyntaxTextArea scriptEventHandlerScriptArea;
     private JTextField firefoxDsiplay;
 
+    private SeleniumDriver seleniumDriver = new SeleniumDriver(scenario);
+
     /**
      * Create the application.
      * 
@@ -111,13 +114,13 @@ public class MainFrame
             @Override
             public int getRowCount()
             {
-                return UserScenario.getStepsCount();
+                return scenario.getStepsCount();
             }
 
             @Override
             public Object getValueAt(int rowIndex, int columnIndex)
             {
-                if (rowIndex == UserScenario.getPosition() && columnIndex == 0)
+                if (rowIndex == scenario.getPosition() && columnIndex == 0)
                 {
                     return "*";
                 }
@@ -252,7 +255,7 @@ public class MainFrame
     protected void playTheScenario()
     {
         saveControlersOptions();
-        scenario.play();
+        ScenarioProcessor.play(scenario, seleniumDriver);
         model.fireTableDataChanged();
     }
 
@@ -583,7 +586,7 @@ public class MainFrame
             @Override
             public void mouseClicked(MouseEvent e)
             {
-                scenario.applyStep(UserScenario.getPosition());
+                ScenarioProcessor.applyStep(scenario, seleniumDriver, scenario.getPosition());
                 scenario.next();
                 model.fireTableDataChanged();
             }
@@ -595,7 +598,7 @@ public class MainFrame
             public void mouseClicked(MouseEvent e)
             {
                 scenario.rewind();
-                SeleniumDriver.resetLastUrls();
+                seleniumDriver.resetLastUrls();
                 model.fireTableDataChanged();
             }
         });
@@ -604,7 +607,7 @@ public class MainFrame
             @Override
             public void mouseClicked(MouseEvent e)
             {
-                SeleniumDriver.closeWebDrivers();
+                seleniumDriver.closeWebDrivers();
             }
         });
         btnOpenBrowser.addMouseListener(new MouseAdapter()
@@ -612,7 +615,7 @@ public class MainFrame
             @Override
             public void mouseClicked(MouseEvent e)
             {
-                scenario.applyStep(table.getSelectedRow());
+                ScenarioProcessor.applyStep(scenario, seleniumDriver, table.getSelectedRow());
             }
         });
         btnParse.addMouseListener(new MouseAdapter()
@@ -623,10 +626,10 @@ public class MainFrame
                 try
                 {
                     scenario.parseNextLine(InputController.getInstance().getFilename());
-                    UserScenario.setPostProcessScenarioScript(scriptArea.getText());
+                    scenario.setPostProcessScenarioScript(scriptArea.getText());
                     long secs = scenario.postProcessScenario();
                     statisticsLabel.setText(
-                            String.format("Events %d, duration %f sec", UserScenario.getStepsCount(), secs / 1000.0));
+                            String.format("Events %d, duration %f sec", scenario.getStepsCount(), secs / 1000.0));
                     model = createEventTableModel();
                     table.setModel(model);
                     model.fireTableDataChanged();

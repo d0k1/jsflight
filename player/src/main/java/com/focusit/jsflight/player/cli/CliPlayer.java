@@ -1,21 +1,22 @@
 package com.focusit.jsflight.player.cli;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-
-import org.apache.commons.io.FileUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.focusit.jmeter.JMeterRecorder;
 import com.focusit.jmeter.JMeterScriptProcessor;
 import com.focusit.jsflight.player.controller.DuplicateHandlerController;
 import com.focusit.jsflight.player.controller.OptionsController;
 import com.focusit.jsflight.player.controller.ScriptEventExectutionController;
 import com.focusit.jsflight.player.controller.WebLookupController;
+import com.focusit.jsflight.player.scenario.ScenarioProcessor;
 import com.focusit.jsflight.player.scenario.UserScenario;
+import com.focusit.jsflight.player.webdriver.SeleniumDriver;
+import org.apache.commons.io.FileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 public class CliPlayer
 {
@@ -24,6 +25,8 @@ public class CliPlayer
     private CliConfig config;
 
     private JMeterRecorder jmeter = new JMeterRecorder();
+
+    private SeleniumDriver seleniumDriver;
 
     public CliPlayer(CliConfig config) throws Exception
     {
@@ -49,6 +52,7 @@ public class CliPlayer
         LOG.info("Loading {}", config.getPathToRecording());
         scenario.parse(config.getPathToRecording());
         scenario.postProcessScenario();
+        seleniumDriver = new SeleniumDriver(scenario);
 
         if (config.isEnableRecording())
         {
@@ -56,7 +60,7 @@ public class CliPlayer
             jmeter.startRecording();
             try
             {
-                scenario.play(Integer.parseInt(config.getStartStep()), Integer.parseInt(config.getFinishStep()));
+                ScenarioProcessor.play(scenario, seleniumDriver, Integer.parseInt(config.getStartStep()), Integer.parseInt(config.getFinishStep()));
             }
             finally
             {
@@ -67,7 +71,7 @@ public class CliPlayer
         }
         else
         {
-            scenario.play(Integer.parseInt(config.getStartStep()), Integer.parseInt(config.getFinishStep()));
+            ScenarioProcessor.play(scenario, seleniumDriver, Integer.parseInt(config.getStartStep()), Integer.parseInt(config.getFinishStep()));
         }
     }
 
@@ -113,5 +117,9 @@ public class CliPlayer
         //Init script events handler
         ScriptEventExectutionController.getInstance()
                 .setScript(FileUtils.readFileToString(new File(config.getScriptEventHandlerScriptPath())));
+    }
+
+    public SeleniumDriver getSeleniumDriver() {
+        return seleniumDriver;
     }
 }
