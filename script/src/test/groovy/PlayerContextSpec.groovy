@@ -5,7 +5,7 @@
 import com.focusit.script.player.PlayerContext
 import spock.lang.Specification
 
-class PlayerContextSpecification extends Specification {
+class PlayerContextSpec extends Specification {
     public static final String TEST_KEY = "testKey";
     public static final String TEST_VALUE = "testValue";
 
