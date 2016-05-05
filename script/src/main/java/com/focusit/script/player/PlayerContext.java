@@ -9,12 +9,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public class PlayerContext
 {
     private static final ConcurrentHashMap<String, Object> context = new ConcurrentHashMap<>();
-    private static final PlayerContext instance = new PlayerContext();
-
-    public static PlayerContext getInstance()
-    {
-        return instance;
-    }
 
     public Binding asBindings()
     {
@@ -25,11 +19,6 @@ public class PlayerContext
     public Object get(String key)
     {
         return context.get(key);
-    }
-
-    public JSONObject getCurrentScenarioStep()
-    {
-        return JMeterJSFlightBridge.getInstace().getCurrentScenarioStep();
     }
 
     public void setCurrentScenarioStep(JSONObject currentScenarioStep)

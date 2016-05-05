@@ -3,7 +3,6 @@ package com.focusit.jsflight.player.scenario;
 import com.focusit.jsflight.player.constants.EventType;
 import com.focusit.jsflight.player.script.PlayerScriptProcessor;
 import com.focusit.jsflight.player.webdriver.SeleniumDriver;
-import com.focusit.script.player.PlayerContext;
 import org.json.JSONObject;
 import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
@@ -16,11 +15,11 @@ public class ScenarioProcessor {
     private static final Logger LOG = LoggerFactory.getLogger(ScenarioProcessor.class);
 
     public static void applyStep(UserScenario scenario, SeleniumDriver seleniumDriver, int position){
-        PlayerContext.getInstance().setCurrentScenarioStep(scenario.getStepAt(position));
+        scenario.getContext().setCurrentScenarioStep(scenario.getStepAt(position));
 
         new PlayerScriptProcessor().runStepPrePostScript(scenario, position, true);
         JSONObject event = scenario.getStepAt(position);
-        event = new PlayerScriptProcessor().runStepTemplating(event);
+        event = new PlayerScriptProcessor().runStepTemplating(scenario, event);
         boolean error = false;
         try
         {

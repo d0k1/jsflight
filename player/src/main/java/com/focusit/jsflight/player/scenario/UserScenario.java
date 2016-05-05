@@ -31,7 +31,12 @@ public class UserScenario
     private List<JSONObject> events = new ArrayList<>();
     private String postProcessScenarioScript = "";
     private List<Boolean> checks = new ArrayList<>();
-    
+    private PlayerContext context = new PlayerContext();
+
+    public PlayerContext getContext() {
+        return context;
+    }
+
     public int getPosition()
     {
         return position;
@@ -149,7 +154,7 @@ public class UserScenario
     {
         events.clear();
         events.addAll(new Events().parse(FileInput.getContent(filename)));
-        PlayerContext.getInstance().reset();
+        context.reset();
     }
 
     public void parseNextLine(String filename) throws IOException
@@ -160,7 +165,6 @@ public class UserScenario
         {
             events.addAll(result);
         }
-        //PlayerContext.getInstance().reset();
     }
 
     public long postProcessScenario()
@@ -199,7 +203,7 @@ public class UserScenario
         checks.stream().forEach(it -> {
             it = Boolean.FALSE;
         });
-        PlayerContext.getInstance().reset();
+        context.reset();
         position = 0;
     }
 

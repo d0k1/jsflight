@@ -3,7 +3,6 @@ package com.focusit.jsflight.player.script;
 import com.focusit.jsflight.player.controller.ScriptEventExectutionController;
 import com.focusit.jsflight.player.scenario.UserScenario;
 import com.focusit.script.ScriptEngine;
-import com.focusit.script.player.PlayerContext;
 import groovy.lang.Binding;
 import groovy.lang.Script;
 import groovy.text.SimpleTemplateEngine;
@@ -126,7 +125,7 @@ public class PlayerScriptProcessor
         }
 
         Binding binding = getBasicBinding();
-        binding.setVariable("context", PlayerContext.getInstance());
+        binding.setVariable("context", scenario.getContext());
         binding.setVariable("scenario", scenario);
         binding.setVariable("step", step);
         binding.setVariable("pre", pre);
@@ -141,10 +140,10 @@ public class PlayerScriptProcessor
         s.run();
     }
 
-    public JSONObject runStepTemplating(JSONObject step)
+    public JSONObject runStepTemplating(UserScenario scenario, JSONObject step)
     {
         SimpleTemplateEngine templateEngine = new SimpleTemplateEngine();
-        Binding binding = PlayerContext.getInstance().asBindings();
+        Binding binding = scenario.getContext().asBindings();
         JSONObject result = new JSONObject(step.toString());
         result.keySet().forEach(key -> {
             if (result.get(key) instanceof String)
