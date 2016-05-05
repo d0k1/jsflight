@@ -1,11 +1,15 @@
 package com.focusit.controllers;
 
 import com.focusit.model.Event;
+import com.focusit.model.Experiment;
+import com.focusit.model.ExperimentStatus;
 import com.focusit.model.Recording;
 import com.focusit.repository.EventRepository;
+import com.focusit.repository.ExperimentRepository;
 import com.focusit.repository.RecordingRepository;
 import com.google.gson.Gson;
 import org.apache.commons.io.IOUtils;
+import org.bson.types.ObjectId;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -24,7 +28,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Created by dkirpichenkov on 29.04.16.
@@ -39,27 +45,37 @@ public class PlayerController {
     private RecordingRepository recordingRepository;
     @Inject
     private EventRepository eventRepository;
+    @Inject
+    private ExperimentRepository experimnetRepository;
 
+    /**
+     * Get list of uploaded scenarios
+     *
+     *
+     * @return
+     */
     @RequestMapping(value = "/list", method= RequestMethod.GET)
     public List<Recording> getRecordings(){
-        return new ArrayList<>();
+
+        ArrayList result = new ArrayList();
+        recordingRepository.findAll().forEach(result::add);
+        return result;
     }
 
     /**
-     * example uploading scenario
-     * $ curl -F "name=test.json" -F "file=@./test.json" 127.0.0.1:8080/player/upload-scenario
+     * Uploading scenario.
+     * Parses uploaded file line by line and inserting events to mongodb
+     *
+     * $ curl -F "name=test.json" -F "file=@./test.json" 127.0.0.1:8080/player/upload
      * @param name
      * @param file
      * @param request
      * @param response
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/upload-scenario")
+    @RequestMapping(method = RequestMethod.POST, value = "/upload")
     public void uploadScenario(@RequestParam("name") String name,
                                @RequestParam("file") MultipartFile file, HttpServletRequest request, HttpServletResponse response){
-
-
         String array = "";
-        List<Event> lineEvents = null;
 
         Recording rec = recordingRepository.findByName(name);
         if(rec==null){
@@ -67,29 +83,53 @@ public class PlayerController {
             rec.setName(name);
             rec = recordingRepository.save(rec);
         }
+        Recording finalRec = rec;
+        Gson gson = new Gson();
+
+        List<CompletableFuture> operations = new ArrayList<>();
 
         try(InputStreamReader reader = new InputStreamReader(file.getInputStream(), "UTF-8")){
             try(BufferedReader buffered = IOUtils.toBufferedReader(reader)){
-                Gson gson = new Gson();
                 array = buffered.readLine();
-                while(array!=null) {
-                    JSONArray rawevents = new JSONArray(array);
-                    lineEvents = new ArrayList<>(rawevents.length());
 
-                    for (int i = 0; i < rawevents.length(); i++) {
-                        JSONObject event = new JSONObject(rawevents.get(i).toString());
-                        try {
-                            Event e = gson.fromJson(event.toString(), Event.class);
-                            if (e == null) {
-                                LOG.error("e==null.\n", event.toString(4));
-                                continue;
+                while(array!=null) {
+
+                    String finalArray = array;
+
+                    operations.add(CompletableFuture.supplyAsync(()->{
+                        List<Event> lineEvents = null;
+                        JSONArray events = new JSONArray(finalArray);
+                        lineEvents = new ArrayList<>(events.length());
+
+                        for (int i = 0; i < events.length(); i++) {
+                            JSONObject event = new JSONObject(events.get(i).toString());
+                            try {
+                                Event e = gson.fromJson(event.toString(), Event.class);
+                                if (e == null) {
+                                    LOG.error("e==null.\n", event.toString(4));
+                                    continue;
+                                }
+                                lineEvents.add(e);
+                            } catch (Throwable t) {
+                                LOG.error(t.toString(), t);
+                                throw t;
                             }
-                            lineEvents.add(e);
-                        } catch (Throwable t) {
-                            LOG.error(t.toString(), t);
-                            throw t;
                         }
-                    }
+
+                        lineEvents.forEach(event->{
+                            event.setRecordingId(finalRec.getId());
+                            event.setRecordName(finalRec.getName());
+                        });
+
+                        eventRepository.save(lineEvents);
+
+                        return true;
+                    }).whenCompleteAsync((aBoolean, throwable) -> {
+                        if(throwable!=null){
+                            LOG.error(throwable.toString(), throwable);
+                        }
+                    }));
+
                     array = buffered.readLine();
                 }
             }
@@ -99,46 +139,138 @@ public class PlayerController {
             e.printStackTrace();
         }
 
-        Recording finalRec = rec;
-        lineEvents.forEach(event->{
-            event.setRecordingId(finalRec.getId());
-            event.setRecordName(finalRec.getName());
+
+        response.setStatus(HttpServletResponse.SC_OK);
+        CompletableFuture.allOf(operations.toArray(new CompletableFuture[operations.size()])).whenComplete((aVoid, throwable) -> {
+            if(throwable!=null){
+                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            }
         });
-        eventRepository.save(lineEvents);
-
-        response.setStatus(HttpServletResponse.SC_OK);
     }
 
-    @RequestMapping(value = "/select")
-    public void selectScenario(@RequestParam("name") String name, HttpServletRequest request, HttpServletResponse response){
-        response.setStatus(HttpServletResponse.SC_OK);
+    /**
+     * Get list of current runnable experiments
+     *
+     * $ curl 127.0.0.1:8080/player/experiments
+     */
+    @RequestMapping(value = "/experiments", method = RequestMethod.GET)
+    public List<Experiment> experiments(){
+        ArrayList<Experiment> result = new ArrayList<>();
+        experimnetRepository.findAll().forEach(result::add);
+        return result;
     }
 
-    public void playScenario(){
+    /**
+     * Play a scenario
+     *
+     * $ curl "127.0.0.1:8080/player/start?recordingId=572b01abc92e6b697f9d9ab2"
+     *
+     * @param recordingId id of existing recording
+     * @return
+     */
+    @RequestMapping(value = "/start", method = RequestMethod.GET)
+    public Experiment start(@RequestParam("recordingId")String recordingId,
+                            @RequestParam(value = "withScreenshots", defaultValue="false") Boolean withScreenshots) {
+        Recording rec = recordingRepository.findOne(new ObjectId(recordingId));
+        if(rec==null){
+            throw new IllegalArgumentException("no recording found for id "+recordingId);
+        }
+
+        Experiment experiment = new Experiment();
+        experiment.setCreated(new Date());
+        experiment.setRecordingName(rec.getName());
+        experiment.setRecordingId(rec.getId());
+        experiment.setScreenshots(withScreenshots);
+
+        experiment.getStatus().setPosition(0L);
+        experiment.getStatus().setLimit(0L);
+        experiment.getStatus().setPlaying(true);
+
+        experimnetRepository.save(experiment);
+        return experiment;
+    }
+
+    /**
+     * Get current experiment status: is it played, what is current step
+     *
+     * @param experimentId
+     */
+    @RequestMapping(value = "/status", method = RequestMethod.GET)
+    public ExperimentStatus status(@RequestParam("experimentId")String experimentId)
+    {
+        Experiment experiment = experimnetRepository.findOne(new ObjectId(experimentId));
+
+        if(experiment==null){
+            throw new IllegalArgumentException("no experiment found for id "+experimentId);
+        }
+
+        return experiment.getStatus();
+    }
+
+    /**
+     * Get screenshot after some step in experiment
+     *
+     * @param experimentId
+     * @param step
+     */
+    @RequestMapping(value = "/screenshot", method = RequestMethod.GET)
+    public void screenshot(@RequestParam("experimentId")String experimentId, @RequestParam("step") Long step)
+    {
 
     }
 
-    public void getScenarioPosition(){
+    /**
+     * Skip some steps or go backward in experiment
+     *
+     * @param experimentId
+     * @param step
+     */
+    @RequestMapping(value = "/move", method = RequestMethod.GET)
+    public void move(@RequestParam("experimentId")String experimentId, @RequestParam("step") Long step)
+    {
 
     }
 
-    public void getScenarioScreenshot(){
+    /**
+     * Pause playing the scenario
+     *
+     * @param experimentId
+     */
+    @RequestMapping(value = "/pause", method = RequestMethod.GET)
+    public void pause(@RequestParam("experimentId")String experimentId)
+    {
 
     }
 
-    public void resumeScenario(){
+    /**
+     * Continue playing the scenario
+     *
+     * @param experimentId
+     */
+    @RequestMapping(value = "/resume", method = RequestMethod.GET)
+    public void resume(@RequestParam("experimentId")String experimentId)
+    {
 
     }
 
-    public void setScenarioPosition(){
+    /**
+     * Stop playing scenario at all
+     * @param experimentId
+     */
+    @RequestMapping(value = "/cancel", method = RequestMethod.GET)
+    public void cancel(@RequestParam("experimentId")String experimentId)
+    {
 
     }
 
-    public void stopScenario(){
-
-    }
-
-    public void pauseScenario(){
+    /**
+     * Check if the App can be terminated without any troubles.
+     * Checks all opened browsers and determine if them can be freely closed
+     * @param experimentId
+     */
+    @RequestMapping(value = "/terminable", method = RequestMethod.GET)
+    public void terminable(@RequestParam("experimentId")String experimentId)
+    {
 
     }
 }

@@ -14,22 +14,22 @@ import java.util.List;
 public class Event {
 
     public class UiRectangle{
-        Integer width;
-        Integer height;
+        Float width;
+        Float height;
 
-        public Integer getWidth() {
+        public Float getWidth() {
             return width;
         }
 
-        public void setWidth(Integer width) {
+        public void setWidth(Float width) {
             this.width = width;
         }
 
-        public Integer getHeight() {
+        public Float getHeight() {
             return height;
         }
 
-        public void setHeight(Integer height) {
+        public void setHeight(Float height) {
             this.height = height;
         }
     }
@@ -170,18 +170,18 @@ public class Event {
     UiRectangle screen;
     UiRectangle window;
     UiRectangle page;
-    Integer pageX;
-    Integer pageY;
-    Integer screenX;
-    Integer screenY;
+    Float pageX;
+    Float pageY;
+    Float screenX;
+    Float screenY;
 
 
     public ObjectId getRecordingId() {
         return recordingId;
     }
 
-    public void setRecordingId(ObjectId recordingId) {
-        this.recordingId = recordingId;
+    public void setRecordingId(String recordingId) {
+        this.recordingId = new ObjectId(recordingId);
     }
 
     public String getAgent() {
@@ -344,35 +344,35 @@ public class Event {
         this.page = page;
     }
 
-    public Integer getPageX() {
+    public Float getPageX() {
         return pageX;
     }
 
-    public void setPageX(Integer pageX) {
+    public void setPageX(Float pageX) {
         this.pageX = pageX;
     }
 
-    public Integer getPageY() {
+    public Float getPageY() {
         return pageY;
     }
 
-    public void setPageY(Integer pageY) {
+    public void setPageY(Float pageY) {
         this.pageY = pageY;
     }
 
-    public Integer getScreenX() {
+    public Float getScreenX() {
         return screenX;
     }
 
-    public void setScreenX(Integer screenX) {
+    public void setScreenX(Float screenX) {
         this.screenX = screenX;
     }
 
-    public Integer getScreenY() {
+    public Float getScreenY() {
         return screenY;
     }
 
-    public void setScreenY(Integer screenY) {
+    public void setScreenY(Float screenY) {
         this.screenY = screenY;
     }
 
