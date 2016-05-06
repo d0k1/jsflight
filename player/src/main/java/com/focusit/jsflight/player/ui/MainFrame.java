@@ -1,7 +1,6 @@
 package com.focusit.jsflight.player.ui;
 
 import com.focusit.jmeter.JMeterRecorder;
-import com.focusit.jmeter.JMeterScriptProcessor;
 import com.focusit.jsflight.player.controller.*;
 import com.focusit.jsflight.player.input.FileInput;
 import com.focusit.jsflight.player.scenario.ScenarioProcessor;
@@ -87,6 +86,7 @@ public class MainFrame
     {
         initialize();
         jmeter.init();
+        scenario.getContext().setJMeterBridge(jmeter.getBridge());
     }
 
     public AbstractTableModel createEventTableModel()
@@ -1043,8 +1043,8 @@ public class MainFrame
             {
                 try
                 {
-                    JMeterScriptProcessor.setProcessScript(stepProcessScript.getText());
-                    JMeterScriptProcessor.setRecordingScript(scenarioProcessScript.getText());
+                    jmeter.getScriptProcessor().setProcessScript(stepProcessScript.getText());
+                    jmeter.getScriptProcessor().setRecordingScript(scenarioProcessScript.getText());
                     jmeter.reset();
                 }
                 catch (IOException e1)
@@ -1318,6 +1318,7 @@ public class MainFrame
 
     private void initUIFromJMeterController()
     {
+        JMeterController.getInstance().syncScripts(jmeter);
         stepProcessScript.setText(JMeterController.getInstance().getStepProcessorScript());
         scenarioProcessScript.setText(JMeterController.getInstance().getScenarioProcessorScript());
     }
@@ -1411,8 +1412,8 @@ public class MainFrame
 
     private void updateJMeterController()
     {
-        JMeterController.getInstance().setStepProcessorScript(stepProcessScript.getText());
-        JMeterController.getInstance().setScenarioProcessorScript(scenarioProcessScript.getText());
+        JMeterController.getInstance().setStepProcessorScript(jmeter, stepProcessScript.getText());
+        JMeterController.getInstance().setScenarioProcessorScript(jmeter, scenarioProcessScript.getText());
     }
 
     private void updateOptionsController()

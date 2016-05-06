@@ -10,22 +10,16 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class JMeterJSFlightBridge
 {
-    private static final JMeterJSFlightBridge instance = new JMeterJSFlightBridge();
     public final JSONObject NO_SCENARIO_STEP;
     public static String TAG_FIELD = "uuid";
     private final ConcurrentHashMap<Object, JSONObject> samplersEvents = new ConcurrentHashMap<>();
     private JSONObject currentScenarioStep;
 
-    private JMeterJSFlightBridge()
+    public JMeterJSFlightBridge()
     {
         NO_SCENARIO_STEP = new JSONObject();
         NO_SCENARIO_STEP.put("DO NOT USE IT", true);
         currentScenarioStep = NO_SCENARIO_STEP;
-    }
-
-    public static JMeterJSFlightBridge getInstace()
-    {
-        return instance;
     }
 
     public void addSampler(Object sampler)

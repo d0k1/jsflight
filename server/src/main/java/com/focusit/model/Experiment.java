@@ -27,6 +27,10 @@ public class Experiment {
     @Indexed
     private String recordingName;
 
+    private String tag;
+
+    private String tagHash;
+
     private String selectQuery = "";
 
     private Boolean screenshots = false;

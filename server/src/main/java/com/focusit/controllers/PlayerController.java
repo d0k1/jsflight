@@ -164,13 +164,15 @@ public class PlayerController {
      * Play a scenario
      *
      * $ curl "127.0.0.1:8080/player/start?recordingId=572b01abc92e6b697f9d9ab2"
-     *
+     * $ curl "127.0.0.1:8080/player/start?recordingId=572b01abc92e6b697f9d9ab2&withScreenshots=true&paused=true"
+     * $ curl "127.0.0.1:8080/player/start?recordingId=572b01abc92e6b697f9d9ab2&paused=true"
      * @param recordingId id of existing recording
      * @return
      */
     @RequestMapping(value = "/start", method = RequestMethod.GET)
     public Experiment start(@RequestParam("recordingId")String recordingId,
-                            @RequestParam(value = "withScreenshots", defaultValue="false") Boolean withScreenshots) {
+                            @RequestParam(value = "withScreenshots", defaultValue="false") Boolean withScreenshots,
+                            @RequestParam(value = "paused", defaultValue="false") Boolean paused) {
         Recording rec = recordingRepository.findOne(new ObjectId(recordingId));
         if(rec==null){
             throw new IllegalArgumentException("no recording found for id "+recordingId);
@@ -184,7 +186,10 @@ public class PlayerController {
 
         experiment.getStatus().setPosition(0L);
         experiment.getStatus().setLimit(0L);
-        experiment.getStatus().setPlaying(true);
+
+        if(!Boolean.TRUE.equals(paused)) {
+            experiment.getStatus().setPlaying(true);
+        }
 
         experimnetRepository.save(experiment);
         return experiment;

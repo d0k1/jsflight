@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * Class that really replays an event in given scenario and given selenium driver
  * Created by doki on 05.05.16.
  */
 public class ScenarioProcessor {

@@ -18,6 +18,7 @@ package org.apache.jmeter.protocol.http.proxy;
  *
  */
 
+import com.focusit.jmeter.JMeterRecorder;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.IOUtils;
@@ -32,7 +33,6 @@ import org.apache.jmeter.control.GenericController;
 import org.apache.jmeter.control.gui.LogicControllerGui;
 import org.apache.jmeter.control.gui.TransactionControllerGui;
 import org.apache.jmeter.engine.util.ValueReplacer;
-import org.apache.jmeter.exceptions.IllegalUserActionException;
 import org.apache.jmeter.functions.InvalidVariableException;
 import org.apache.jmeter.gui.tree.JMeterTreeNode;
 import org.apache.jmeter.protocol.http.control.AuthManager;
@@ -187,6 +187,11 @@ public class JMeterProxyControl extends GenericController {
 
     // If this is defined, it is assumed to be the alias of a user-supplied certificate; overrides dynamic mode
     private static final String CERT_ALIAS = JMeterUtils.getProperty("proxy.cert.alias"); // $NON-NLS-1$
+    private final JMeterRecorder recorder;
+
+    public JMeterRecorder getRecorder() {
+        return recorder;
+    }
 
     public enum KeystoreMode {
         USER_KEYSTORE,   // user-provided keystore
@@ -259,11 +264,12 @@ public class JMeterProxyControl extends GenericController {
 
     private String keyPassword;
 
-    public JMeterProxyControl() {
+    public JMeterProxyControl(JMeterRecorder jMeterRecorder) {
         setPort(DEFAULT_PORT);
         setExcludeList(new HashSet<String>());
         setIncludeList(new HashSet<String>());
         setCaptureHttpHeaders(true); // maintain original behaviour
+        this.recorder = jMeterRecorder;
     }
 
     public void setPort(int port) {
@@ -529,13 +535,6 @@ public class JMeterProxyControl extends GenericController {
             }
             if (filterContentType(result) && filterUrl(sampler)) {
                 TestElement myTarget = target;
-//                @SuppressWarnings("unchecked") // OK, because find only returns correct element types
-//                Collection<ConfigTestElement> defaultConfigurations = (Collection<ConfigTestElement>) findApplicableElements(myTarget, ConfigTestElement.class, false);
-//                @SuppressWarnings("unchecked") // OK, because find only returns correct element types
-//                Collection<Arguments> userDefinedVariables = (Collection<Arguments>) findApplicableElements(myTarget, Arguments.class, true);
-
-//                removeValuesFromSampler(sampler, defaultConfigurations);
-//                replaceValues(sampler, subConfigs, userDefinedVariables);
                 sampler.setAutoRedirects(samplerRedirectAutomatically);
                 sampler.setFollowRedirects(samplerFollowRedirects);
                 sampler.setUseKeepAlive(useKeepAlive);
@@ -553,12 +552,6 @@ public class JMeterProxyControl extends GenericController {
                 notifySampleListeners = notifyChildSamplerListenersOfFilteredSamples;
                 result.setSampleLabel("["+result.getSampleLabel()+"]");
             }
-        }
-        if(notifySampleListeners) {
-            // SampleEvent is not passed JMeterVariables, because they don't make sense for Proxy Recording
-//            notifySampleListeners(new SampleEvent(result, "WorkBench")); // TODO - is this the correct threadgroup name?
-        } else {
-            log.debug("Sample not delivered to Child Sampler Listener based on url or content-type: " + result.getUrlAsString() + " - " + result.getContentType());
         }
     }
 
@@ -754,310 +747,7 @@ public class JMeterProxyControl extends GenericController {
         return true;
     }
 
-    /**
-     * Find if there is any AuthManager in JMeterTreeModel
-     * If there is no one, create and add it to tree
-     * Add authorization object to AuthManager
-     * @param authorization {@link Authorization}
-     * @param target {@link JMeterTreeNode}
-     */
-//    private void setAuthorization(Authorization authorization, JMeterTreeNode target) {
-//        JMeterTreeModel jmeterTreeModel = GuiPackage.getInstance().getTreeModel();
-//        List<JMeterTreeNode> authManagerNodes = jmeterTreeModel.getNodesOfType(AuthManager.class);
-//        if (authManagerNodes.size() == 0) {
-//            try {
-//                log.debug("Creating HTTP Authentication manager for authorization:"+authorization);
-//                AuthManager authManager = newAuthorizationManager(authorization);
-//                jmeterTreeModel.addComponent(authManager, target);
-//            } catch (IllegalUserActionException e) {
-//                log.error("Failed to add Authorization Manager to target node:" + target.getName(), e);
-//            }
-//        } else{
-//            AuthManager authManager=(AuthManager)authManagerNodes.get(0).getTestElement();
-//            authManager.addAuth(authorization);
-//        }
-//    }
 
-    /**
-     * Helper method to add a Response Assertion
-     * Called from AWT Event thread
-     */
-//    private void addAssertion(JMeterTreeModel model, JMeterTreeNode node) throws IllegalUserActionException {
-//        ResponseAssertion ra = new ResponseAssertion();
-//        ra.setProperty(TestElement.GUI_CLASS, ASSERTION_GUI);
-//        ra.setName(JMeterUtils.getResString("assertion_title")); // $NON-NLS-1$
-//        ra.setTestFieldResponseData();
-//        model.addComponent(ra, node);
-//    }
-
-    /**
-     * Construct AuthManager
-     * @param authorization
-     * @return AuthManager
-     * @throws IllegalUserActionException
-     */
-    private AuthManager newAuthorizationManager(Authorization authorization) throws IllegalUserActionException {
-        AuthManager authManager = new AuthManager();
-        authManager.setProperty(TestElement.GUI_CLASS, AUTH_PANEL);
-        authManager.setProperty(TestElement.TEST_CLASS, AUTH_MANAGER);
-        authManager.setName("HTTP Authorization Manager");
-        authManager.addAuth(authorization);
-        return authManager;
-    }
-
-    /**
-     * Helper method to add a Divider
-     * Called from Application Thread that needs to update GUI (JMeterTreeModel)
-     */
-//    private void addDivider(final JMeterTreeModel model, final JMeterTreeNode node) {
-//        final GenericController sc = new GenericController();
-//        sc.setProperty(TestElement.GUI_CLASS, LOGIC_CONTROLLER_GUI);
-//        sc.setName("-------------------"); // $NON-NLS-1$
-//        JMeterUtils.runSafe(new Runnable() {
-//            @Override
-//            public void run() {
-//                try {
-//                    model.addComponent(sc, node);
-//                } catch (IllegalUserActionException e) {
-//                    log.error("Program error", e);
-//                    throw new Error(e);
-//                }
-//            }
-//        });
-//    }
-
-    /**
-     * Helper method to add a Simple Controller to contain the samplers.
-     * Called from Application Thread that needs to update GUI (JMeterTreeModel)
-     * @param model
-     *            Test component tree model
-     * @param node
-     *            Node in the tree where we will add the Controller
-     * @param name
-     *            A name for the Controller
-     * @throws InvocationTargetException
-     * @throws InterruptedException
-     */
-//    private void addSimpleController(final JMeterTreeModel model, final JMeterTreeNode node, String name)
-//            throws InterruptedException, InvocationTargetException {
-//        final GenericController sc = new GenericController();
-//        sc.setProperty(TestElement.GUI_CLASS, LOGIC_CONTROLLER_GUI);
-//        sc.setName(name);
-//        JMeterUtils.runSafe(new Runnable() {
-//            @Override
-//            public void run() {
-//                try {
-//                    model.addComponent(sc, node);
-//                } catch (IllegalUserActionException e) {
-//                     log.error("Program error", e);
-//                     throw new Error(e);
-//                }
-//            }
-//        });
-//    }
-
-    /**
-     * Helper method to add a Transaction Controller to contain the samplers.
-     * Called from Application Thread that needs to update GUI (JMeterTreeModel)
-     * @param model
-     *            Test component tree model
-     * @param node
-     *            Node in the tree where we will add the Controller
-     * @param name
-     *            A name for the Controller
-     * @throws InvocationTargetException
-     * @throws InterruptedException
-     */
-//    private void addTransactionController(final JMeterTreeModel model, final JMeterTreeNode node, String name)
-//            throws InterruptedException, InvocationTargetException {
-//        final TransactionController sc = new TransactionController();
-//        sc.setIncludeTimers(false);
-//        sc.setProperty(TestElement.GUI_CLASS, TRANSACTION_CONTROLLER_GUI);
-//        sc.setName(name);
-//        JMeterUtils.runSafe(new Runnable() {
-//            @Override
-//            public void run() {
-//                 try {
-//                    model.addComponent(sc, node);
-//                } catch (IllegalUserActionException e) {
-//                    log.error("Program error", e);
-//                    throw new Error(e);
-//                }
-//            }
-//        });
-//    }
-    /**
-     * Helpler method to replicate any timers found within the Proxy Controller
-     * into the provided sampler, while replacing any occurences of string _T_
-     * in the timer's configuration with the provided deltaT.
-     * Called from AWT Event thread
-     * @param model
-     *            Test component tree model
-     * @param node
-     *            Sampler node in where we will add the timers
-     * @param deltaT
-     *            Time interval from the previous request
-     */
-//    private void addTimers(JMeterTreeModel model, JMeterTreeNode node, long deltaT) {
-//        TestPlan variables = new TestPlan();
-//        variables.addParameter("T", Long.toString(deltaT)); // $NON-NLS-1$
-//        ValueReplacer replacer = new ValueReplacer(variables);
-//        JMeterTreeNode mySelf = model.getNodeOf(this);
-//        Enumeration<JMeterTreeNode> children = mySelf.children();
-//        while (children.hasMoreElements()) {
-//            JMeterTreeNode templateNode = children.nextElement();
-//            if (templateNode.isEnabled()) {
-//                TestElement template = templateNode.getTestElement();
-//                if (template instanceof Timer) {
-//                    TestElement timer = (TestElement) template.clone();
-//                    try {
-//                        replacer.undoReverseReplace(timer);
-//                        model.addComponent(timer, node);
-//                    } catch (InvalidVariableException e) {
-//                        // Not 100% sure, but I believe this can't happen, so
-//                        // I'll log and throw an error:
-//                        log.error("Program error", e);
-//                        throw new Error(e);
-//                    } catch (IllegalUserActionException e) {
-//                        // Not 100% sure, but I believe this can't happen, so
-//                        // I'll log and throw an error:
-//                        log.error("Program error", e);
-//                        throw new Error(e);
-//                    }
-//                }
-//            }
-//        }
-//    }
-
-    /**
-     * Finds the first enabled node of a given type in the tree.
-     *
-     * @param type
-     *            class of the node to be found
-     *
-     * @return the first node of the given type in the test component tree, or
-     *         <code>null</code> if none was found.
-     */
-//    private JMeterTreeNode findFirstNodeOfType(Class<?> type) {
-//        JMeterTreeModel treeModel = GuiPackage.getInstance().getTreeModel();
-//        List<JMeterTreeNode> nodes = treeModel.getNodesOfType(type);
-//        for (JMeterTreeNode node : nodes) {
-//            if (node.isEnabled()) {
-//                return node;
-//            }
-//        }
-//        return null;
-//    }
-
-    /**
-     * Finds the controller where samplers have to be stored, that is:
-     * <ul>
-     * <li>The controller specified by the <code>target</code> property.
-     * <li>If none was specified, the first RecordingController in the tree.
-     * <li>If none is found, the first AbstractThreadGroup in the tree.
-     * <li>If none is found, the Workspace.
-     * </ul>
-     *
-     * @return the tree node for the controller where the proxy must store the
-     *         generated samplers.
-     */
-//    public TestElement findTargetControllerNode() {
-//        JMeterTreeNode myTarget = getTarget();
-//        if (myTarget != null) {
-//            return myTarget;
-//        }
-//        myTarget = findFirstNodeOfType(RecordingController.class);
-//        if (myTarget != null) {
-//            return myTarget;
-//        }
-//        myTarget = findFirstNodeOfType(AbstractThreadGroup.class);
-//        if (myTarget != null) {
-//            return myTarget;
-//        }
-//        myTarget = findFirstNodeOfType(WorkBench.class);
-//        if (myTarget != null) {
-//            return myTarget;
-//        }
-//        log.error("Program error: test script recording target not found.");
-//        return null;
-//    }
-
-    /**
-     * Finds all configuration objects of the given class applicable to the
-     * recorded samplers, that is:
-     * <ul>
-     * <li>All such elements directly within the HTTP(S) Test Script Recorder (these have
-     * the highest priority).
-     * <li>All such elements directly within the target controller (higher
-     * priority) or directly within any containing controller (lower priority),
-     * including the Test Plan itself (lowest priority).
-     * </ul>
-     *
-     * @param myTarget
-     *            tree node for the recording target controller.
-     * @param myClass
-     *            Class of the elements to be found.
-     * @param ascending
-     *            true if returned elements should be ordered in ascending
-     *            priority, false if they should be in descending priority.
-     *
-     * @return a collection of applicable objects of the given class.
-     */
-    // TODO - could be converted to generic class?
-//    private Collection<?> findApplicableElements(TestElement myTarget, Class<? extends TestElement> myClass, boolean ascending) {
-//        LinkedList<TestElement> elements = new LinkedList<>();
-//
-//        // Look for elements directly within the HTTP proxy:
-//        Enumeration<?> kids = myTarget.  .children();
-//        while (kids.hasMoreElements()) {
-//            JMeterTreeNode subNode = (JMeterTreeNode) kids.nextElement();
-//            if (subNode.isEnabled()) {
-//                TestElement element = (TestElement) subNode.getUserObject();
-//                if (myClass.isInstance(element)) {
-//                    if (ascending) {
-//                        elements.addFirst(element);
-//                    } else {
-//                        elements.add(element);
-//                    }
-//                }
-//            }
-//        }
-//
-        // Look for arguments elements in the target controller or higher up:
-//        for (JMeterTreeNode controller = myTarget; controller != null; controller = (JMeterTreeNode) controller
-//                .getParent()) {
-//            kids = controller.children();
-//            while (kids.hasMoreElements()) {
-//                JMeterTreeNode subNode = (JMeterTreeNode) kids.nextElement();
-//                if (subNode.isEnabled()) {
-//                    TestElement element = (TestElement) subNode.getUserObject();
-//                    if (myClass.isInstance(element)) {
-//                        log.debug("Applicable: " + element.getName());
-//                        if (ascending) {
-//                            elements.addFirst(element);
-//                        } else {
-//                            elements.add(element);
-//                        }
-//                    }
-//
-//                    // Special case for the TestPlan's Arguments sub-element:
-//                    if (element instanceof TestPlan) {
-//                        TestPlan tp = (TestPlan) element;
-//                        Arguments args = tp.getArguments();
-//                        if (myClass.isInstance(args)) {
-//                            if (ascending) {
-//                                elements.addFirst(args);
-//                            } else {
-//                                elements.add(args);
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//
-//        return elements;
-//    }
 
     private void placeSampler(final HTTPSamplerBase sampler, final TestElement[] subConfigs,
             final TestElement myTarget) {
@@ -1177,67 +867,6 @@ public class JMeterProxyControl extends GenericController {
             log.warn("Invalid variables included for replacement into recorded " + "sample", e);
         }
     }
-
-    /**
-     * This will notify sample listeners directly within the Proxy of the
-     * sampling that just occured -- so that we have a means to record the
-     * server's responses as we go.
-     *
-     * @param event
-     *            sampling event to be delivered
-     */
-//    private void notifySampleListeners(SampleEvent event) {
-//        JMeterTreeModel treeModel = GuiPackage.getInstance().getTreeModel();
-//        JMeterTreeNode myNode = treeModel.getNodeOf(this);
-//        Enumeration<JMeterTreeNode> kids = myNode.children();
-//        while (kids.hasMoreElements()) {
-//            JMeterTreeNode subNode = kids.nextElement();
-//            if (subNode.isEnabled()) {
-//                TestElement testElement = subNode.getTestElement();
-//                if (testElement instanceof SampleListener) {
-//                    ((SampleListener) testElement).sampleOccurred(event);
-//                }
-//            }
-//        }
-//    }
-
-    /**
-     * This will notify test listeners directly within the Proxy that the 'test'
-     * (here meaning the proxy recording) has started.
-     */
-//    private void notifyTestListenersOfStart() {
-//        JMeterTreeModel treeModel = GuiPackage.getInstance().getTreeModel();
-//        JMeterTreeNode myNode = treeModel.getNodeOf(this);
-//        Enumeration<JMeterTreeNode> kids = myNode.children();
-//        while (kids.hasMoreElements()) {
-//            JMeterTreeNode subNode = kids.nextElement();
-//            if (subNode.isEnabled()) {
-//                TestElement testElement = subNode.getTestElement();
-//                if (testElement instanceof TestStateListener) {
-//                    ((TestStateListener) testElement).testStarted();
-//                }
-//            }
-//        }
-//    }
-
-    /**
-     * This will notify test listeners directly within the Proxy that the 'test'
-     * (here meaning the proxy recording) has ended.
-     */
-//    private void notifyTestListenersOfEnd() {
-//        JMeterTreeModel treeModel = GuiPackage.getInstance().getTreeModel();
-//        JMeterTreeNode myNode = treeModel.getNodeOf(this);
-//        Enumeration<JMeterTreeNode> kids = myNode.children();
-//        while (kids.hasMoreElements()) {
-//            JMeterTreeNode subNode = kids.nextElement();
-//            if (subNode.isEnabled()) {
-//                TestElement testElement = subNode.getTestElement();
-//                if (testElement instanceof TestStateListener) { // TL - TE
-//                    ((TestStateListener) testElement).testEnded();
-//                }
-//            }
-//        }
-//    }
 
     @Override
     public boolean canRemove() {

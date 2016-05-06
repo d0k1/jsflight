@@ -17,7 +17,7 @@ public class ScriptsClassLoader extends URLClassLoader {
     private static final Map<String, Object> classes = new ConcurrentHashMap<>();
     private static final Logger log = LoggerFactory.getLogger(ScriptsClassLoader.class);
 
-    private static URL urls[];
+    private static URL urls[] = new URL[]{};
 
     static {
         if(System.getProperty("cp")!=null){

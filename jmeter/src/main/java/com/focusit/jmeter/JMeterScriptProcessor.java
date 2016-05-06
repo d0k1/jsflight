@@ -1,8 +1,6 @@
 package com.focusit.jmeter;
 
 import com.focusit.script.ScriptEngine;
-import com.focusit.script.jmeter.JMeterJSFlightBridge;
-import com.focusit.script.jmeter.JMeterRecorderContext;
 import groovy.lang.Binding;
 import groovy.lang.Script;
 import org.apache.jmeter.config.Arguments;
@@ -17,35 +15,32 @@ import org.slf4j.LoggerFactory;
  * Created by doki on 25.03.16.
  */
 public class JMeterScriptProcessor {
-    private final static JMeterScriptProcessor instance = new JMeterScriptProcessor();
     private static final Logger log = LoggerFactory.getLogger(JMeterScriptProcessor.class);
     // script called at recording phase. Can skip sample
-    private static String recordingScript;
+    private String recordingScript;
     // script callled at storing phase. Can skip sample
-    private static String processScript;
+    private String processScript;
+    private JMeterRecorder recorder;
 
-    private JMeterScriptProcessor(){
+    public JMeterScriptProcessor(JMeterRecorder recorder){
 
+        this.recorder = recorder;
     }
 
-    public static JMeterScriptProcessor getInstance(){
-        return instance;
-    }
-
-    public static String getRecordingScript() {
+    public String getRecordingScript() {
         return recordingScript;
     }
 
-    public static void setRecordingScript(String recordingScript) {
-        JMeterScriptProcessor.recordingScript = recordingScript;
+    public void setRecordingScript(String recordingScript) {
+        this.recordingScript = recordingScript;
     }
 
-    public static String getProcessScript() {
+    public String getProcessScript() {
         return processScript;
     }
 
-    public static void setProcessScript(String processScript) {
-        JMeterScriptProcessor.processScript = processScript;
+    public void setProcessScript(String processScript) {
+        this.processScript = processScript;
     }
 
     /**
@@ -60,8 +55,8 @@ public class JMeterScriptProcessor {
         binding.setVariable("logger", log);
         binding.setVariable("request", sampler);
         binding.setVariable("response", result);
-        binding.setVariable("ctx", JMeterRecorderContext.getInstance());
-        binding.setVariable("jsflight", JMeterJSFlightBridge.getInstace());
+        binding.setVariable("ctx", recorder.getContext());
+        binding.setVariable("jsflight", recorder.getBridge());
         binding.setVariable("classloader", ScriptEngine.getInstance().getClassLoader());
 
         boolean isOk = true;
@@ -95,8 +90,8 @@ public class JMeterScriptProcessor {
         binding.setVariable("logger", log);
         binding.setVariable("sample", sample);
         binding.setVariable("tree", tree);
-        binding.setVariable("ctx", JMeterRecorderContext.getInstance());
-        binding.setVariable("jsflight", JMeterJSFlightBridge.getInstace());
+        binding.setVariable("ctx", recorder.getContext());
+        binding.setVariable("jsflight", recorder.getBridge());
         binding.setVariable("vars", userVariables);
         binding.setVariable("classloader", ScriptEngine.getInstance().getClassLoader());
 
@@ -108,4 +103,7 @@ public class JMeterScriptProcessor {
         compiledProcessScript.run();
     }
 
+    public JMeterRecorder getRecorder() {
+        return recorder;
+    }
 }

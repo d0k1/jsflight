@@ -1,7 +1,6 @@
 package com.focusit.jsflight.player.cli;
 
 import com.focusit.jmeter.JMeterRecorder;
-import com.focusit.jmeter.JMeterScriptProcessor;
 import com.focusit.jsflight.player.controller.DuplicateHandlerController;
 import com.focusit.jsflight.player.controller.OptionsController;
 import com.focusit.jsflight.player.controller.ScriptEventExectutionController;
@@ -53,7 +52,7 @@ public class CliPlayer
         scenario.parse(config.getPathToRecording());
         scenario.postProcessScenario();
         seleniumDriver = new SeleniumDriver(scenario);
-
+        scenario.getContext().setJMeterBridge(jmeter.getBridge());
         if (config.isEnableRecording())
         {
             jmeter.setProxyPort(Integer.parseInt(config.getProxyPort()));
@@ -79,16 +78,14 @@ public class CliPlayer
     {
         if (this.config.getJmeterStepPreprocess() != null && !this.config.getJmeterStepPreprocess().trim().isEmpty())
         {
-            JMeterScriptProcessor.getInstance();
-            JMeterScriptProcessor.setRecordingScript(
+            jmeter.getScriptProcessor().setRecordingScript(
                     new String(Files.readAllBytes(Paths.get(config.getJmeterStepPreprocess().trim())), "UTF-8"));
         }
 
         if (this.config.getJmeterScenarioPreprocess() != null
                 && !this.config.getJmeterScenarioPreprocess().trim().isEmpty())
         {
-            JMeterScriptProcessor.getInstance();
-            JMeterScriptProcessor.setProcessScript(
+            jmeter.getScriptProcessor().setProcessScript(
                     new String(Files.readAllBytes(Paths.get(config.getJmeterScenarioPreprocess().trim())), "UTF-8"));
         }
 

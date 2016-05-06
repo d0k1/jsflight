@@ -1,7 +1,6 @@
 package org.apache.jmeter.protocol.http.proxy;
 
-import com.focusit.jmeter.JMeterScriptProcessor;
-import com.focusit.script.jmeter.JMeterJSFlightBridge;
+import com.focusit.jmeter.JMeterRecorder;
 import org.apache.jmeter.protocol.http.control.HeaderManager;
 import org.apache.jmeter.protocol.http.parser.HTMLParseException;
 import org.apache.jmeter.protocol.http.sampler.HTTPSamplerBase;
@@ -62,6 +61,8 @@ public class JMeterProxy extends Thread
     private static final HashMap<String, SSLSocketFactory> HOST2SSL_SOCK_FAC = new HashMap<String, SSLSocketFactory>();
 
     private static final SamplerCreatorFactory SAMPLERFACTORY = new SamplerCreatorFactory();
+
+    private JMeterRecorder recorder;
 
     static
     {
@@ -288,10 +289,10 @@ public class JMeterProxy extends Thread
 
                 if(sampler!=null) {
                     logger.error(Thread.currentThread().getName() + ":" + "//////////// Scripting " + sampler.getName() + " hash " + System.identityHashCode(sampler));
-                    if (JMeterScriptProcessor.getInstance().processSampleDuringRecord(sampler, result)) {
-                        if (!JMeterJSFlightBridge.getInstace().isCurrentStepEmpty()) {
+                    if (target.getRecorder().getScriptProcessor().processSampleDuringRecord(sampler, result)) {
+                        if (!target.getRecorder().getBridge().isCurrentStepEmpty()) {
                             // save link to JSFlight event
-                            JMeterJSFlightBridge.getInstace().addSampler(sampler);
+                            target.getRecorder().getBridge().addSampler(sampler);
                         }
 
                         target.deliverSampler(sampler,
@@ -719,5 +720,13 @@ public class JMeterProxy extends Thread
                 log.warn(port + "Error while closing socket", ex);
             }
         }
+    }
+
+    public JMeterRecorder getRecorder() {
+        return recorder;
+    }
+
+    public void setRecorder(JMeterRecorder recorder) {
+        this.recorder = recorder;
     }
 }

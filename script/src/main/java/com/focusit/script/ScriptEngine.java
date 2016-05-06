@@ -1,8 +1,10 @@
 package com.focusit.script;
 
+import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
 import groovy.lang.Script;
 
+import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -13,18 +15,20 @@ import java.util.concurrent.ConcurrentHashMap;
  * Created by doki on 06.04.16.
  */
 public class ScriptEngine {
-    // general purpose script storage. Not Thread Safe!
-    private final static ConcurrentHashMap<String, Script> generalScripts = new ConcurrentHashMap<>();
-    private static final ClassLoader loader = new ScriptsClassLoader(ClassLoader.getSystemClassLoader());
-    private static final GroovyShell shell = new GroovyShell(loader);
+    // General purpose script storage.
+    // Not Thread Safe, because compiled script has writable bindings. So one thread can easily change other one's bindings
+    private final ConcurrentHashMap<String, Script> generalScripts = new ConcurrentHashMap<>();
+    private final ClassLoader loader = new ScriptsClassLoader(ClassLoader.getSystemClassLoader());
+    private final GroovyShell shell = new GroovyShell(loader);
     private static final ScriptEngine instance = new ScriptEngine();
-    private static final Script NO_SCRIPT = new Script() {
+    private final Script NO_SCRIPT = new Script() {
         @Override
         public Object run() {
             return null;
         }
     };
     // Storage to hold compiled script(s) in thread's bounds. Thread safe!
+    // One script for one thread. No way to manipulate script's bindings outside calling thread
     private ThreadLocal<HashMap<String, Script>> threadBindedScripts = new ThreadLocal();
 
     private ScriptEngine() {
@@ -35,9 +39,10 @@ public class ScriptEngine {
     }
 
     public ClassLoader getClassLoader(){
-        return ScriptEngine.loader;
+        return this.loader;
     }
 
+    @Nullable
     public Script getScript(String script){
         if(script==null) {
             return null;
@@ -81,6 +86,7 @@ public class ScriptEngine {
 
         if(result==null) {
             result = shell.parse(script);
+            result.setBinding(new Binding());
             scripts.put(script, result);
         }
 

@@ -1,5 +1,6 @@
 package com.focusit.jmeter;
 
+import com.focusit.script.jmeter.JMeterJSFlightBridge;
 import com.focusit.script.jmeter.JMeterRecorderContext;
 import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.protocol.http.control.HeaderManager;
@@ -43,6 +44,26 @@ public class JMeterRecorder
     private HashTree varsPlace = null;
     private String currentTemplate = DEFAULT_TEMPLATE_NAME;
 
+    private JMeterJSFlightBridge bridge = new JMeterJSFlightBridge();
+
+    private JMeterRecorderContext context;
+
+    public JMeterScriptProcessor getScriptProcessor() {
+        return scriptProcessor;
+    }
+
+    private JMeterScriptProcessor scriptProcessor;
+
+    public JMeterRecorder(){
+        this.context = new JMeterRecorderContext();
+        this.scriptProcessor = new JMeterScriptProcessor(this);
+    }
+
+    public JMeterRecorder(JMeterRecorderContext context, JMeterScriptProcessor scriptProcessor) {
+        this.context = context;
+        this.scriptProcessor = scriptProcessor;
+    }
+
     public void init() throws Exception
     {
         init(DEFAULT_TEMPLATE_NAME);
@@ -61,7 +82,7 @@ public class JMeterRecorder
 
         JMeterUtils.setProperty("proxy.cert.directory", new File("").getAbsolutePath());
         hashTree = SaveService.loadTree(new File(pathToTemplate));
-        ctrl = new JMeterProxyControl();
+        ctrl = new JMeterProxyControl(this);
 
         hashTree.traverse(new HashTreeTraverser()
         {
@@ -181,7 +202,7 @@ public class JMeterRecorder
             if(sample instanceof HTTPSamplerBase){
             	HTTPSamplerBase http = (HTTPSamplerBase) sample;
 
-                JMeterScriptProcessor.getInstance().processScenario(http, parent, vars);
+                scriptProcessor.processScenario(http, parent, vars);
             }
         }
 
@@ -190,7 +211,7 @@ public class JMeterRecorder
 
     public void startRecording() throws IOException
     {
-        JMeterRecorderContext.getInstance().reset();
+        context.reset();
         ctrl.startProxy();
     }
 
@@ -249,5 +270,21 @@ public class JMeterRecorder
         });
 
         ctrl.setTargetTestElement(recCtrl);
+    }
+
+    public JMeterRecorderContext getContext() {
+        return context;
+    }
+
+    public void setContext(JMeterRecorderContext context) {
+        this.context = context;
+    }
+
+    public JMeterJSFlightBridge getBridge() {
+        return bridge;
+    }
+
+    public void setBridge(JMeterJSFlightBridge bridge) {
+        this.bridge = bridge;
     }
 }

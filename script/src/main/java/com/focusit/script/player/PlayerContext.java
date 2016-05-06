@@ -9,6 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class PlayerContext
 {
     private static final ConcurrentHashMap<String, Object> context = new ConcurrentHashMap<>();
+    private JMeterJSFlightBridge jmeterBridge;
 
     public Binding asBindings()
     {
@@ -23,7 +24,9 @@ public class PlayerContext
 
     public void setCurrentScenarioStep(JSONObject currentScenarioStep)
     {
-        JMeterJSFlightBridge.getInstace().setCurrentScenarioStep(currentScenarioStep);
+        if(jmeterBridge!=null) {
+            jmeterBridge.setCurrentScenarioStep(currentScenarioStep);
+        }
     }
 
     public void put(String key, Object value)
@@ -38,4 +41,7 @@ public class PlayerContext
         });
     }
 
+    public void setJMeterBridge(JMeterJSFlightBridge JMeterBridge) {
+        this.jmeterBridge=JMeterBridge;
+    }
 }

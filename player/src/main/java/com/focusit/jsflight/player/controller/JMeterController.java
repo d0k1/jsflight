@@ -1,6 +1,6 @@
 package com.focusit.jsflight.player.controller;
 
-import com.focusit.jmeter.JMeterScriptProcessor;
+import com.focusit.jmeter.JMeterRecorder;
 
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -27,16 +27,16 @@ public class JMeterController extends UIController
         ObjectInputStream stream = getInputStream(file);
         stepProcessorScript = (String) stream.readObject();
         scenarioProcessorScript = (String) stream.readObject();
-        syncScripts();
+        //syncScripts();
     }
 
-    private void syncScripts(){
+    public void syncScripts(JMeterRecorder recorder){
         if(getStepProcessorScript()!=null) {
-            JMeterScriptProcessor.getInstance().setRecordingScript(getStepProcessorScript());
+            recorder.getScriptProcessor().setRecordingScript(getStepProcessorScript());
         }
 
         if(getScenarioProcessorScript()!=null) {
-            JMeterScriptProcessor.getInstance().setProcessScript(getScenarioProcessorScript());
+            recorder.getScriptProcessor().setProcessScript(getScenarioProcessorScript());
         }
     }
 
@@ -58,17 +58,17 @@ public class JMeterController extends UIController
         return stepProcessorScript;
     }
 
-    public void setStepProcessorScript(String stepProcessorScript) {
+    public void setStepProcessorScript(JMeterRecorder recorder, String stepProcessorScript) {
         this.stepProcessorScript = stepProcessorScript;
-        syncScripts();
+        syncScripts(recorder);
     }
 
     public String getScenarioProcessorScript() {
         return scenarioProcessorScript;
     }
 
-    public void setScenarioProcessorScript(String scenarioProcessorScript) {
+    public void setScenarioProcessorScript(JMeterRecorder recorder, String scenarioProcessorScript) {
         this.scenarioProcessorScript = scenarioProcessorScript;
-        syncScripts();
+        syncScripts(recorder);
     }
 }
