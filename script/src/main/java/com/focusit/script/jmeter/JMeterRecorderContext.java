@@ -12,10 +12,6 @@ public class JMeterRecorderContext {
     private final ConcurrentHashMap<String, Object> templateReplacemnts = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Object> properties = new ConcurrentHashMap<>();
 
-    public JMeterRecorderContext(){
-
-    }
-
     /**
      * Store a template - jmeter's user devined variable.
      *

@@ -48,11 +48,11 @@ public class JMeterRecorder
 
     private JMeterRecorderContext context;
 
+    private JMeterScriptProcessor scriptProcessor;
+
     public JMeterScriptProcessor getScriptProcessor() {
         return scriptProcessor;
     }
-
-    private JMeterScriptProcessor scriptProcessor;
 
     public JMeterRecorder(){
         this.context = new JMeterRecorderContext();

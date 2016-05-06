@@ -123,8 +123,14 @@ public class ScenarioProcessor {
                 LOG.info("Step 0");
             }
             applyStep(scenario, seleniumDriver, scenario.getPosition());
-            scenario.next();
+            if(scenario.getPosition()+1<scenario.getStepsCount()) {
+                scenario.next();
+            } else {
+                break;
+            }
+
         }
+        scenario.next();
         LOG.info(String.format("Done(%d):playing", System.currentTimeMillis() - begin));
     }
 
@@ -158,8 +164,13 @@ public class ScenarioProcessor {
                 LOG.info("Step 0");
             }
             applyStep(scenario, seleniumDriver, scenario.getPosition());
-            scenario.next();
+            if(scenario.getPosition()+1<maxPosition) {
+                scenario.next();
+            } else {
+                break;
+            }
         }
+        scenario.next();
         LOG.info(String.format("Done(%d):playing", System.currentTimeMillis() - begin));
     }
 

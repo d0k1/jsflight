@@ -100,4 +100,20 @@ public class Experiment {
     public void setStatus(ExperimentStatus status) {
         this.status = status;
     }
+
+    public String getTag() {
+        return tag;
+    }
+
+    public void setTag(String tag) {
+        this.tag = tag;
+    }
+
+    public String getTagHash() {
+        return tagHash;
+    }
+
+    public void setTagHash(String tagHash) {
+        this.tagHash = tagHash;
+    }
 }
