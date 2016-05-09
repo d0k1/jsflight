@@ -1,13 +1,14 @@
 package com.focusit.jsflight.player.config;
 
 /**
+ * Player configuration holder
  * Created by dkirpichenkov on 06.05.16.
  */
 public class Configuration {
-    private CommonConfiguration commonConfiguration;
-    private JMeterConfiguration jMeterConfiguration;
-    private ScriptEventConfiguration scriptEventConfiguration;
-    private WebLookupConfiguration webLookupConfiguration;
+    private CommonConfiguration commonConfiguration = new CommonConfiguration();
+    private JMeterConfiguration jMeterConfiguration = new JMeterConfiguration();
+    private ScriptEventConfiguration scriptEventConfiguration = new ScriptEventConfiguration();
+    private WebLookupConfiguration webLookupConfiguration = new WebLookupConfiguration();
 
     public CommonConfiguration getCommonConfiguration() {
         return commonConfiguration;

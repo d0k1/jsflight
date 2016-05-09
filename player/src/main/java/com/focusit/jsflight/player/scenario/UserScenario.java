@@ -1,5 +1,6 @@
 package com.focusit.jsflight.player.scenario;
 
+import com.focusit.jsflight.player.config.Configuration;
 import com.focusit.jsflight.player.constants.EventType;
 import com.focusit.jsflight.player.controller.DuplicateHandlerController;
 import com.focusit.jsflight.player.input.Events;
@@ -32,6 +33,8 @@ public class UserScenario
     private String postProcessScenarioScript = "";
     private List<Boolean> checks = new ArrayList<>();
     private PlayerContext context = new PlayerContext();
+
+    private Configuration configuration = new Configuration();
 
     public PlayerContext getContext() {
         return context;
@@ -244,5 +247,13 @@ public class UserScenario
                         && !eventType.equalsIgnoreCase(EventType.MOUSEWHEEL)
                         && !eventType.equalsIgnoreCase(EventType.MOUSEDOWN)
                         && !eventType.equals(EventType.SCRIPT));
+    }
+
+    public Configuration getConfiguration() {
+        return configuration;
+    }
+
+    public void setConfiguration(Configuration configuration) {
+        this.configuration = configuration;
     }
 }
