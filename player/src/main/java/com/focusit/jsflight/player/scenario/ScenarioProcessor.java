@@ -4,6 +4,7 @@ import com.focusit.jsflight.player.constants.EventType;
 import com.focusit.jsflight.player.script.PlayerScriptProcessor;
 import com.focusit.jsflight.player.webdriver.SeleniumDriver;
 import org.json.JSONObject;
+import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +15,17 @@ import org.slf4j.LoggerFactory;
  */
 public class ScenarioProcessor {
     private static final Logger LOG = LoggerFactory.getLogger(ScenarioProcessor.class);
+
+    private static WebDriver getWebDriver(UserScenario scenario, SeleniumDriver seleniumDriver, JSONObject event){
+        boolean firefox = scenario.getConfiguration().getCommonConfiguration().isUseFirefox();
+        String path = firefox ? scenario.getConfiguration().getCommonConfiguration().getFfPath() : scenario.getConfiguration().getCommonConfiguration().getPjsPath();
+        String proxyHost = scenario.getConfiguration().getCommonConfiguration().getProxyHost();
+        String proxyPort = scenario.getConfiguration().getCommonConfiguration().getProxyPort();
+        String display = scenario.getConfiguration().getCommonConfiguration().getFirefoxDisplay();
+        WebDriver theWebDriver = seleniumDriver.getDriverForEvent(event, firefox, path, display, proxyHost, proxyPort);
+
+        return theWebDriver;
+    }
 
     public static void applyStep(UserScenario scenario, SeleniumDriver seleniumDriver, int position){
         scenario.getContext().setCurrentScenarioStep(scenario.getStepAt(position));
@@ -45,14 +57,17 @@ public class ScenarioProcessor {
                 return;
             }
 
-            seleniumDriver.openEventUrl(event);
+            WebDriver theWebDriver = getWebDriver(scenario, seleniumDriver, event);
+            int pageTimeoutMs = Integer.parseInt(scenario.getConfiguration().getCommonConfiguration().getPageReadyTimeout());
+
+            seleniumDriver.openEventUrl(theWebDriver, event, pageTimeoutMs);
 
             WebElement element = null;
 
             String target = scenario.getTargetForEvent(event);
 
             LOG.info("Event type: {}", type);
-            seleniumDriver.waitPageReady(event);
+            seleniumDriver.waitPageReady(theWebDriver, event, pageTimeoutMs);
 
             try
             {
@@ -60,24 +75,24 @@ public class ScenarioProcessor {
                 {
 
                     case EventType.MOUSEWHEEL:
-                        seleniumDriver.processMouseWheel(event, target);
+                        seleniumDriver.processMouseWheel(theWebDriver, event, target);
                         break;
                     case EventType.SCROLL_EMULATION:
-                        seleniumDriver.processScroll(event, target);
+                        seleniumDriver.processScroll(theWebDriver, event, target, pageTimeoutMs);
                         break;
 
                     case EventType.MOUSEDOWN:
                     case EventType.CLICK:
-                        element = seleniumDriver.findTargetWebElement(event, target);
-                        seleniumDriver.processMouseEvent(event, element);
-                        seleniumDriver.waitPageReady(event);
+                        element = seleniumDriver.findTargetWebElement(theWebDriver, event, target);
+                        seleniumDriver.processMouseEvent(theWebDriver, event, element);
+                        seleniumDriver.waitPageReady(theWebDriver, event, pageTimeoutMs);
                         break;
                     case EventType.KEY_UP:
                     case EventType.KEY_DOWN:
                     case EventType.KEY_PRESS:
-                        element = seleniumDriver.findTargetWebElement(event, target);
-                        seleniumDriver.processKeyboardEvent(event, element);
-                        seleniumDriver.waitPageReady(event);
+                        element = seleniumDriver.findTargetWebElement(theWebDriver, event, target);
+                        seleniumDriver.processKeyboardEvent(theWebDriver, event, element, scenario.getConfiguration().getCommonConfiguration().isUseRandomChars());
+                        seleniumDriver.waitPageReady(theWebDriver, event, pageTimeoutMs);
                         break;
                     default:
                         break;
@@ -88,7 +103,9 @@ public class ScenarioProcessor {
                 LOG.error("Failed to process step: " + position, e);
             }
 
-            seleniumDriver.makeAShot(event);
+            if(scenario.getConfiguration().getCommonConfiguration().getMakeShots()) {
+                seleniumDriver.makeAShot(theWebDriver, scenario.getConfiguration().getCommonConfiguration().getScreenDir());
+            }
         }
         catch (Exception e)
         {
@@ -115,7 +132,11 @@ public class ScenarioProcessor {
         {
             if (scenario.getPosition() > 0)
             {
-                seleniumDriver.waitPageReady(scenario.getStepAt(scenario.getPosition()));
+                JSONObject event = scenario.getStepAt(scenario.getPosition());
+                WebDriver theWebDriver = getWebDriver(scenario, seleniumDriver, event);
+                int pageTimeoutMs = Integer.parseInt(scenario.getConfiguration().getCommonConfiguration().getPageReadyTimeout());
+
+                seleniumDriver.waitPageReady(theWebDriver, event, pageTimeoutMs);
                 LOG.info("Step " + scenario.getPosition());
             }
             else
@@ -156,7 +177,11 @@ public class ScenarioProcessor {
         {
             if (scenario.getPosition() > 0)
             {
-                seleniumDriver.waitPageReady(scenario.getStepAt(scenario.getPosition()));
+                JSONObject event = scenario.getStepAt(scenario.getPosition());
+                WebDriver theWebDriver = getWebDriver(scenario, seleniumDriver, event);
+                int pageTimeoutMs = Integer.parseInt(scenario.getConfiguration().getCommonConfiguration().getPageReadyTimeout());
+
+                seleniumDriver.waitPageReady(theWebDriver, event, pageTimeoutMs);
                 LOG.info("Step " + scenario.getPosition());
             }
             else

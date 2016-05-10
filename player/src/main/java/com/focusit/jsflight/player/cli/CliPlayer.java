@@ -2,7 +2,6 @@ package com.focusit.jsflight.player.cli;
 
 import com.focusit.jmeter.JMeterRecorder;
 import com.focusit.jsflight.player.controller.DuplicateHandlerController;
-import com.focusit.jsflight.player.controller.OptionsController;
 import com.focusit.jsflight.player.controller.ScriptEventExectutionController;
 import com.focusit.jsflight.player.controller.WebLookupController;
 import com.focusit.jsflight.player.scenario.ScenarioProcessor;
@@ -41,13 +40,14 @@ public class CliPlayer
             LOG.info("Initializing Jmeter with jmx template: {}", templatePath);
             jmeter.init(templatePath);
         }
-
-        updateControllers();
     }
 
     public void play() throws IOException
     {
         UserScenario scenario = new UserScenario();
+
+        updateControllers(scenario);
+
         LOG.info("Loading {}", config.getPathToRecording());
         scenario.parse(config.getPathToRecording());
         scenario.postProcessScenario();
@@ -74,7 +74,7 @@ public class CliPlayer
         }
     }
 
-    private void updateControllers() throws IOException
+    private void updateControllers(UserScenario scenario) throws IOException
     {
         if (this.config.getJmeterStepPreprocess() != null && !this.config.getJmeterStepPreprocess().trim().isEmpty())
         {
@@ -90,18 +90,17 @@ public class CliPlayer
         }
 
         //Init options, based on config
-        OptionsController options = OptionsController.getInstance();
 
-        options.setFfPath(config.getFfPath());
-        options.setMakeShots(config.getMakeShots());
-        options.setPageReadyTimeout(config.getPageReadyTimeout());
-        options.setProxyHost(config.getProxyHost());
-        options.setProxyPort(config.getProxyPort());
-        options.setScreenDir(config.getScreenDir());
-        options.setUseFirefox(config.isUseFirefox());
-        options.setUsePhantomJs(config.isUsePhantomJs());
-        options.setPjsPath(config.getPjsPath());
-        options.setUseRandomChars(config.isUseRandomChars());
+        scenario.getConfiguration().getCommonConfiguration().setFfPath(config.getFfPath());
+        scenario.getConfiguration().getCommonConfiguration().setMakeShots(config.getMakeShots());
+        scenario.getConfiguration().getCommonConfiguration().setPageReadyTimeout(config.getPageReadyTimeout());
+        scenario.getConfiguration().getCommonConfiguration().setProxyHost(config.getProxyHost());
+        scenario.getConfiguration().getCommonConfiguration().setProxyPort(config.getProxyPort());
+        scenario.getConfiguration().getCommonConfiguration().setScreenDir(config.getScreenDir());
+        scenario.getConfiguration().getCommonConfiguration().setUseFirefox(config.isUseFirefox());
+        scenario.getConfiguration().getCommonConfiguration().setUsePhantomJs(config.isUsePhantomJs());
+        scenario.getConfiguration().getCommonConfiguration().setPjsPath(config.getPjsPath());
+        scenario.getConfiguration().getCommonConfiguration().setUseRandomChars(config.isUseRandomChars());
 
         //Init weblookup script
         WebLookupController.getInstance()

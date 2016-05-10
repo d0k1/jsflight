@@ -1325,19 +1325,35 @@ public class MainFrame
 
     private void initUIFromOptionsController()
     {
-        proxyHost.setText(OptionsController.getInstance().getProxyHost());
-        proxyPort.setText(OptionsController.getInstance().getProxyPort());
-        ffPath.setText(OptionsController.getInstance().getFfPath());
-        pjsPath.setText(OptionsController.getInstance().getPjsPath());
-        useFirefoxButton.setSelected(OptionsController.getInstance().isUseFirefox());
-        usePhantomButton.setSelected(OptionsController.getInstance().isUsePhantomJs());
-        pageReadyTimeoutField.setText(OptionsController.getInstance().getPageReadyTimeout());
-        makeShots.setSelected(OptionsController.getInstance().getMakeShots());
-        screenDirTextField.setText(OptionsController.getInstance().getScreenDir());
-        checkPageJs.setText(OptionsController.getInstance().getCheckPageJs());
-        webDriverTag.setText(OptionsController.getInstance().getWebDriverTag());
-        useRandomCharsBox.setSelected(OptionsController.getInstance().isUseRandomChars());
-        firefoxDsiplay.setText(OptionsController.getInstance().getFirefoxDisplay());
+        OptionsController.getInstance().setConfiguration(scenario.getConfiguration().getCommonConfiguration());
+        try
+        {
+            InputController.getInstance().load(IUIController.defaultConfig);
+            JMeterController.getInstance().load(IUIController.defaultConfig);
+            OptionsController.getInstance().load(IUIController.defaultConfig);
+            PostProcessController.getInstance().load(IUIController.defaultConfig);
+            ScenarioController.getInstance().load(IUIController.defaultConfig);
+            WebLookupController.getInstance().load(IUIController.defaultConfig);
+            DuplicateHandlerController.getInstance().load(IUIController.defaultConfig);
+            ScriptEventExectutionController.getInstance().load(IUIController.defaultConfig);
+        }
+        catch (Exception e)
+        {
+            log.error(e.toString(), e);
+        }
+        proxyHost.setText(scenario.getConfiguration().getCommonConfiguration().getProxyHost());
+        proxyPort.setText(scenario.getConfiguration().getCommonConfiguration().getProxyPort());
+        ffPath.setText(scenario.getConfiguration().getCommonConfiguration().getFfPath());
+        pjsPath.setText(scenario.getConfiguration().getCommonConfiguration().getPjsPath());
+        useFirefoxButton.setSelected(scenario.getConfiguration().getCommonConfiguration().isUseFirefox());
+        usePhantomButton.setSelected(scenario.getConfiguration().getCommonConfiguration().isUsePhantomJs());
+        pageReadyTimeoutField.setText(scenario.getConfiguration().getCommonConfiguration().getPageReadyTimeout());
+        makeShots.setSelected(scenario.getConfiguration().getCommonConfiguration().getMakeShots());
+        screenDirTextField.setText(scenario.getConfiguration().getCommonConfiguration().getScreenDir());
+        checkPageJs.setText(scenario.getConfiguration().getCommonConfiguration().getCheckPageJs());
+        webDriverTag.setText(scenario.getConfiguration().getCommonConfiguration().getWebDriverTag());
+        useRandomCharsBox.setSelected(scenario.getConfiguration().getCommonConfiguration().isUseRandomChars());
+        firefoxDsiplay.setText(scenario.getConfiguration().getCommonConfiguration().getFirefoxDisplay());
     }
 
     private void initUIFromPostProcessorController()
@@ -1418,19 +1434,19 @@ public class MainFrame
 
     private void updateOptionsController()
     {
-        OptionsController.getInstance().setProxyHost(proxyHost.getText());
-        OptionsController.getInstance().setProxyPort(proxyPort.getText());
-        OptionsController.getInstance().setFfPath(ffPath.getText());
-        OptionsController.getInstance().setPjsPath(pjsPath.getText());
-        OptionsController.getInstance().setPageReadyTimeout(pageReadyTimeoutField.getText());
-        OptionsController.getInstance().setMakeShots(makeShots.isSelected());
-        OptionsController.getInstance().setScreenDir(screenDirTextField.getText());
-        OptionsController.getInstance().setCheckPageJs(checkPageJs.getText());
-        OptionsController.getInstance().setWebDriverTag(webDriverTag.getText());
-        OptionsController.getInstance().setUseFirefox(useFirefoxButton.isSelected());
-        OptionsController.getInstance().setUsePhantomJs(usePhantomButton.isSelected());
-        OptionsController.getInstance().setUseRandomChars(useRandomCharsBox.isSelected());
-        OptionsController.getInstance().setFirefoxDisplay(firefoxDsiplay.getText());
+        scenario.getConfiguration().getCommonConfiguration().setProxyHost(proxyHost.getText());
+        scenario.getConfiguration().getCommonConfiguration().setProxyPort(proxyPort.getText());
+        scenario.getConfiguration().getCommonConfiguration().setFfPath(ffPath.getText());
+        scenario.getConfiguration().getCommonConfiguration().setPjsPath(pjsPath.getText());
+        scenario.getConfiguration().getCommonConfiguration().setPageReadyTimeout(pageReadyTimeoutField.getText());
+        scenario.getConfiguration().getCommonConfiguration().setMakeShots(makeShots.isSelected());
+        scenario.getConfiguration().getCommonConfiguration().setScreenDir(screenDirTextField.getText());
+        scenario.getConfiguration().getCommonConfiguration().setCheckPageJs(checkPageJs.getText());
+        scenario.getConfiguration().getCommonConfiguration().setWebDriverTag(webDriverTag.getText());
+        scenario.getConfiguration().getCommonConfiguration().setUseFirefox(useFirefoxButton.isSelected());
+        scenario.getConfiguration().getCommonConfiguration().setUsePhantomJs(usePhantomButton.isSelected());
+        scenario.getConfiguration().getCommonConfiguration().setUseRandomChars(useRandomCharsBox.isSelected());
+        scenario.getConfiguration().getCommonConfiguration().setFirefoxDisplay(firefoxDsiplay.getText());
     }
 
     private void updatePostProcessController()

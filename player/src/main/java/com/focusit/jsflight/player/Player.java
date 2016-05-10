@@ -3,7 +3,6 @@ package com.focusit.jsflight.player;
 import com.beust.jcommander.JCommander;
 import com.focusit.jsflight.player.cli.CliConfig;
 import com.focusit.jsflight.player.cli.CliPlayer;
-import com.focusit.jsflight.player.controller.*;
 import com.focusit.jsflight.player.ui.ExceptionDialog;
 import com.focusit.jsflight.player.ui.MainFrame;
 import org.apache.jorphan.logging.LoggingManager;
@@ -19,21 +18,6 @@ public class Player
 
     public static void main(String[] args) throws Exception
     {
-        try
-        {
-            InputController.getInstance().load(IUIController.defaultConfig);
-            JMeterController.getInstance().load(IUIController.defaultConfig);
-            OptionsController.getInstance().load(IUIController.defaultConfig);
-            PostProcessController.getInstance().load(IUIController.defaultConfig);
-            ScenarioController.getInstance().load(IUIController.defaultConfig);
-            WebLookupController.getInstance().load(IUIController.defaultConfig);
-            DuplicateHandlerController.getInstance().load(IUIController.defaultConfig);
-            ScriptEventExectutionController.getInstance().load(IUIController.defaultConfig);
-        }
-        catch (Exception e)
-        {
-            log.error(e.toString(), e);
-        }
         CliConfig config = new CliConfig();
         JCommander jc = new JCommander(config, args);
         jc.setProgramName(Player.class.getSimpleName());

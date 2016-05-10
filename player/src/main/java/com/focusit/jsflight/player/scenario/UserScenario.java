@@ -10,8 +10,6 @@ import com.focusit.script.jmeter.JMeterJSFlightBridge;
 import com.focusit.script.player.PlayerContext;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -26,14 +24,12 @@ import java.util.List;
  */
 public class UserScenario
 {
-    private static final Logger log = LoggerFactory.getLogger(UserScenario.class);
     private static HashMap<String, JSONObject> lastEvents = new HashMap<>();
     private volatile int position = 0;
     private List<JSONObject> events = new ArrayList<>();
     private String postProcessScenarioScript = "";
     private List<Boolean> checks = new ArrayList<>();
     private PlayerContext context = new PlayerContext();
-
     private Configuration configuration = new Configuration();
 
     public PlayerContext getContext() {
