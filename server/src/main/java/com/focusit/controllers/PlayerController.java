@@ -164,7 +164,7 @@ public class PlayerController {
      * Play a scenario
      *
      * $ curl "127.0.0.1:8080/player/start?recordingId=572b01abc92e6b697f9d9ab2"
-     * $ curl "127.0.0.1:8080/player/start?recordingId=572b01abc92e6b697f9d9ab2&withScreenshots=true&paused=true"
+     * $ curl "127.0.0.1:8080/player/start?recordingId=572b01abc92e6b697f9d9ab2&withScreenshots=true&paused=false"
      * $ curl "127.0.0.1:8080/player/start?recordingId=572b01abc92e6b697f9d9ab2&paused=true"
      * @param recordingId id of existing recording
      * @return
@@ -172,7 +172,7 @@ public class PlayerController {
     @RequestMapping(value = "/start", method = RequestMethod.GET)
     public Experiment start(@RequestParam("recordingId")String recordingId,
                             @RequestParam(value = "withScreenshots", defaultValue="false") Boolean withScreenshots,
-                            @RequestParam(value = "paused", defaultValue="false") Boolean paused) {
+                            @RequestParam(value = "paused", defaultValue="true") Boolean paused) {
         Recording rec = recordingRepository.findOne(new ObjectId(recordingId));
         if(rec==null){
             throw new IllegalArgumentException("no recording found for id "+recordingId);
@@ -275,6 +275,12 @@ public class PlayerController {
      */
     @RequestMapping(value = "/terminable", method = RequestMethod.GET)
     public void terminable(@RequestParam("experimentId")String experimentId)
+    {
+
+    }
+
+    @RequestMapping(method = RequestMethod.POST, value = "/configure")
+    public void configure()
     {
 
     }

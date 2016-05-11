@@ -1,5 +1,6 @@
 package com.focusit.model;
 
+import com.focusit.jsflight.player.config.Configuration;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
@@ -26,6 +27,8 @@ public class Experiment {
 
     @Indexed
     private String recordingName;
+
+    private Configuration configuration;
 
     private String tag;
 
@@ -115,5 +118,13 @@ public class Experiment {
 
     public void setTagHash(String tagHash) {
         this.tagHash = tagHash;
+    }
+
+    public Configuration getConfiguration() {
+        return configuration;
+    }
+
+    public void setConfiguration(Configuration configuration) {
+        this.configuration = configuration;
     }
 }
