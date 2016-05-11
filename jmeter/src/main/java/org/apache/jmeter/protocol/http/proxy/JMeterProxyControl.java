@@ -481,7 +481,7 @@ public class JMeterProxyControl extends GenericController {
     }
 
     /**
-     * @return the target controller node
+     * @return the target fileconfigholder node
      */
     public JMeterTreeNode getTarget() {
         return null;

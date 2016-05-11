@@ -1,9 +1,6 @@
 package com.focusit.jsflight.player.cli;
 
 import com.focusit.jmeter.JMeterRecorder;
-import com.focusit.jsflight.player.controller.DuplicateHandlerController;
-import com.focusit.jsflight.player.controller.ScriptEventExectutionController;
-import com.focusit.jsflight.player.controller.WebLookupController;
 import com.focusit.jsflight.player.scenario.ScenarioProcessor;
 import com.focusit.jsflight.player.scenario.UserScenario;
 import com.focusit.jsflight.player.webdriver.SeleniumDriver;
@@ -102,17 +99,16 @@ public class CliPlayer
         scenario.getConfiguration().getCommonConfiguration().setPjsPath(config.getPjsPath());
         scenario.getConfiguration().getCommonConfiguration().setUseRandomChars(config.isUseRandomChars());
 
+        scenario.getConfiguration().getCommonConfiguration().loadDefaultValues();
+
         //Init weblookup script
-        WebLookupController.getInstance()
-                .setScript(FileUtils.readFileToString(new File(config.getWebLookupScriptPath())));
+        scenario.getConfiguration().getWebConfiguration().setLookupScript(FileUtils.readFileToString(new File(config.getWebLookupScriptPath())));
 
         //Init duplicate handler script
-        DuplicateHandlerController.getInstance()
-                .setScriptBody(FileUtils.readFileToString(new File(config.getDuplicateHandlerScriptPath())));
+        scenario.getConfiguration().getWebConfiguration().setDuplicationScript(FileUtils.readFileToString(new File(config.getDuplicateHandlerScriptPath())));
 
         //Init script events handler
-        ScriptEventExectutionController.getInstance()
-                .setScript(FileUtils.readFileToString(new File(config.getScriptEventHandlerScriptPath())));
+        scenario.getConfiguration().getScriptEventConfiguration().setScript(FileUtils.readFileToString(new File(config.getScriptEventHandlerScriptPath())));
     }
 
     public SeleniumDriver getSeleniumDriver() {

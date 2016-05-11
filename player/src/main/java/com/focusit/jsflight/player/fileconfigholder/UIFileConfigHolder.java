@@ -1,8 +1,8 @@
-package com.focusit.jsflight.player.controller;
+package com.focusit.jsflight.player.fileconfigholder;
 
 import java.io.*;
 
-public abstract class UIController implements IUIController, Serializable
+public abstract class UIFileConfigHolder implements IFileConfigHolder, Serializable
 {
     private static final long serialVersionUID = 1L;
 

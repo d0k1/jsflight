@@ -1,6 +1,5 @@
 package com.focusit.jsflight.player.script;
 
-import com.focusit.jsflight.player.controller.ScriptEventExectutionController;
 import com.focusit.jsflight.player.scenario.UserScenario;
 import com.focusit.script.ScriptEngine;
 import groovy.lang.Binding;
@@ -49,7 +48,7 @@ public class PlayerScriptProcessor
         Binding binding = getBasicBinding();
         binding.setVariable("current", currentEvent);
         binding.setVariable("previous", prevEvent);
-        Script scr = ScriptEngine.getInstance().getScript(script);
+        Script scr = ScriptEngine.getInstance().getThreadBindedScript(script);
 
         if(scr!=null) {
             return false;
@@ -59,12 +58,12 @@ public class PlayerScriptProcessor
         return (boolean) scr.run();
     }
 
-    public void executeScriptEvent(JSONObject event)
+    public void executeScriptEvent(String script, JSONObject event)
     {
         Binding binging = getBasicBinding();
         binging.setVariable("event", event);
 
-        Script scr = ScriptEngine.getInstance().getScript(ScriptEventExectutionController.getInstance().getScript());
+        Script scr = ScriptEngine.getInstance().getThreadBindedScript(script);
         scr.setBinding(binging);
         scr.run();
     }
@@ -75,7 +74,7 @@ public class PlayerScriptProcessor
         binding.setVariable("webdriver", wd);
         binding.setVariable("target", target);
         binding.setVariable("event", event);
-        Script scr = ScriptEngine.getInstance().getScript(script);
+        Script scr = ScriptEngine.getInstance().getThreadBindedScript(script);
 
         if(scr==null) {
             throw new NoSuchElementException("no web lookup script provided");
@@ -95,7 +94,7 @@ public class PlayerScriptProcessor
         Binding binding = getBasicBinding();
         //binding.setVariable("context", context);
         binding.setVariable("events", events);
-        Script s = ScriptEngine.getInstance().getScript(script);
+        Script s = ScriptEngine.getInstance().getThreadBindedScript(script);
 
         if(s==null) {
             return;
@@ -130,7 +129,7 @@ public class PlayerScriptProcessor
         binding.setVariable("step", step);
         binding.setVariable("pre", pre);
         binding.setVariable("post", !pre);
-        Script s = ScriptEngine.getInstance().getScript(script);
+        Script s = ScriptEngine.getInstance().getThreadBindedScript(script);
 
         if(s==null) {
             return;
@@ -189,7 +188,7 @@ public class PlayerScriptProcessor
         binding.setVariable("ctx", new ConcurrentHashMap<>());
         binding.setVariable("events", new ArrayList<>(events));
 
-        Script s = ScriptEngine.getInstance().getScript(script);
+        Script s = ScriptEngine.getInstance().getThreadBindedScript(script);
         s.setBinding(binding);
         s.run();
     }

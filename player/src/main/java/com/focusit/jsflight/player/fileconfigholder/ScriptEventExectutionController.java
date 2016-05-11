@@ -1,9 +1,11 @@
-package com.focusit.jsflight.player.controller;
+package com.focusit.jsflight.player.fileconfigholder;
+
+import com.focusit.jsflight.player.config.ScriptEventConfiguration;
 
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
-public class ScriptEventExectutionController extends UIController
+public class ScriptEventExectutionController extends UIFileConfigHolder
 {
     private static final long serialVersionUID = 8326565501493347454L;
 
@@ -14,44 +16,22 @@ public class ScriptEventExectutionController extends UIController
         return INSTANCE;
     }
 
-    private String filename = "";
-
-    private String script;
-
-    public String getFilename()
-    {
-        return filename;
-    }
-
-    public String getScript()
-    {
-        return script;
-    }
+    private ScriptEventConfiguration configuration;
 
     @Override
     public void load(String file) throws Exception
     {
         ObjectInputStream stream = getInputStream(file);
-        script = (String)stream.readObject();
-        setFilename((String)stream.readObject());
-    }
-
-    public void setFilename(String filename)
-    {
-        this.filename = filename;
-    }
-
-    public void setScript(String script)
-    {
-        this.script = script;
+        configuration.setScript((String)stream.readObject());
+        configuration.setFilename((String)stream.readObject());
     }
 
     @Override
     public void store(String file) throws Exception
     {
         ObjectOutputStream stream = getOutputStream(file);
-        stream.writeObject(script);
-        stream.writeObject(getFilename());
+        stream.writeObject(configuration.getScript());
+        stream.writeObject(configuration.getFilename());
     }
 
     @Override
@@ -60,4 +40,7 @@ public class ScriptEventExectutionController extends UIController
         return "scriptEventExecution";
     }
 
+    public void setConfiguration(ScriptEventConfiguration configuration) {
+        this.configuration = configuration;
+    }
 }

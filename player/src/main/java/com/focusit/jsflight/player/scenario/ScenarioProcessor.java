@@ -36,7 +36,7 @@ public class ScenarioProcessor {
         boolean error = false;
         try
         {
-            if (scenario.isStepDuplicates(event))
+            if (scenario.isStepDuplicates(scenario.getConfiguration().getWebConfiguration().getDuplicationScript(), event))
             {
                 LOG.warn("Event duplicates prev");
                 return;
@@ -53,21 +53,26 @@ public class ScenarioProcessor {
 
             if (type.equalsIgnoreCase(EventType.SCRIPT))
             {
-                new PlayerScriptProcessor().executeScriptEvent(event);
+                new PlayerScriptProcessor().executeScriptEvent(scenario.getConfiguration().getScriptEventConfiguration().getScript(), event);
                 return;
             }
 
             WebDriver theWebDriver = getWebDriver(scenario, seleniumDriver, event);
-            int pageTimeoutMs = Integer.parseInt(scenario.getConfiguration().getCommonConfiguration().getPageReadyTimeout());
 
-            seleniumDriver.openEventUrl(theWebDriver, event, pageTimeoutMs);
+            int pageTimeoutMs = Integer.parseInt(scenario.getConfiguration().getCommonConfiguration().getPageReadyTimeout());
+            String checkPageJs = scenario.getConfiguration().getCommonConfiguration().getCheckPageJs();
+            String maxElementGroovy = scenario.getConfiguration().getCommonConfiguration().getMaxElementGroovy();
+            String lookupScript = scenario.getConfiguration().getWebConfiguration().getLookupScript();
+            String uiShownScript = scenario.getConfiguration().getCommonConfiguration().getUiShownScript();
+
+            seleniumDriver.openEventUrl(theWebDriver, event, pageTimeoutMs, scenario.getConfiguration().getCommonConfiguration().getCheckPageJs(), uiShownScript);
 
             WebElement element = null;
 
             String target = scenario.getTargetForEvent(event);
 
             LOG.info("Event type: {}", type);
-            seleniumDriver.waitPageReady(theWebDriver, event, pageTimeoutMs);
+            seleniumDriver.waitPageReady(theWebDriver, event, pageTimeoutMs, scenario.getConfiguration().getCommonConfiguration().getCheckPageJs());
 
             try
             {
@@ -75,24 +80,24 @@ public class ScenarioProcessor {
                 {
 
                     case EventType.MOUSEWHEEL:
-                        seleniumDriver.processMouseWheel(theWebDriver, event, target);
+                        seleniumDriver.processMouseWheel(lookupScript, theWebDriver, event, target);
                         break;
                     case EventType.SCROLL_EMULATION:
-                        seleniumDriver.processScroll(theWebDriver, event, target, pageTimeoutMs);
+                        seleniumDriver.processScroll(theWebDriver, event, target, pageTimeoutMs, checkPageJs, maxElementGroovy);
                         break;
 
                     case EventType.MOUSEDOWN:
                     case EventType.CLICK:
-                        element = seleniumDriver.findTargetWebElement(theWebDriver, event, target);
+                        element = seleniumDriver.findTargetWebElement(lookupScript, theWebDriver, event, target);
                         seleniumDriver.processMouseEvent(theWebDriver, event, element);
-                        seleniumDriver.waitPageReady(theWebDriver, event, pageTimeoutMs);
+                        seleniumDriver.waitPageReady(theWebDriver, event, pageTimeoutMs, checkPageJs);
                         break;
                     case EventType.KEY_UP:
                     case EventType.KEY_DOWN:
                     case EventType.KEY_PRESS:
-                        element = seleniumDriver.findTargetWebElement(theWebDriver, event, target);
+                        element = seleniumDriver.findTargetWebElement(lookupScript, theWebDriver, event, target);
                         seleniumDriver.processKeyboardEvent(theWebDriver, event, element, scenario.getConfiguration().getCommonConfiguration().isUseRandomChars());
-                        seleniumDriver.waitPageReady(theWebDriver, event, pageTimeoutMs);
+                        seleniumDriver.waitPageReady(theWebDriver, event, pageTimeoutMs, checkPageJs);
                         break;
                     default:
                         break;
@@ -135,8 +140,9 @@ public class ScenarioProcessor {
                 JSONObject event = scenario.getStepAt(scenario.getPosition());
                 WebDriver theWebDriver = getWebDriver(scenario, seleniumDriver, event);
                 int pageTimeoutMs = Integer.parseInt(scenario.getConfiguration().getCommonConfiguration().getPageReadyTimeout());
+                String checkPageJs = scenario.getConfiguration().getCommonConfiguration().getCheckPageJs();
 
-                seleniumDriver.waitPageReady(theWebDriver, event, pageTimeoutMs);
+                seleniumDriver.waitPageReady(theWebDriver, event, pageTimeoutMs, checkPageJs);
                 LOG.info("Step " + scenario.getPosition());
             }
             else
@@ -149,7 +155,6 @@ public class ScenarioProcessor {
             } else {
                 break;
             }
-
         }
         scenario.next();
         LOG.info(String.format("Done(%d):playing", System.currentTimeMillis() - begin));
@@ -180,8 +185,9 @@ public class ScenarioProcessor {
                 JSONObject event = scenario.getStepAt(scenario.getPosition());
                 WebDriver theWebDriver = getWebDriver(scenario, seleniumDriver, event);
                 int pageTimeoutMs = Integer.parseInt(scenario.getConfiguration().getCommonConfiguration().getPageReadyTimeout());
+                String checkPageJs = scenario.getConfiguration().getCommonConfiguration().getCheckPageJs();
 
-                seleniumDriver.waitPageReady(theWebDriver, event, pageTimeoutMs);
+                seleniumDriver.waitPageReady(theWebDriver, event, pageTimeoutMs, checkPageJs);
                 LOG.info("Step " + scenario.getPosition());
             }
             else
@@ -189,9 +195,11 @@ public class ScenarioProcessor {
                 LOG.info("Step 0");
             }
             applyStep(scenario, seleniumDriver, scenario.getPosition());
-            if(scenario.getPosition()+1<maxPosition) {
+            if(scenario.getPosition()+1<maxPosition)
+            {
                 scenario.next();
-            } else {
+            } else
+            {
                 break;
             }
         }

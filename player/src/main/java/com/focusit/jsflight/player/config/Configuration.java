@@ -8,7 +8,7 @@ public class Configuration {
     private CommonConfiguration commonConfiguration = new CommonConfiguration();
     private JMeterConfiguration jMeterConfiguration = new JMeterConfiguration();
     private ScriptEventConfiguration scriptEventConfiguration = new ScriptEventConfiguration();
-    private WebLookupConfiguration webLookupConfiguration = new WebLookupConfiguration();
+    private WebConfiguration webConfiguration = new WebConfiguration();
 
     public CommonConfiguration getCommonConfiguration() {
         return commonConfiguration;
@@ -34,11 +34,11 @@ public class Configuration {
         this.scriptEventConfiguration = scriptEventConfiguration;
     }
 
-    public WebLookupConfiguration getWebLookupConfiguration() {
-        return webLookupConfiguration;
+    public WebConfiguration getWebConfiguration() {
+        return webConfiguration;
     }
 
-    public void setWebLookupConfiguration(WebLookupConfiguration webLookupConfiguration) {
-        this.webLookupConfiguration = webLookupConfiguration;
+    public void setWebConfiguration(WebConfiguration webConfiguration) {
+        this.webConfiguration = webConfiguration;
     }
 }

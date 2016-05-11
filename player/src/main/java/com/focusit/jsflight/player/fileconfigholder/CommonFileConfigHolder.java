@@ -1,22 +1,22 @@
-package com.focusit.jsflight.player.controller;
+package com.focusit.jsflight.player.fileconfigholder;
 
 import com.focusit.jsflight.player.config.CommonConfiguration;
 
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
-public class OptionsController extends UIController
+public class CommonFileConfigHolder extends UIFileConfigHolder
 {
     private static final long serialVersionUID = 1L;
 
-    private final static OptionsController instance = new OptionsController();
+    private final static CommonFileConfigHolder instance = new CommonFileConfigHolder();
 
-    public static OptionsController getInstance()
+    public static CommonFileConfigHolder getInstance()
     {
         return instance;
     }
 
-    private OptionsController()
+    private CommonFileConfigHolder()
     {
     }
 
@@ -39,6 +39,11 @@ public class OptionsController extends UIController
         configuration.setCheckPageJs((String)stream.readObject());
         configuration.setWebDriverTag((String)stream.readObject());
         configuration.setFirefoxDisplay((String)stream.readObject());
+        configuration.setUiShownScript((String)stream.readObject());
+        configuration.setScrollTimeout((Integer)stream.readObject());
+        configuration.setPageShownTimeout((Integer)stream.readObject());
+
+        configuration.loadDefaultValues();
     }
 
     @Override
@@ -58,6 +63,9 @@ public class OptionsController extends UIController
         stream.writeObject(configuration.getCheckPageJs());
         stream.writeObject(configuration.getWebDriverTag());
         stream.writeObject(configuration.getFirefoxDisplay());
+        stream.writeObject(configuration.getUiShownScript());
+        stream.writeObject(configuration.getScrollTimeout());
+        stream.writeObject(configuration.getPageShownTimeout());
     }
 
     @Override

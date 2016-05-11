@@ -1,20 +1,20 @@
-package com.focusit.jsflight.player.controller;
+package com.focusit.jsflight.player.fileconfigholder;
 
 
-public class InputController extends UIController
+public class InputFileConfigHolder extends UIFileConfigHolder
 {
     private static final long serialVersionUID = 1L;
 
-    private final static InputController instance = new InputController();
+    private final static InputFileConfigHolder instance = new InputFileConfigHolder();
 
-    public static InputController getInstance()
+    public static InputFileConfigHolder getInstance()
     {
         return instance;
     }
 
     private String filename = "";
 
-    private InputController()
+    private InputFileConfigHolder()
     {
     }
 

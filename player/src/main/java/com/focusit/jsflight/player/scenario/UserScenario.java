@@ -2,7 +2,6 @@ package com.focusit.jsflight.player.scenario;
 
 import com.focusit.jsflight.player.config.Configuration;
 import com.focusit.jsflight.player.constants.EventType;
-import com.focusit.jsflight.player.controller.DuplicateHandlerController;
 import com.focusit.jsflight.player.input.Events;
 import com.focusit.jsflight.player.input.FileInput;
 import com.focusit.jsflight.player.script.PlayerScriptProcessor;
@@ -123,13 +122,13 @@ public class UserScenario
         return target;
     }
 
-    public boolean isStepDuplicates(JSONObject event)
+    public boolean isStepDuplicates(String script, JSONObject event)
     {
         JSONObject prev = getPrevEvent(event);
 
         if (prev != null)
         {
-            return new PlayerScriptProcessor().executeDuplicateHandlerScript(DuplicateHandlerController.getInstance().getScriptBody(), event, prev);
+            return new PlayerScriptProcessor().executeDuplicateHandlerScript(script, event, prev);
         }
 
         return false;

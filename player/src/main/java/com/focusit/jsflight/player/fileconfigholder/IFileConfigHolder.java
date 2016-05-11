@@ -1,12 +1,12 @@
-package com.focusit.jsflight.player.controller;
+package com.focusit.jsflight.player.fileconfigholder;
 
 /**
  * UI Controller interface.
- * Any controller must have two main methods to store and load content from a file in certain directory 
+ * Any fileconfigholder must have two main methods to store and load content from a file in certain directory
  * @author dkirpichenkov
  *
  */
-public interface IUIController
+public interface IFileConfigHolder
 {
     final String defaultConfig = "params";
 
@@ -17,7 +17,7 @@ public interface IUIController
     void load(String file) throws Exception;
 
     /**
-     * store controller data
+     * store fileconfigholder data
      * @param file path to directory to store data
      */
     void store(String file) throws Exception;

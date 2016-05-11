@@ -1,8 +1,6 @@
 package com.focusit.jsflight.player.webdriver;
 
 import com.focusit.jsflight.player.constants.EventType;
-import com.focusit.jsflight.player.controller.OptionsController;
-import com.focusit.jsflight.player.controller.WebLookupController;
 import com.focusit.jsflight.player.scenario.UserScenario;
 import com.focusit.jsflight.player.script.PlayerScriptProcessor;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -26,7 +24,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 /**
  * Selenium webdriver proxy: runs a browser, sends events, make screenshots
@@ -37,7 +34,6 @@ import java.util.List;
 public class SeleniumDriver
 {
     private static final Logger log = LoggerFactory.getLogger(SeleniumDriver.class);
-    private static OptionsController config = OptionsController.getInstance();
     private HashMap<String, WebDriver> drivers = new HashMap<>();
     private HashMap<String, String> tabsWindow = new HashMap<>();
     private HashMap<String, String> lastUrls = new HashMap<>();
@@ -75,12 +71,13 @@ public class SeleniumDriver
         }
     }
 
-    private static WebElement getMax(WebDriver wd)
+    private static WebElement getMax(WebDriver wd, String script)
     {
-        List<WebElement> els = wd.findElements(By.xpath("//div[@id='gwt-debug-PopupListSelect']//div[@__idx]"));
-        els.sort((WebElement el1, WebElement el2) -> Integer.valueOf(el1.getAttribute("__idx"))
-                .compareTo(Integer.valueOf(el2.getAttribute("__idx"))));
-        return els.get(els.size() - 1);
+        return (WebElement)new PlayerScriptProcessor().executeWebLookupScript(script, wd, null, null);
+//        List<WebElement> els = wd.findElements(By.xpath("//div[@id='gwt-debug-PopupListSelect']//div[@__idx]"));
+//        els.sort((WebElement el1, WebElement el2) -> Integer.valueOf(el1.getAttribute("__idx"))
+//                .compareTo(Integer.valueOf(el2.getAttribute("__idx"))));
+//        return els.get(els.size() - 1);
     }
 
     private static void resizeForEvent(WebDriver wd, JSONObject event)
@@ -117,16 +114,17 @@ public class SeleniumDriver
         js.executeScript("arguments[0].scrollIntoView(true)", element);
     }
 
-    private static void waitUiShow(WebDriver wd)
+    private static void waitUiShow(String script, WebDriver wd)
     {
         long timeout = System.currentTimeMillis() + 20000L;
         while (System.currentTimeMillis() < timeout)
         {
             try
             {
-                wd.findElement(By.xpath("//*[@id='gwt-debug-editProfile']"));
-                log.debug("Yeeepeee UI showed up!");
-                return;
+                if(new PlayerScriptProcessor().executeWebLookupScript(script, wd, null, null)!=null) {
+                    log.debug("Yeeepeee UI showed up!");
+                    return;
+                }
             }
             catch (NoSuchElementException e)
             {
@@ -151,7 +149,7 @@ public class SeleniumDriver
         lastUrls.clear();
     }
 
-    public WebElement findTargetWebElement(WebDriver wd, JSONObject event, String target)
+    public WebElement findTargetWebElement(String script, WebDriver wd, JSONObject event, String target)
     {
         try
         {
@@ -161,8 +159,7 @@ public class SeleniumDriver
         catch (NoSuchElementException e)
         {
             log.info("failed looking for {}. trying to restore xpath");
-            return (WebElement)new PlayerScriptProcessor().executeWebLookupScript(WebLookupController.getInstance().getScript(), wd,
-                    target, event);
+            return (WebElement)new PlayerScriptProcessor().executeWebLookupScript(script, wd, target, event);
         }
     }
 
@@ -202,7 +199,7 @@ public class SeleniumDriver
         }
     }
 
-    public void openEventUrl(WebDriver wd, JSONObject event, int pageTimeoutMs)
+    public void openEventUrl(WebDriver wd, JSONObject event, int pageTimeoutMs, String checkPageJs, String uiShownScript)
     {
         String event_url = event.getString("url");
 
@@ -211,8 +208,8 @@ public class SeleniumDriver
         {
             wd.get(event_url);
 
-            waitUiShow(wd);
-            waitPageReady(wd, event, pageTimeoutMs);
+            waitUiShow(uiShownScript, wd);
+            waitPageReady(wd, event, pageTimeoutMs, checkPageJs);
             updateLastUrl(event, event_url);
         }
     }
@@ -342,10 +339,9 @@ public class SeleniumDriver
         }
     }
 
-    public void processMouseWheel(WebDriver wd, JSONObject event, String target)
+    public void processMouseWheel(String script, WebDriver wd, JSONObject event, String target)
     {
-        WebElement el = (WebElement)new PlayerScriptProcessor().executeWebLookupScript(WebLookupController.getInstance().getScript(), wd,
-                target, event);
+        WebElement el = (WebElement)new PlayerScriptProcessor().executeWebLookupScript(script, wd, target, event);
         //Web lookup script MUST return /html element if scroll occurs not in a popup
         if (!el.getTagName().equalsIgnoreCase("html"))
         {
@@ -358,7 +354,7 @@ public class SeleniumDriver
         }
     }
 
-    public void processScroll(WebDriver wd, JSONObject event, String target, int pageTimeoutMs)
+    public void processScroll(WebDriver wd, JSONObject event, String target, int pageTimeoutMs, String checkPageJs, String getMaxElementGroovy)
     {
         long timeout = System.currentTimeMillis() + 20000l;
         if (checkElementPresent(wd, target))
@@ -367,13 +363,16 @@ public class SeleniumDriver
         }
         do
         {
-            waitPageReady(wd, event, pageTimeoutMs);
+            waitPageReady(wd, event, pageTimeoutMs, checkPageJs);
             // TODO WebLookup script must return the element
-            WebElement el = getMax(wd);
-            scroll((JavascriptExecutor)wd, el);
-            if (checkElementPresent(wd, target))
-            {
-                return;
+            try {
+                WebElement el = getMax(wd, getMaxElementGroovy);
+                scroll((JavascriptExecutor) wd, el);
+                if (checkElementPresent(wd, target)) {
+                    return;
+                }
+            } catch (Exception ex){
+                log.error(ex.toString(), ex);
             }
         }
         while (System.currentTimeMillis() < timeout);
@@ -390,7 +389,7 @@ public class SeleniumDriver
         lastUrls.put(scenario.getTagForEvent(event), url);
     }
 
-    public void waitPageReady(WebDriver wd, JSONObject event, int pageTimeoutMs)
+    public void waitPageReady(WebDriver wd, JSONObject event, int pageTimeoutMs, String checkPageJs)
     {
     	String type = event.getString("type");
         if (type.equalsIgnoreCase(EventType.XHR) || type.equalsIgnoreCase(EventType.SCRIPT))
@@ -404,8 +403,7 @@ public class SeleniumDriver
             JavascriptExecutor js = (JavascriptExecutor)wd;
             while (sleeps < timeout)
             {
-                String CHECK_PAGE_READY_JS = "return (document.getElementById('state.dispatch')==null || document.getElementById('state.dispatch').getAttribute('value')==0) &&  (document.getElementById('state.context')==null ||  document.getElementById('state.context').getAttribute('value')=='ready');";
-                Object result = js.executeScript(CHECK_PAGE_READY_JS);
+                Object result = js.executeScript(checkPageJs);
                 if (result != null && Boolean.parseBoolean(result.toString().toLowerCase()))
                 {
                     break;

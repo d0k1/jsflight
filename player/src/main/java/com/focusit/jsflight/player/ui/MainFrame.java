@@ -1,7 +1,7 @@
 package com.focusit.jsflight.player.ui;
 
 import com.focusit.jmeter.JMeterRecorder;
-import com.focusit.jsflight.player.controller.*;
+import com.focusit.jsflight.player.fileconfigholder.*;
 import com.focusit.jsflight.player.input.FileInput;
 import com.focusit.jsflight.player.scenario.ScenarioProcessor;
 import com.focusit.jsflight.player.scenario.UserScenario;
@@ -281,14 +281,13 @@ public class MainFrame
             updateDuplicateHandlerController();
             updateScriptEventHandlerController();
 
-            InputController.getInstance().store(IUIController.defaultConfig);
-            JMeterController.getInstance().store(IUIController.defaultConfig);
-            OptionsController.getInstance().store(IUIController.defaultConfig);
-            PostProcessController.getInstance().store(IUIController.defaultConfig);
-            ScenarioController.getInstance().store(IUIController.defaultConfig);
-            WebLookupController.getInstance().store(IUIController.defaultConfig);
-            DuplicateHandlerController.getInstance().store(IUIController.defaultConfig);
-            ScriptEventExectutionController.getInstance().store(IUIController.defaultConfig);
+            InputFileConfigHolder.getInstance().store(IFileConfigHolder.defaultConfig);
+            JMeterFileConfigHolder.getInstance().store(IFileConfigHolder.defaultConfig);
+            CommonFileConfigHolder.getInstance().store(IFileConfigHolder.defaultConfig);
+            PostProcessFileConfigHolder.getInstance().store(IFileConfigHolder.defaultConfig);
+            WebLookupFileConfigHolder.getInstance().store(IFileConfigHolder.defaultConfig);
+            DuplicationFileConfigHolder.getInstance().store(IFileConfigHolder.defaultConfig);
+            ScriptEventExectutionController.getInstance().store(IFileConfigHolder.defaultConfig);
         }
         catch (Exception e)
         {
@@ -625,7 +624,7 @@ public class MainFrame
             {
                 try
                 {
-                    scenario.parseNextLine(InputController.getInstance().getFilename());
+                    scenario.parseNextLine(InputFileConfigHolder.getInstance().getFilename());
                     scenario.setPostProcessScenarioScript(scriptArea.getText());
                     long secs = scenario.postProcessScenario();
                     statisticsLabel.setText(
@@ -1307,35 +1306,38 @@ public class MainFrame
 
     private void initUIFromDuplicateHandlerController()
     {
-        duplicatesFilePath.setText(DuplicateHandlerController.getInstance().getScriptFileName());
-        duplicatesScriptArea.setText(DuplicateHandlerController.getInstance().getScriptBody());
+        duplicatesFilePath.setText(scenario.getConfiguration().getWebConfiguration().getDuplicationScriptFilename());
+        duplicatesScriptArea.setText(scenario.getConfiguration().getWebConfiguration().getDuplicationScript());
     }
 
     private void initUIFromInitController()
     {
-        filenameField.setText(InputController.getInstance().getFilename());
+        filenameField.setText(InputFileConfigHolder.getInstance().getFilename());
     }
 
     private void initUIFromJMeterController()
     {
-        JMeterController.getInstance().syncScripts(jmeter);
-        stepProcessScript.setText(JMeterController.getInstance().getStepProcessorScript());
-        scenarioProcessScript.setText(JMeterController.getInstance().getScenarioProcessorScript());
+        scenario.getConfiguration().getjMeterConfiguration().syncScripts(jmeter);
+        stepProcessScript.setText(scenario.getConfiguration().getjMeterConfiguration().getStepProcessorScript());
+        scenarioProcessScript.setText(scenario.getConfiguration().getjMeterConfiguration().getScenarioProcessorScript());
     }
 
     private void initUIFromOptionsController()
     {
-        OptionsController.getInstance().setConfiguration(scenario.getConfiguration().getCommonConfiguration());
+        CommonFileConfigHolder.getInstance().setConfiguration(scenario.getConfiguration().getCommonConfiguration());
+        JMeterFileConfigHolder.getInstance().setConfiguration(scenario.getConfiguration().getjMeterConfiguration());
+        ScriptEventExectutionController.getInstance().setConfiguration(scenario.getConfiguration().getScriptEventConfiguration());
+        WebLookupFileConfigHolder.getInstance().setConfiguration(scenario.getConfiguration().getWebConfiguration());
+        DuplicationFileConfigHolder.getInstance().setConfiguration(scenario.getConfiguration().getWebConfiguration());
         try
         {
-            InputController.getInstance().load(IUIController.defaultConfig);
-            JMeterController.getInstance().load(IUIController.defaultConfig);
-            OptionsController.getInstance().load(IUIController.defaultConfig);
-            PostProcessController.getInstance().load(IUIController.defaultConfig);
-            ScenarioController.getInstance().load(IUIController.defaultConfig);
-            WebLookupController.getInstance().load(IUIController.defaultConfig);
-            DuplicateHandlerController.getInstance().load(IUIController.defaultConfig);
-            ScriptEventExectutionController.getInstance().load(IUIController.defaultConfig);
+            InputFileConfigHolder.getInstance().load(IFileConfigHolder.defaultConfig);
+            JMeterFileConfigHolder.getInstance().load(IFileConfigHolder.defaultConfig);
+            CommonFileConfigHolder.getInstance().load(IFileConfigHolder.defaultConfig);
+            PostProcessFileConfigHolder.getInstance().load(IFileConfigHolder.defaultConfig);
+            WebLookupFileConfigHolder.getInstance().load(IFileConfigHolder.defaultConfig);
+            DuplicationFileConfigHolder.getInstance().load(IFileConfigHolder.defaultConfig);
+            ScriptEventExectutionController.getInstance().load(IFileConfigHolder.defaultConfig);
         }
         catch (Exception e)
         {
@@ -1358,20 +1360,20 @@ public class MainFrame
 
     private void initUIFromPostProcessorController()
     {
-        scriptFilename.setText(PostProcessController.getInstance().getFilename());
-        scriptArea.setText(PostProcessController.getInstance().getScript());
+        scriptFilename.setText(PostProcessFileConfigHolder.getInstance().getFilename());
+        scriptArea.setText(PostProcessFileConfigHolder.getInstance().getScript());
     }
 
     private void initUIFromScriptEventHandlerController()
     {
-        scriptEventHandlerFilePath.setText(ScriptEventExectutionController.getInstance().getFilename());
-        scriptEventHandlerScriptArea.setText(ScriptEventExectutionController.getInstance().getScript());
+        scriptEventHandlerFilePath.setText(scenario.getConfiguration().getScriptEventConfiguration().getFilename());
+        scriptEventHandlerScriptArea.setText(scenario.getConfiguration().getScriptEventConfiguration().getScript());
     }
 
     private void initUIFromWebLookupController()
     {
-        lookupFilename.setText(WebLookupController.getInstance().getFilename());
-        lookupScriptArea.setText(WebLookupController.getInstance().getScript());
+        lookupFilename.setText(scenario.getConfiguration().getWebConfiguration().getLookupScriptFilename());
+        lookupScriptArea.setText(scenario.getConfiguration().getWebConfiguration().getLookupScript());
     }
 
     /**
@@ -1416,20 +1418,19 @@ public class MainFrame
 
     private void updateDuplicateHandlerController()
     {
-        DuplicateHandlerController controller = DuplicateHandlerController.getInstance();
-        controller.setScriptFileName(duplicatesFilePath.getText());
-        controller.setScriptBody(duplicatesScriptArea.getText());
+        scenario.getConfiguration().getWebConfiguration().setDuplicationScriptFilename(duplicatesFilePath.getText());
+        scenario.getConfiguration().getWebConfiguration().setDuplicationScript(duplicatesScriptArea.getText());
     }
 
     private void updateInputController()
     {
-        InputController.getInstance().setFilename(filenameField.getText());
+        InputFileConfigHolder.getInstance().setFilename(filenameField.getText());
     }
 
     private void updateJMeterController()
     {
-        JMeterController.getInstance().setStepProcessorScript(jmeter, stepProcessScript.getText());
-        JMeterController.getInstance().setScenarioProcessorScript(jmeter, scenarioProcessScript.getText());
+        scenario.getConfiguration().getjMeterConfiguration().setStepProcessorScript(jmeter, stepProcessScript.getText());
+        scenario.getConfiguration().getjMeterConfiguration().setScenarioProcessorScript(jmeter, scenarioProcessScript.getText());
     }
 
     private void updateOptionsController()
@@ -1451,19 +1452,19 @@ public class MainFrame
 
     private void updatePostProcessController()
     {
-        PostProcessController.getInstance().setFilename(scriptFilename.getText());
-        PostProcessController.getInstance().setScript(scriptArea.getText());
+        PostProcessFileConfigHolder.getInstance().setFilename(scriptFilename.getText());
+        PostProcessFileConfigHolder.getInstance().setScript(scriptArea.getText());
     }
 
     private void updateScriptEventHandlerController()
     {
-        ScriptEventExectutionController.getInstance().setFilename(scriptFilename.getText());
-        ScriptEventExectutionController.getInstance().setScript(scriptEventHandlerScriptArea.getText());
+        scenario.getConfiguration().getScriptEventConfiguration().setFilename(scriptFilename.getText());
+        scenario.getConfiguration().getScriptEventConfiguration().setScript(scriptEventHandlerScriptArea.getText());
     }
 
     private void updateWebLookupController()
     {
-        WebLookupController.getInstance().setFilename(lookupFilename.getText());
-        WebLookupController.getInstance().setScript(lookupScriptArea.getText());
+        scenario.getConfiguration().getWebConfiguration().setLookupScriptFilename(lookupFilename.getText());
+        scenario.getConfiguration().getWebConfiguration().setLookupScript(lookupScriptArea.getText());
     }
 }

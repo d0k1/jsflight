@@ -1,20 +1,20 @@
-package com.focusit.jsflight.player.controller;
+package com.focusit.jsflight.player.fileconfigholder;
 
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
-public class PostProcessController extends UIController
+public class PostProcessFileConfigHolder extends UIFileConfigHolder
 {
     private static final long serialVersionUID = 1L;
 
-    private final static PostProcessController instance = new PostProcessController();
+    private final static PostProcessFileConfigHolder instance = new PostProcessFileConfigHolder();
     private String filename = "";
     private String script;
-    private PostProcessController()
+    private PostProcessFileConfigHolder()
     {
     }
 
-    public static PostProcessController getInstance()
+    public static PostProcessFileConfigHolder getInstance()
     {
         return instance;
     }
