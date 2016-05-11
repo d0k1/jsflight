@@ -1,8 +1,14 @@
 package com.focusit.jsflight.player.webdriver;
 
-import com.focusit.jsflight.player.constants.EventType;
-import com.focusit.jsflight.player.scenario.UserScenario;
-import com.focusit.jsflight.player.script.PlayerScriptProcessor;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.HashMap;
+
 import org.apache.commons.lang3.RandomStringUtils;
 import org.json.JSONObject;
 import org.openqa.selenium.*;
@@ -16,14 +22,9 @@ import org.openqa.selenium.remote.DesiredCapabilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashMap;
+import com.focusit.jsflight.player.constants.EventType;
+import com.focusit.jsflight.player.scenario.UserScenario;
+import com.focusit.jsflight.player.script.PlayerScriptProcessor;
 
 /**
  * Selenium webdriver proxy: runs a browser, sends events, make screenshots
@@ -40,7 +41,8 @@ public class SeleniumDriver
     private StringGenerator stringGen;
     private UserScenario scenario;
 
-    public SeleniumDriver(UserScenario scenario) {
+    public SeleniumDriver(UserScenario scenario)
+    {
         this.scenario = scenario;
     }
 
@@ -74,10 +76,10 @@ public class SeleniumDriver
     private static WebElement getMax(WebDriver wd, String script)
     {
         return (WebElement)new PlayerScriptProcessor().executeWebLookupScript(script, wd, null, null);
-//        List<WebElement> els = wd.findElements(By.xpath("//div[@id='gwt-debug-PopupListSelect']//div[@__idx]"));
-//        els.sort((WebElement el1, WebElement el2) -> Integer.valueOf(el1.getAttribute("__idx"))
-//                .compareTo(Integer.valueOf(el2.getAttribute("__idx"))));
-//        return els.get(els.size() - 1);
+        //        List<WebElement> els = wd.findElements(By.xpath("//div[@id='gwt-debug-PopupListSelect']//div[@__idx]"));
+        //        els.sort((WebElement el1, WebElement el2) -> Integer.valueOf(el1.getAttribute("__idx"))
+        //                .compareTo(Integer.valueOf(el2.getAttribute("__idx"))));
+        //        return els.get(els.size() - 1);
     }
 
     private static void resizeForEvent(WebDriver wd, JSONObject event)
@@ -121,7 +123,8 @@ public class SeleniumDriver
         {
             try
             {
-                if(new PlayerScriptProcessor().executeWebLookupScript(script, wd, null, null)!=null) {
+                if (new PlayerScriptProcessor().executeWebLookupScript(script, wd, null, null) != null)
+                {
                     log.debug("Yeeepeee UI showed up!");
                     return;
                 }
@@ -180,16 +183,16 @@ public class SeleniumDriver
     {
         TakesScreenshot shoter = (TakesScreenshot)wd;
         byte[] shot = shoter.getScreenshotAs(OutputType.BYTES);
-        File dir = new File(screenDir + File.separator
-                + Paths.get(scenario.getScenarioFilename()).getFileName().toString());
+        File dir = new File(
+                screenDir + File.separator + Paths.get(scenario.getScenarioFilename()).getFileName().toString());
 
         if (!dir.exists() && !dir.mkdirs())
         {
             return;
         }
 
-        try (FileOutputStream fos = new FileOutputStream(new String(dir.getAbsolutePath() + File.separator
-                + String.format("%05d", scenario.getPosition()) + ".png")))
+        try (FileOutputStream fos = new FileOutputStream(new String(
+                dir.getAbsolutePath() + File.separator + String.format("%05d", scenario.getPosition()) + ".png")))
         {
             fos.write(shot);
         }
@@ -199,7 +202,8 @@ public class SeleniumDriver
         }
     }
 
-    public void openEventUrl(WebDriver wd, JSONObject event, int pageTimeoutMs, String checkPageJs, String uiShownScript)
+    public void openEventUrl(WebDriver wd, JSONObject event, int pageTimeoutMs, String checkPageJs,
+            String uiShownScript)
     {
         String event_url = event.getString("url");
 
@@ -214,7 +218,8 @@ public class SeleniumDriver
         }
     }
 
-    public void processKeyboardEvent(WebDriver wd, JSONObject event, WebElement element, boolean useRandomChars) throws UnsupportedEncodingException
+    public void processKeyboardEvent(WebDriver wd, JSONObject event, WebElement element, boolean useRandomChars)
+            throws UnsupportedEncodingException
     {
         ensureStringGeneratorInitialized(useRandomChars);
         if (event.getString("type").equalsIgnoreCase(EventType.KEY_PRESS))
@@ -296,15 +301,21 @@ public class SeleniumDriver
 
             if (event.getInt("button") == 2)
             {
-                try {
+                try
+                {
                     new Actions(wd).contextClick(element).perform();
-                } catch (WebDriverException ex){
-                    try {
+                }
+                catch (WebDriverException ex)
+                {
+                    try
+                    {
                         log.warn("Error simulation right click. Retrying after 2 sec.");
                         Thread.sleep(2000);
 
                         new Actions(wd).contextClick(element).perform();
-                    } catch (Exception e) {
+                    }
+                    catch (Exception e)
+                    {
                         log.error(e.toString(), e);
                     }
                 }
@@ -354,7 +365,8 @@ public class SeleniumDriver
         }
     }
 
-    public void processScroll(WebDriver wd, JSONObject event, String target, int pageTimeoutMs, String checkPageJs, String getMaxElementGroovy)
+    public void processScroll(WebDriver wd, JSONObject event, String target, int pageTimeoutMs, String checkPageJs,
+            String getMaxElementGroovy)
     {
         long timeout = System.currentTimeMillis() + 20000l;
         if (checkElementPresent(wd, target))
@@ -365,13 +377,17 @@ public class SeleniumDriver
         {
             waitPageReady(wd, event, pageTimeoutMs, checkPageJs);
             // TODO WebLookup script must return the element
-            try {
+            try
+            {
                 WebElement el = getMax(wd, getMaxElementGroovy);
-                scroll((JavascriptExecutor) wd, el);
-                if (checkElementPresent(wd, target)) {
+                scroll((JavascriptExecutor)wd, el);
+                if (checkElementPresent(wd, target))
+                {
                     return;
                 }
-            } catch (Exception ex){
+            }
+            catch (Exception ex)
+            {
                 log.error(ex.toString(), ex);
             }
         }
@@ -391,7 +407,7 @@ public class SeleniumDriver
 
     public void waitPageReady(WebDriver wd, JSONObject event, int pageTimeoutMs, String checkPageJs)
     {
-    	String type = event.getString("type");
+        String type = event.getString("type");
         if (type.equalsIgnoreCase(EventType.XHR) || type.equalsIgnoreCase(EventType.SCRIPT))
         {
             return;
@@ -434,7 +450,8 @@ public class SeleniumDriver
         }
     }
 
-    public WebDriver getDriverForEvent(JSONObject event, boolean firefox, String path, String display, String proxyHost, String proxyPort)
+    public WebDriver getDriverForEvent(JSONObject event, boolean firefox, String path, String display, String proxyHost,
+            String proxyPort)
     {
         String tag = scenario.getTagForEvent(event);
 
@@ -474,7 +491,8 @@ public class SeleniumDriver
                 {
                     binary = new FirefoxBinary();
                 }
-                if(display!=null && !display.trim().isEmpty()) {
+                if (display != null && !display.trim().isEmpty())
+                {
                     binary.setEnvironmentProperty("DISPLAY", display);
                 }
                 driver = new FirefoxDriver(binary, profile, cap);
@@ -524,7 +542,8 @@ public class SeleniumDriver
         }
     }
 
-    public void setScenario(UserScenario scenario) {
+    public void setScenario(UserScenario scenario)
+    {
         this.scenario = scenario;
     }
 
