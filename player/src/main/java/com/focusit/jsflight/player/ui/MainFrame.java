@@ -1,15 +1,18 @@
 package com.focusit.jsflight.player.ui;
 
-import com.focusit.jmeter.JMeterRecorder;
-import com.focusit.jsflight.player.fileconfigholder.*;
-import com.focusit.jsflight.player.input.FileInput;
-import com.focusit.jsflight.player.scenario.ScenarioProcessor;
-import com.focusit.jsflight.player.scenario.UserScenario;
-import com.focusit.jsflight.player.webdriver.SeleniumDriver;
-import com.jgoodies.forms.layout.ColumnSpec;
-import com.jgoodies.forms.layout.FormLayout;
-import com.jgoodies.forms.layout.FormSpecs;
-import com.jgoodies.forms.layout.RowSpec;
+import java.awt.*;
+import java.awt.event.*;
+import java.io.File;
+import java.io.IOException;
+import java.util.Date;
+
+import javax.swing.*;
+import javax.swing.event.CellEditorListener;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+import javax.swing.table.AbstractTableModel;
+
 import org.apache.commons.io.FileUtils;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
@@ -20,17 +23,16 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.*;
-import javax.swing.event.CellEditorListener;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
-import javax.swing.table.AbstractTableModel;
-import java.awt.*;
-import java.awt.event.*;
-import java.io.File;
-import java.io.IOException;
-import java.util.Date;
+import com.focusit.jmeter.JMeterRecorder;
+import com.focusit.jsflight.player.fileconfigholder.*;
+import com.focusit.jsflight.player.input.FileInput;
+import com.focusit.jsflight.player.scenario.ScenarioProcessor;
+import com.focusit.jsflight.player.scenario.UserScenario;
+import com.focusit.jsflight.player.webdriver.SeleniumDriver;
+import com.jgoodies.forms.layout.ColumnSpec;
+import com.jgoodies.forms.layout.FormLayout;
+import com.jgoodies.forms.layout.FormSpecs;
+import com.jgoodies.forms.layout.RowSpec;
 
 public class MainFrame
 {
@@ -255,7 +257,7 @@ public class MainFrame
     protected void playTheScenario()
     {
         saveControlersOptions();
-        ScenarioProcessor.play(scenario, seleniumDriver);
+        new ScenarioProcessor().play(scenario, seleniumDriver);
         model.fireTableDataChanged();
     }
 
@@ -585,7 +587,7 @@ public class MainFrame
             @Override
             public void mouseClicked(MouseEvent e)
             {
-                ScenarioProcessor.applyStep(scenario, seleniumDriver, scenario.getPosition());
+                new ScenarioProcessor().applyStep(scenario, seleniumDriver, scenario.getPosition());
                 scenario.next();
                 model.fireTableDataChanged();
             }
@@ -614,7 +616,7 @@ public class MainFrame
             @Override
             public void mouseClicked(MouseEvent e)
             {
-                ScenarioProcessor.applyStep(scenario, seleniumDriver, table.getSelectedRow());
+                new ScenarioProcessor().applyStep(scenario, seleniumDriver, table.getSelectedRow());
             }
         });
         btnParse.addMouseListener(new MouseAdapter()

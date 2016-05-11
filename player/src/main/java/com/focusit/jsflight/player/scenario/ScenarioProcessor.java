@@ -17,7 +17,7 @@ import com.focusit.jsflight.player.webdriver.SeleniumDriver;
 public class ScenarioProcessor {
     private static final Logger LOG = LoggerFactory.getLogger(ScenarioProcessor.class);
 
-    private static WebDriver getWebDriver(UserScenario scenario, SeleniumDriver seleniumDriver, JSONObject event){
+    private WebDriver getWebDriver(UserScenario scenario, SeleniumDriver seleniumDriver, JSONObject event){
         boolean firefox = scenario.getConfiguration().getCommonConfiguration().isUseFirefox();
         String path = firefox ? scenario.getConfiguration().getCommonConfiguration().getFfPath() : scenario.getConfiguration().getCommonConfiguration().getPjsPath();
         String proxyHost = scenario.getConfiguration().getCommonConfiguration().getProxyHost();
@@ -28,7 +28,7 @@ public class ScenarioProcessor {
         return theWebDriver;
     }
 
-    public static void applyStep(UserScenario scenario, SeleniumDriver seleniumDriver, int position){
+    public void applyStep(UserScenario scenario, SeleniumDriver seleniumDriver, int position){
         scenario.getContext().setCurrentScenarioStep(scenario.getStepAt(position));
 
         new PlayerScriptProcessor().runStepPrePostScript(scenario, position, true);
@@ -127,7 +127,7 @@ public class ScenarioProcessor {
         }
     }
 
-    public static void play(UserScenario scenario, SeleniumDriver seleniumDriver)
+    public void play(UserScenario scenario, SeleniumDriver seleniumDriver)
     {
         long begin = System.currentTimeMillis();
 
@@ -160,7 +160,7 @@ public class ScenarioProcessor {
         LOG.info(String.format("Done(%d):playing", System.currentTimeMillis() - begin));
     }
 
-    public static void play(UserScenario scenario, SeleniumDriver seleniumDriver, int start, int finish)
+    public void play(UserScenario scenario, SeleniumDriver seleniumDriver, int start, int finish)
     {
         long begin = System.currentTimeMillis();
 

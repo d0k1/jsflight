@@ -46,7 +46,7 @@ public class SeleniumDriver
         this.scenario = scenario;
     }
 
-    private static boolean checkElementPresent(WebDriver wd, String target)
+    private boolean checkElementPresent(WebDriver wd, String target)
     {
         try
         {
@@ -60,7 +60,7 @@ public class SeleniumDriver
 
     }
 
-    private static void ensureElementInWindow(WebDriver wd, WebElement element)
+    private void ensureElementInWindow(WebDriver wd, WebElement element)
     {
         int windowHeight = wd.manage().window().getSize().getHeight();
         int elementYCoord = element.getLocation().getY();
@@ -73,16 +73,12 @@ public class SeleniumDriver
         }
     }
 
-    private static WebElement getMax(WebDriver wd, String script)
+    private WebElement getMax(WebDriver wd, String script)
     {
         return (WebElement)new PlayerScriptProcessor().executeWebLookupScript(script, wd, null, null);
-        //        List<WebElement> els = wd.findElements(By.xpath("//div[@id='gwt-debug-PopupListSelect']//div[@__idx]"));
-        //        els.sort((WebElement el1, WebElement el2) -> Integer.valueOf(el1.getAttribute("__idx"))
-        //                .compareTo(Integer.valueOf(el2.getAttribute("__idx"))));
-        //        return els.get(els.size() - 1);
     }
 
-    private static void resizeForEvent(WebDriver wd, JSONObject event)
+    private void resizeForEvent(WebDriver wd, JSONObject event)
     {
         int w = 0;
         int h = 0;
@@ -111,12 +107,12 @@ public class SeleniumDriver
         wd.manage().window().setSize(new Dimension(w, h));
     }
 
-    private static void scroll(JavascriptExecutor js, WebElement element)
+    private void scroll(JavascriptExecutor js, WebElement element)
     {
         js.executeScript("arguments[0].scrollIntoView(true)", element);
     }
 
-    private static void waitUiShow(String script, WebDriver wd)
+    private void waitUiShow(String script, WebDriver wd)
     {
         long timeout = System.currentTimeMillis() + 20000L;
         while (System.currentTimeMillis() < timeout)
@@ -142,7 +138,7 @@ public class SeleniumDriver
                 }
             }
         }
-        throw new NoSuchElementException("UI didn`t show up. =(");
+        throw new NoSuchElementException("UI didn't show up");
     }
 
     public void closeWebDrivers()

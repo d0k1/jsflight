@@ -1,17 +1,18 @@
 package com.focusit.jsflight.player.cli;
 
-import com.focusit.jmeter.JMeterRecorder;
-import com.focusit.jsflight.player.scenario.ScenarioProcessor;
-import com.focusit.jsflight.player.scenario.UserScenario;
-import com.focusit.jsflight.player.webdriver.SeleniumDriver;
-import org.apache.commons.io.FileUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+
+import org.apache.commons.io.FileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.focusit.jmeter.JMeterRecorder;
+import com.focusit.jsflight.player.scenario.ScenarioProcessor;
+import com.focusit.jsflight.player.scenario.UserScenario;
+import com.focusit.jsflight.player.webdriver.SeleniumDriver;
 
 public class CliPlayer
 {
@@ -56,7 +57,7 @@ public class CliPlayer
             jmeter.startRecording();
             try
             {
-                ScenarioProcessor.play(scenario, seleniumDriver, Integer.parseInt(config.getStartStep()), Integer.parseInt(config.getFinishStep()));
+                new ScenarioProcessor().play(scenario, seleniumDriver, Integer.parseInt(config.getStartStep()), Integer.parseInt(config.getFinishStep()));
             }
             finally
             {
@@ -67,7 +68,7 @@ public class CliPlayer
         }
         else
         {
-            ScenarioProcessor.play(scenario, seleniumDriver, Integer.parseInt(config.getStartStep()), Integer.parseInt(config.getFinishStep()));
+            new ScenarioProcessor().play(scenario, seleniumDriver, Integer.parseInt(config.getStartStep()), Integer.parseInt(config.getFinishStep()));
         }
     }
 
