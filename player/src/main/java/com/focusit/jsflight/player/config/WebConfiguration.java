@@ -3,43 +3,52 @@ package com.focusit.jsflight.player.config;
 /**
  * Created by dkirpichenkov on 06.05.16.
  */
-public class WebConfiguration {
+public class WebConfiguration
+{
 
     private String lookupScriptFilename = "";
-    private String lookupScript="";
+    private String lookupScript = "";
 
     private String duplicationScriptFilename = "";
-    private String duplicationScript="";
+    private String duplicationScript = "";
 
-    public String getLookupScriptFilename() {
+    public String getLookupScriptFilename()
+    {
         return lookupScriptFilename;
     }
 
-    public void setLookupScriptFilename(String filename) {
+    public void setLookupScriptFilename(String filename)
+    {
         this.lookupScriptFilename = filename;
     }
 
-    public String getLookupScript() {
+    public String getLookupScript()
+    {
         return lookupScript;
     }
 
-    public void setLookupScript(String script) {
+    public void setLookupScript(String script)
+    {
         this.lookupScript = script;
     }
 
-    public String getDuplicationScriptFilename() {
+    public String getDuplicationScriptFilename()
+    {
         return duplicationScriptFilename;
     }
 
-    public void setDuplicationScriptFilename(String duplicationScriptFilename) {
+    public void setDuplicationScriptFilename(String duplicationScriptFilename)
+    {
         this.duplicationScriptFilename = duplicationScriptFilename;
     }
 
-    public String getDuplicationScript() {
+    public String getDuplicationScript()
+    {
         return duplicationScript;
     }
 
-    public void setDuplicationScript(String duplicationScript) {
+    public void setDuplicationScript(String duplicationScript)
+    {
         this.duplicationScript = duplicationScript;
     }
 }

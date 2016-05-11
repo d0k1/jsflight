@@ -1,5 +1,13 @@
 package com.focusit.jsflight.player.scenario;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import com.focusit.jsflight.player.config.Configuration;
 import com.focusit.jsflight.player.constants.EventType;
 import com.focusit.jsflight.player.input.Events;
@@ -7,17 +15,10 @@ import com.focusit.jsflight.player.input.FileInput;
 import com.focusit.jsflight.player.script.PlayerScriptProcessor;
 import com.focusit.script.jmeter.JMeterJSFlightBridge;
 import com.focusit.script.player.PlayerContext;
-import org.json.JSONArray;
-import org.json.JSONObject;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 
 /**
- * Recorded scenario encapsulation: parses file, plays the scenario by step, modifies the scenario, saves to a disk
- * 
+ * Recorded scenario encapsulation: parses file, plays the scenario by step, modifies the scenario, saves to a disk.
+ *
  * @author Denis V. Kirpichenkov
  *
  */

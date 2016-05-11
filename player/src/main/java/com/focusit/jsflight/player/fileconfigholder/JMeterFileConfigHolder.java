@@ -1,9 +1,9 @@
 package com.focusit.jsflight.player.fileconfigholder;
 
-import com.focusit.jsflight.player.config.JMeterConfiguration;
-
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+
+import com.focusit.jsflight.player.config.JMeterConfiguration;
 
 public class JMeterFileConfigHolder extends UIFileConfigHolder
 {
@@ -25,8 +25,8 @@ public class JMeterFileConfigHolder extends UIFileConfigHolder
     public void load(String file) throws Exception
     {
         ObjectInputStream stream = getInputStream(file);
-        configuration.setStepProcessorScript(null, (String) stream.readObject());
-        configuration.setScenarioProcessorScript(null, (String) stream.readObject());
+        configuration.setStepProcessorScript(null, (String)stream.readObject());
+        configuration.setScenarioProcessorScript(null, (String)stream.readObject());
         //syncScripts();
     }
 
@@ -44,7 +44,8 @@ public class JMeterFileConfigHolder extends UIFileConfigHolder
         return null;
     }
 
-    public void setConfiguration(JMeterConfiguration configuration) {
+    public void setConfiguration(JMeterConfiguration configuration)
+    {
         this.configuration = configuration;
     }
 }

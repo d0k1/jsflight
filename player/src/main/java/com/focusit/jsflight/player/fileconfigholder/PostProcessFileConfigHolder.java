@@ -10,6 +10,7 @@ public class PostProcessFileConfigHolder extends UIFileConfigHolder
     private final static PostProcessFileConfigHolder instance = new PostProcessFileConfigHolder();
     private String filename = "";
     private String script;
+
     private PostProcessFileConfigHolder()
     {
     }
@@ -32,7 +33,7 @@ public class PostProcessFileConfigHolder extends UIFileConfigHolder
     @Override
     public void load(String file) throws Exception
     {
-    	ObjectInputStream stream = getInputStream(file);
+        ObjectInputStream stream = getInputStream(file);
         script = (String)stream.readObject();
         filename = (String)stream.readObject();
     }
@@ -40,7 +41,7 @@ public class PostProcessFileConfigHolder extends UIFileConfigHolder
     @Override
     public void store(String file) throws Exception
     {
-    	ObjectOutputStream stream = getOutputStream(file);
+        ObjectOutputStream stream = getOutputStream(file);
         stream.writeObject(script);
         stream.writeObject(filename);
     }
@@ -51,11 +52,13 @@ public class PostProcessFileConfigHolder extends UIFileConfigHolder
         return "postprocess";
     }
 
-	public String getFilename() {
-		return filename;
-	}
+    public String getFilename()
+    {
+        return filename;
+    }
 
-	public void setFilename(String filename) {
-		this.filename = filename;
-	}
+    public void setFilename(String filename)
+    {
+        this.filename = filename;
+    }
 }

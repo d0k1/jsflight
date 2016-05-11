@@ -1,26 +1,25 @@
 package com.focusit.jsflight.player.fileconfigholder;
 
-import com.focusit.jsflight.player.config.CommonConfiguration;
-
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+
+import com.focusit.jsflight.player.config.CommonConfiguration;
 
 public class CommonFileConfigHolder extends UIFileConfigHolder
 {
     private static final long serialVersionUID = 1L;
 
     private final static CommonFileConfigHolder instance = new CommonFileConfigHolder();
-
-    public static CommonFileConfigHolder getInstance()
-    {
-        return instance;
-    }
+    private CommonConfiguration configuration;
 
     private CommonFileConfigHolder()
     {
     }
 
-    private CommonConfiguration configuration;
+    public static CommonFileConfigHolder getInstance()
+    {
+        return instance;
+    }
 
     @Override
     public void load(String file) throws Exception
@@ -74,7 +73,8 @@ public class CommonFileConfigHolder extends UIFileConfigHolder
         return "options";
     }
 
-    public void setConfiguration(CommonConfiguration configuration) {
+    public void setConfiguration(CommonConfiguration configuration)
+    {
         this.configuration = configuration;
     }
 }

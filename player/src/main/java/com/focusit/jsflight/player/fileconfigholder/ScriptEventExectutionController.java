@@ -1,22 +1,21 @@
 package com.focusit.jsflight.player.fileconfigholder;
 
-import com.focusit.jsflight.player.config.ScriptEventConfiguration;
-
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+
+import com.focusit.jsflight.player.config.ScriptEventConfiguration;
 
 public class ScriptEventExectutionController extends UIFileConfigHolder
 {
     private static final long serialVersionUID = 8326565501493347454L;
 
     private static final ScriptEventExectutionController INSTANCE = new ScriptEventExectutionController();
+    private ScriptEventConfiguration configuration;
 
     public static ScriptEventExectutionController getInstance()
     {
         return INSTANCE;
     }
-
-    private ScriptEventConfiguration configuration;
 
     @Override
     public void load(String file) throws Exception
@@ -40,7 +39,8 @@ public class ScriptEventExectutionController extends UIFileConfigHolder
         return "scriptEventExecution";
     }
 
-    public void setConfiguration(ScriptEventConfiguration configuration) {
+    public void setConfiguration(ScriptEventConfiguration configuration)
+    {
         this.configuration = configuration;
     }
 }

@@ -1,21 +1,19 @@
 package com.focusit.jsflight.player.fileconfigholder;
 
-
 public class InputFileConfigHolder extends UIFileConfigHolder
 {
     private static final long serialVersionUID = 1L;
 
     private final static InputFileConfigHolder instance = new InputFileConfigHolder();
-
-    public static InputFileConfigHolder getInstance()
-    {
-        return instance;
-    }
-
     private String filename = "";
 
     private InputFileConfigHolder()
     {
+    }
+
+    public static InputFileConfigHolder getInstance()
+    {
+        return instance;
     }
 
     public String getFilename()
@@ -23,15 +21,15 @@ public class InputFileConfigHolder extends UIFileConfigHolder
         return filename;
     }
 
+    public void setFilename(String filename)
+    {
+        this.filename = filename;
+    }
+
     @Override
     public void load(String file) throws Exception
     {
         filename = (String)getInputStream(file).readObject();
-    }
-
-    public void setFilename(String filename)
-    {
-        this.filename = filename;
     }
 
     @Override

@@ -1,12 +1,15 @@
 package com.focusit.model;
 
-import com.focusit.jsflight.player.config.Configuration;
+import java.util.Date;
+
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.util.Date;
+import com.focusit.jsflight.player.config.Configuration;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * Playing process state
@@ -44,12 +47,20 @@ public class Experiment {
         return id.toString();
     }
 
+    public void setId(ObjectId id) {
+        this.id = id;
+    }
+
     public void setId(String id) {
         this.id = new ObjectId(id);
     }
 
     public String getRecordingId() {
         return recordingId.toString();
+    }
+
+    public void setRecordingId(ObjectId recordingId) {
+        this.recordingId = recordingId;
     }
 
     public void setRecordingId(String recordingId) {
@@ -72,6 +83,7 @@ public class Experiment {
         this.selectQuery = selectQuery;
     }
 
+    @SuppressFBWarnings("EI_EXPOSE_REP")
     public Date getCreated() {
         return created;
     }
@@ -86,14 +98,6 @@ public class Experiment {
 
     public void setScreenshots(Boolean screenshots) {
         this.screenshots = screenshots;
-    }
-
-    public void setId(ObjectId id) {
-        this.id = id;
-    }
-
-    public void setRecordingId(ObjectId recordingId) {
-        this.recordingId = recordingId;
     }
 
     public ExperimentStatus getStatus() {

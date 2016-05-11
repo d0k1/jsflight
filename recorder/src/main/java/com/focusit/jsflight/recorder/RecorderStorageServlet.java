@@ -49,6 +49,7 @@ public class RecorderStorageServlet extends HttpServlet
         {
             resp.getWriter().print("{\"OK\"}");
             resp.setStatus(HttpServletResponse.SC_OK);
+            return;
         }
 
         // 'cause form's data starts with 'data='

@@ -1,22 +1,21 @@
 package com.focusit.jsflight.player.fileconfigholder;
 
-import com.focusit.jsflight.player.config.WebConfiguration;
-
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+
+import com.focusit.jsflight.player.config.WebConfiguration;
 
 public class DuplicationFileConfigHolder extends UIFileConfigHolder
 {
     private static final long serialVersionUID = 5900843806336550183L;
 
     private static final DuplicationFileConfigHolder INSTANCE = new DuplicationFileConfigHolder();
+    private WebConfiguration configuration;
 
     public static DuplicationFileConfigHolder getInstance()
     {
         return INSTANCE;
     }
-
-    private WebConfiguration configuration;
 
     @Override
     public void load(String file) throws Exception
@@ -40,11 +39,13 @@ public class DuplicationFileConfigHolder extends UIFileConfigHolder
         return "duplicateHandler";
     }
 
-    public WebConfiguration getConfiguration() {
+    public WebConfiguration getConfiguration()
+    {
         return configuration;
     }
 
-    public void setConfiguration(WebConfiguration configuration) {
+    public void setConfiguration(WebConfiguration configuration)
+    {
         this.configuration = configuration;
     }
 }

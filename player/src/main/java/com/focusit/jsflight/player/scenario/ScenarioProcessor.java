@@ -1,13 +1,14 @@
 package com.focusit.jsflight.player.scenario;
 
-import com.focusit.jsflight.player.constants.EventType;
-import com.focusit.jsflight.player.script.PlayerScriptProcessor;
-import com.focusit.jsflight.player.webdriver.SeleniumDriver;
 import org.json.JSONObject;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.focusit.jsflight.player.constants.EventType;
+import com.focusit.jsflight.player.script.PlayerScriptProcessor;
+import com.focusit.jsflight.player.webdriver.SeleniumDriver;
 
 /**
  * Class that really replays an event in given scenario and given selenium driver
@@ -78,7 +79,6 @@ public class ScenarioProcessor {
             {
                 switch (type)
                 {
-
                     case EventType.MOUSEWHEEL:
                         seleniumDriver.processMouseWheel(lookupScript, theWebDriver, event, target);
                         break;
