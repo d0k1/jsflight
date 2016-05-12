@@ -1,5 +1,6 @@
 package com.focusit.controllers;
 
+import com.focusit.jsflight.player.config.Configuration;
 import com.focusit.model.Event;
 import com.focusit.model.Experiment;
 import com.focusit.model.ExperimentStatus;
@@ -189,7 +190,11 @@ public class PlayerController {
 
         if(!Boolean.TRUE.equals(paused)) {
             experiment.getStatus().setPlaying(true);
+        } else {
+            experiment.getStatus().setPlaying(false);
         }
+
+        experiment.setConfiguration(new Configuration());
 
         experimnetRepository.save(experiment);
         return experiment;
