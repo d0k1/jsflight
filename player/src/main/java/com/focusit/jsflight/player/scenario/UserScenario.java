@@ -32,50 +32,6 @@ public class UserScenario
     private PlayerContext context = new PlayerContext();
     private Configuration configuration = new Configuration();
 
-    public PlayerContext getContext() {
-        return context;
-    }
-
-    public int getPosition()
-    {
-        return position;
-    }
-    
-    public void setPosition(int position) {
-        this.position = position;
-    }
-
-    public String getScenarioFilename()
-    {
-        return "";
-    }
-
-    public int getStepsCount()
-    {
-        return events.size();
-    }
-
-    public String getTagForEvent(JSONObject event)
-    {
-        String tag = "null";
-        if (event.has(JMeterJSFlightBridge.TAG_FIELD))
-        {
-            tag = event.getString(JMeterJSFlightBridge.TAG_FIELD);
-        }
-
-        return tag;
-    }
-
-    public void setPostProcessScenarioScript(String postProcessScenarioScript)
-    {
-        this.postProcessScenarioScript = postProcessScenarioScript;
-    }
-
-    public void updatePrevEvent(JSONObject event)
-    {
-        lastEvents.put(getTagForEvent(event), event);
-    }
-
     public void checkStep(int position)
     {
 
@@ -93,14 +49,50 @@ public class UserScenario
         events.remove(position);
     }
 
+    public Configuration getConfiguration()
+    {
+        return configuration;
+    }
+
+    public PlayerContext getContext()
+    {
+        return context;
+    }
+
+    public int getPosition()
+    {
+        return position;
+    }
+
     public JSONObject getPrevEvent(JSONObject event)
     {
         return lastEvents.get(getTagForEvent(event));
     }
 
+    public String getScenarioFilename()
+    {
+        return "";
+    }
+
     public JSONObject getStepAt(int position)
     {
         return events.get(position);
+    }
+
+    public int getStepsCount()
+    {
+        return events.size();
+    }
+
+    public String getTagForEvent(JSONObject event)
+    {
+        String tag = "null";
+        if (event.has(JMeterJSFlightBridge.TAG_FIELD))
+        {
+            tag = event.getString(JMeterJSFlightBridge.TAG_FIELD);
+        }
+
+        return tag;
     }
 
     public String getTargetForEvent(JSONObject event)
@@ -121,6 +113,23 @@ public class UserScenario
 
         String target = array.getJSONObject(0).getString("getxp");
         return target;
+    }
+
+    public boolean isEventBad(JSONObject event)
+    {
+        return event.getString("type").equals(EventType.SCRIPT) ? false
+                : !event.has("target") || event.get("target") == null || event.get("target") == JSONObject.NULL;
+    }
+
+    public boolean isEventIgnored(String eventType)
+    {
+        return eventType.equalsIgnoreCase(EventType.XHR) || eventType.equalsIgnoreCase(EventType.HASH_CHANGE)
+                || (!eventType.equalsIgnoreCase(EventType.CLICK) && !eventType.equalsIgnoreCase(EventType.KEY_PRESS)
+                        && !eventType.equalsIgnoreCase(EventType.KEY_UP)
+                        && !eventType.equalsIgnoreCase(EventType.KEY_DOWN)
+                        && !eventType.equalsIgnoreCase(EventType.SCROLL_EMULATION)
+                        && !eventType.equalsIgnoreCase(EventType.MOUSEWHEEL)
+                        && !eventType.equalsIgnoreCase(EventType.MOUSEDOWN) && !eventType.equals(EventType.SCRIPT));
     }
 
     public boolean isStepDuplicates(String script, JSONObject event)
@@ -217,39 +226,33 @@ public class UserScenario
         FileInput.saveEvents(events, filename);
     }
 
+    public void setConfiguration(Configuration configuration)
+    {
+        this.configuration = configuration;
+    }
+
+    public void setPosition(int position)
+    {
+        this.position = position;
+    }
+
+    public void setPostProcessScenarioScript(String postProcessScenarioScript)
+    {
+        this.postProcessScenarioScript = postProcessScenarioScript;
+    }
+
     public void skip()
     {
         position++;
     }
 
+    public void updatePrevEvent(JSONObject event)
+    {
+        lastEvents.put(getTagForEvent(event), event);
+    }
+
     public void updateStep(int position, JSONObject event)
     {
         events.set(position, event);
-    }
-
-    public boolean isEventBad(JSONObject event)
-    {
-        return event.getString("type").equals(EventType.SCRIPT) ? false
-                : !event.has("target") || event.get("target") == null || event.get("target") == JSONObject.NULL;
-    }
-
-    public boolean isEventIgnored(String eventType)
-    {
-        return eventType.equalsIgnoreCase(EventType.XHR) || eventType.equalsIgnoreCase(EventType.HASH_CHANGE)
-                || (!eventType.equalsIgnoreCase(EventType.CLICK) && !eventType.equalsIgnoreCase(EventType.KEY_PRESS)
-                        && !eventType.equalsIgnoreCase(EventType.KEY_UP)
-                        && !eventType.equalsIgnoreCase(EventType.KEY_DOWN)
-                        && !eventType.equalsIgnoreCase(EventType.SCROLL_EMULATION)
-                        && !eventType.equalsIgnoreCase(EventType.MOUSEWHEEL)
-                        && !eventType.equalsIgnoreCase(EventType.MOUSEDOWN)
-                        && !eventType.equals(EventType.SCRIPT));
-    }
-
-    public Configuration getConfiguration() {
-        return configuration;
-    }
-
-    public void setConfiguration(Configuration configuration) {
-        this.configuration = configuration;
     }
 }

@@ -40,6 +40,11 @@ public class CliPlayer
         }
     }
 
+    public SeleniumDriver getSeleniumDriver()
+    {
+        return seleniumDriver;
+    }
+
     public void play() throws IOException
     {
         UserScenario scenario = new UserScenario();
@@ -57,7 +62,8 @@ public class CliPlayer
             jmeter.startRecording();
             try
             {
-                new ScenarioProcessor().play(scenario, seleniumDriver, Integer.parseInt(config.getStartStep()), Integer.parseInt(config.getFinishStep()));
+                new ScenarioProcessor().play(scenario, seleniumDriver, Integer.parseInt(config.getStartStep()),
+                        Integer.parseInt(config.getFinishStep()));
             }
             finally
             {
@@ -68,7 +74,8 @@ public class CliPlayer
         }
         else
         {
-            new ScenarioProcessor().play(scenario, seleniumDriver, Integer.parseInt(config.getStartStep()), Integer.parseInt(config.getFinishStep()));
+            new ScenarioProcessor().play(scenario, seleniumDriver, Integer.parseInt(config.getStartStep()),
+                    Integer.parseInt(config.getFinishStep()));
         }
     }
 
@@ -99,20 +106,20 @@ public class CliPlayer
         scenario.getConfiguration().getCommonConfiguration().setUsePhantomJs(config.isUsePhantomJs());
         scenario.getConfiguration().getCommonConfiguration().setPjsPath(config.getPjsPath());
         scenario.getConfiguration().getCommonConfiguration().setUseRandomChars(config.isUseRandomChars());
+        scenario.getConfiguration().getCommonConfiguration().setFormOrDialogXpath(config.getFormDialogXpath());
 
         scenario.getConfiguration().getCommonConfiguration().loadDefaultValues();
 
         //Init weblookup script
-        scenario.getConfiguration().getWebConfiguration().setLookupScript(FileUtils.readFileToString(new File(config.getWebLookupScriptPath())));
+        scenario.getConfiguration().getWebConfiguration()
+                .setLookupScript(FileUtils.readFileToString(new File(config.getWebLookupScriptPath())));
 
         //Init duplicate handler script
-        scenario.getConfiguration().getWebConfiguration().setDuplicationScript(FileUtils.readFileToString(new File(config.getDuplicateHandlerScriptPath())));
+        scenario.getConfiguration().getWebConfiguration()
+                .setDuplicationScript(FileUtils.readFileToString(new File(config.getDuplicateHandlerScriptPath())));
 
         //Init script events handler
-        scenario.getConfiguration().getScriptEventConfiguration().setScript(FileUtils.readFileToString(new File(config.getScriptEventHandlerScriptPath())));
-    }
-
-    public SeleniumDriver getSeleniumDriver() {
-        return seleniumDriver;
+        scenario.getConfiguration().getScriptEventConfiguration()
+                .setScript(FileUtils.readFileToString(new File(config.getScriptEventHandlerScriptPath())));
     }
 }

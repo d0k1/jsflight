@@ -1,12 +1,39 @@
 package com.focusit.jsflight.player.ui;
 
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
 import java.util.Date;
 
-import javax.swing.*;
+import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
+import javax.swing.DefaultCellEditor;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.JTabbedPane;
+import javax.swing.JTable;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import javax.swing.JToolBar;
+import javax.swing.SwingConstants;
 import javax.swing.event.CellEditorListener;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ListSelectionEvent;
@@ -24,7 +51,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.focusit.jmeter.JMeterRecorder;
-import com.focusit.jsflight.player.fileconfigholder.*;
+import com.focusit.jsflight.player.fileconfigholder.CommonFileConfigHolder;
+import com.focusit.jsflight.player.fileconfigholder.DuplicationFileConfigHolder;
+import com.focusit.jsflight.player.fileconfigholder.IFileConfigHolder;
+import com.focusit.jsflight.player.fileconfigholder.InputFileConfigHolder;
+import com.focusit.jsflight.player.fileconfigholder.JMeterFileConfigHolder;
+import com.focusit.jsflight.player.fileconfigholder.PostProcessFileConfigHolder;
+import com.focusit.jsflight.player.fileconfigholder.ScriptEventExectutionController;
+import com.focusit.jsflight.player.fileconfigholder.WebLookupFileConfigHolder;
 import com.focusit.jsflight.player.input.FileInput;
 import com.focusit.jsflight.player.scenario.ScenarioProcessor;
 import com.focusit.jsflight.player.scenario.UserScenario;
@@ -76,6 +110,7 @@ public class MainFrame
 
     private RSyntaxTextArea scriptEventHandlerScriptArea;
     private JTextField firefoxDsiplay;
+    private JTextField formDialogXpathField;
 
     private SeleniumDriver seleniumDriver = new SeleniumDriver(scenario);
 
@@ -1000,6 +1035,11 @@ public class MainFrame
         firefoxDsiplay.setColumns(10);
         optionsPanel.add(firefoxDsiplay, "4, 24, fill, default");
 
+        JLabel lblFromXpath = new JLabel("Form or dialog xpath");
+        optionsPanel.add(lblFromXpath, "2, 26, right, default");
+
+        formDialogXpathField = new JTextField();
+        optionsPanel.add(formDialogXpathField, "4, 26, fill, default");
         jmeterPanel = new JPanel();
         tabbedPane.addTab("JMeter", null, jmeterPanel, null);
         jmeterPanel.setLayout(new FormLayout(
@@ -1321,14 +1361,16 @@ public class MainFrame
     {
         scenario.getConfiguration().getjMeterConfiguration().syncScripts(jmeter);
         stepProcessScript.setText(scenario.getConfiguration().getjMeterConfiguration().getStepProcessorScript());
-        scenarioProcessScript.setText(scenario.getConfiguration().getjMeterConfiguration().getScenarioProcessorScript());
+        scenarioProcessScript
+                .setText(scenario.getConfiguration().getjMeterConfiguration().getScenarioProcessorScript());
     }
 
     private void initUIFromOptionsController()
     {
         CommonFileConfigHolder.getInstance().setConfiguration(scenario.getConfiguration().getCommonConfiguration());
         JMeterFileConfigHolder.getInstance().setConfiguration(scenario.getConfiguration().getjMeterConfiguration());
-        ScriptEventExectutionController.getInstance().setConfiguration(scenario.getConfiguration().getScriptEventConfiguration());
+        ScriptEventExectutionController.getInstance()
+                .setConfiguration(scenario.getConfiguration().getScriptEventConfiguration());
         WebLookupFileConfigHolder.getInstance().setConfiguration(scenario.getConfiguration().getWebConfiguration());
         DuplicationFileConfigHolder.getInstance().setConfiguration(scenario.getConfiguration().getWebConfiguration());
         try
@@ -1358,6 +1400,7 @@ public class MainFrame
         webDriverTag.setText(scenario.getConfiguration().getCommonConfiguration().getWebDriverTag());
         useRandomCharsBox.setSelected(scenario.getConfiguration().getCommonConfiguration().isUseRandomChars());
         firefoxDsiplay.setText(scenario.getConfiguration().getCommonConfiguration().getFirefoxDisplay());
+        formDialogXpathField.setText(scenario.getConfiguration().getCommonConfiguration().getFormOrDialogXpath());
     }
 
     private void initUIFromPostProcessorController()
@@ -1431,8 +1474,10 @@ public class MainFrame
 
     private void updateJMeterController()
     {
-        scenario.getConfiguration().getjMeterConfiguration().setStepProcessorScript(jmeter, stepProcessScript.getText());
-        scenario.getConfiguration().getjMeterConfiguration().setScenarioProcessorScript(jmeter, scenarioProcessScript.getText());
+        scenario.getConfiguration().getjMeterConfiguration().setStepProcessorScript(jmeter,
+                stepProcessScript.getText());
+        scenario.getConfiguration().getjMeterConfiguration().setScenarioProcessorScript(jmeter,
+                scenarioProcessScript.getText());
     }
 
     private void updateOptionsController()
@@ -1450,6 +1495,7 @@ public class MainFrame
         scenario.getConfiguration().getCommonConfiguration().setUsePhantomJs(usePhantomButton.isSelected());
         scenario.getConfiguration().getCommonConfiguration().setUseRandomChars(useRandomCharsBox.isSelected());
         scenario.getConfiguration().getCommonConfiguration().setFirefoxDisplay(firefoxDsiplay.getText());
+        scenario.getConfiguration().getCommonConfiguration().setFormOrDialogXpath(formDialogXpathField.getText());
     }
 
     private void updatePostProcessController()
