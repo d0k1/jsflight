@@ -177,7 +177,7 @@ def makeTemplateInRequest(def request) {
 				def tt = new String(template);
 				tt = 'clone.'+tt;
 				if(ctx.getTemplate(src)==null||!ctx.getTemplate(src).equals(tt)) {
-					logger.error('^^^^^^^^^^^^^^^^^^^^^^^^^ 2. ' + src + ' - ' + tt);
+					logger.debug('^^^^^^^^^^^^^^^^^^^^^^^^^ 2. ' + src + ' - ' + tt);
 					ctx.addTemplate(src, tt);
 				}
 			}
@@ -198,7 +198,7 @@ def makeTemplateInRequest(def request) {
 			// if request has a link to an object. jmeter recorder should add an user-defined-variable with partOne.partTwo equals to partOne$partTwo
 			def tt = new String(template);
 
-			logger.error('**************************** 1. '+src+' - '+tt);
+			logger.debug('**************************** 1. '+src+' - '+tt);
 			ctx.addTemplate(src, tt);
 		}
 
@@ -219,9 +219,9 @@ def makeTemplateInRequest(def request) {
 	}
 
 	if(request.getMethod().toLowerCase().equals('get')) {
-		logger.info(Thread.currentThread().getName() + ":" + '----------------'+request.getName()+'-'+ request.getMethod().toLowerCase() + '-request-' + request.getQueryString() );
+		logger.debug(Thread.currentThread().getName() + ":" + '----------------'+request.getName()+'-'+ request.getMethod().toLowerCase() + '-request-' + request.getQueryString() );
 	} else {
-		logger.info(Thread.currentThread().getName() + ":" + '----------------'+request.getName()+'-'+ request.getMethod().toLowerCase() + '-request-' + request.getPropertyAsString('HTTPsampler.Arguments'));
+		logger.debug(Thread.currentThread().getName() + ":" + '----------------'+request.getName()+'-'+ request.getMethod().toLowerCase() + '-request-' + request.getPropertyAsString('HTTPsampler.Arguments'));
 	}
 
 	return body;
@@ -249,7 +249,7 @@ logger.info(Thread.currentThread().getName()+":"+"Proceeding with hash "+System.
 	def res = new String(response.getResponseData(), "UTF-8");
 
 	if(request.getMethod().toLowerCase().equals('post')) {
-		logger.error(Thread.currentThread().getName()+":"+'-----------------response:' + res);
+		logger.debug(Thread.currentThread().getName()+":"+'-----------------response:' + res);
 	}
 
 	def rr = java.util.regex.Pattern.compile('AddObjectAction\\/\\d+\\|.*Fqn\\/\\d+\\|(\\w+)(\\$\\w+)?\\|');
@@ -257,9 +257,9 @@ logger.info(Thread.currentThread().getName()+":"+"Proceeding with hash "+System.
 
 	if(mm.find()) {
 		r = java.util.regex.Pattern.compile('('+mm.group(1)+')\\$(\\d+)');
-		logger.error('!!!!!!!!!!!!!!!!!!!!!!!!! AddObjectAction');
-		logger.error('!!!!!!!!!!!!!!!!!!!!!!!!! regex:'+r.toString());
-		logger.error('!!!!!!!!!!!!!!!!!!!!!!!!! res:'+res);
+		logger.debug('!!!!!!!!!!!!!!!!!!!!!!!!! AddObjectAction');
+		logger.debug('!!!!!!!!!!!!!!!!!!!!!!!!! regex:'+r.toString());
+		logger.debug('!!!!!!!!!!!!!!!!!!!!!!!!! res:'+res);
 		m = r.matcher(res);
 
 		if (m.find())
@@ -269,9 +269,9 @@ logger.info(Thread.currentThread().getName()+":"+"Proceeding with hash "+System.
 			if(ctx.getTemplate(src)==null){
 				// if response has a link to an object jmeter recorder should add an user-defined-variable with partOne.partTwo equals current request
 				ctx.addTemplate(src, request);
-				logger.error('!!!!!!!!!!!!!!!!!!!!!!!!! register ree '+src+' - '+request.getName());
+				logger.debug('!!!!!!!!!!!!!!!!!!!!!!!!! register ree '+src+' - '+request.getName());
 			} else {
-				logger.error('=============================== Already has '+src+' variable!!');
+				logger.debug('=============================== Already has '+src+' variable!!');
 			}
 			res = res.replace(template, '${'+src+'}');
 		}

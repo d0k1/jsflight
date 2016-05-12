@@ -12,6 +12,8 @@ public class WebConfiguration
     private String duplicationScriptFilename = "";
     private String duplicationScript = "";
 
+    private String findBrowserErrorScript = "return false;";
+
     public String getLookupScriptFilename()
     {
         return lookupScriptFilename;
@@ -50,5 +52,17 @@ public class WebConfiguration
     public void setDuplicationScript(String duplicationScript)
     {
         this.duplicationScript = duplicationScript;
+    }
+
+    public void loadDefaults(){
+
+    }
+
+    public String getFindBrowserErrorScript() {
+        return findBrowserErrorScript;
+    }
+
+    public void setFindBrowserErrorScript(String findBrowserErrorScript) {
+        this.findBrowserErrorScript = findBrowserErrorScript;
     }
 }

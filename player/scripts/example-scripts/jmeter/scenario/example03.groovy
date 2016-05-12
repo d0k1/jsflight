@@ -100,9 +100,9 @@ if(sample.getMethod().toLowerCase().equals('post')) {
         if(name!=null) {
             String counter = sample.getName().split(" ")[0].trim();
             sample.setName("" + counter + " " + name);
-            logger.error(Thread.currentThread().getName()+":"+'Request ' + sample.getName() + ' renamed to ' + name + ' hash ' + System.identityHashCode(sample));
+            logger.debug(Thread.currentThread().getName()+":"+'Request ' + sample.getName() + ' renamed to ' + name + ' hash ' + System.identityHashCode(sample));
         } else {
-            logger.error(Thread.currentThread().getName()+":"+'Request ' + sample.getName() + ' is not gwt-prc ' + ' hash ' + System.identityHashCode(sample)+'.'+raw);
+            logger.debug(Thread.currentThread().getName()+":"+'Request ' + sample.getName() + ' is not gwt-prc ' + ' hash ' + System.identityHashCode(sample)+'.'+raw);
         }
     }
 }
@@ -146,7 +146,7 @@ if(!accesKeyFound) {
     }
     else
     {
-        logger.error("No tag found for sampler " + sample.getName());
+        logger.info("No tag found for sampler " + sample.getName());
     }
 }
 
@@ -171,10 +171,10 @@ srcs.each({
         // add just an user defined variable
         vars.addArgument(new org.apache.jmeter.config.Argument(it, template));
 
-        logger.error('???????????? Added variable '+it+' for '+sample.getName());
+        logger.debug('???????????? Added variable '+it+' for '+sample.getName());
         ctx.getProperty(vars_key).remove(it);
     } else if(template instanceof org.apache.jmeter.protocol.http.sampler.HTTPSamplerBase){
-        logger.error('++++++++++++++ template '+template.getName()+' sample '+sample.getName());
+        logger.debug('++++++++++++++ template '+template.getName()+' sample '+sample.getName());
         if(template.equals(sample)) {
             def ree = new org.apache.jmeter.extractor.RegexExtractor();
             ree.setProperty(org.apache.jmeter.testelement.TestElement.GUI_CLASS, "RegexExtractorGui");
@@ -196,10 +196,10 @@ srcs.each({
 
             ctx.getProperty(vars_key).remove(it);
 
-            logger.error('???????????? Added regex extractor to ' + sample.getName())
+            logger.debug('???????????? Added regex extractor to ' + sample.getName())
         }
     } else {
-        logger.error('Source '+ it+' template '+template.getName()+' sample '+sample.getName());
+        logger.debug('Source '+ it+' template '+template.getName()+' sample '+sample.getName());
     }
 })
 

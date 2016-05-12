@@ -31,8 +31,38 @@ public class ScenarioProcessor
         return theWebDriver;
     }
 
-    public void applyStep(UserScenario scenario, SeleniumDriver seleniumDriver, int position)
-    {
+    /**
+     * Method that check if a browser has error dialog visible.
+     * aand if it has then throws an exception.
+     * A browser after any step should not contain any error
+     * @param scenario
+     * @param wd
+     * @throws Exception
+     */
+    protected void hasBrowserAnError(UserScenario scenario, WebDriver wd) throws Exception {
+        try{
+            Object result = new PlayerScriptProcessor().executeWebLookupScript(scenario.getConfiguration().getWebConfiguration().getFindBrowserErrorScript(), wd, null, null);
+            if(Boolean.parseBoolean(result.toString())){
+                throw new IllegalStateException("Browser contains some error after step processing");
+            }
+        } catch (Exception e){
+            LOG.error(e.toString(), e);
+        }
+    }
+
+    /**
+     * This method will decide whether step processing should be terminatedd at current step or not.
+     * Or, in other words, should an exception be there or not.
+     * Default implementation just logs
+     * @param position
+     * @param ex
+     * @throws Exception
+     */
+    protected void processClickExcpetion(int position, Exception ex) throws Exception{
+        LOG.error("Failed to process step: " + position, ex);
+    }
+
+    public void applyStep(UserScenario scenario, SeleniumDriver seleniumDriver, int position) {
         scenario.getContext().setCurrentScenarioStep(scenario.getStepAt(position));
 
         new PlayerScriptProcessor().runStepPrePostScript(scenario, position, true);
@@ -113,24 +143,27 @@ public class ScenarioProcessor
                 default:
                     break;
                 }
+
+                if (scenario.getConfiguration().getCommonConfiguration().getMakeShots())
+                {
+                    seleniumDriver.makeAShot(theWebDriver,
+                            scenario.getConfiguration().getCommonConfiguration().getScreenDir());
+                }
+
+                hasBrowserAnError(scenario, theWebDriver);
             }
             catch (Exception e)
             {
-                LOG.error("Failed to process step: " + position, e);
+                processClickExcpetion(position, e);
             }
 
-            if (scenario.getConfiguration().getCommonConfiguration().getMakeShots())
-            {
-                seleniumDriver.makeAShot(theWebDriver,
-                        scenario.getConfiguration().getCommonConfiguration().getScreenDir());
-            }
             seleniumDriver.releaseBrowser(theWebDriver,
                     scenario.getConfiguration().getCommonConfiguration().getFormOrDialogXpath());
         }
         catch (Exception e)
         {
             error = true;
-            throw e;
+            throw new RuntimeException(e);
         }
         finally
         {

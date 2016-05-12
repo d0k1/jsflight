@@ -52,4 +52,8 @@ public class JMeterConfiguration
             recorder.getScriptProcessor().setProcessScript(getScenarioProcessorScript());
         }
     }
+
+    public void loadDefaults(){
+
+    }
 }

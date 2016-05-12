@@ -29,4 +29,8 @@ public class ScriptEventConfiguration
     {
         this.script = script;
     }
+
+    public void loadDefaults(){
+
+    }
 }
