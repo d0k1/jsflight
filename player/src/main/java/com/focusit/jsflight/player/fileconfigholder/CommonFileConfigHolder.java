@@ -39,10 +39,10 @@ public class CommonFileConfigHolder extends UIFileConfigHolder
         configuration.setCheckPageJs((String)stream.readObject());
         configuration.setWebDriverTag((String)stream.readObject());
         configuration.setFirefoxDisplay((String)stream.readObject());
-        configuration.setFormOrDialogXpath((String)stream.readObject());
         configuration.setUiShownScript((String)stream.readObject());
         configuration.setScrollTimeout((Integer)stream.readObject());
         configuration.setPageShownTimeout((Integer)stream.readObject());
+        configuration.setFormOrDialogXpath((String)stream.readObject());
 
         configuration.loadDefaultValues();
     }

@@ -181,7 +181,7 @@ public class ScenarioProcessor
 
         LOG.info("playing the scenario");
 
-        while (scenario.getPosition() < scenario.getStepsCount() - 1)
+        while (scenario.getPosition() < scenario.getStepsCount())
         {
             if (scenario.getPosition() > 0)
             {
