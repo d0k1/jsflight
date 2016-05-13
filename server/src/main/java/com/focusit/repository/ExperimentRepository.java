@@ -8,5 +8,4 @@ import org.springframework.data.repository.CrudRepository;
  * Created by dkirpichenkov on 05.05.16.
  */
 public interface ExperimentRepository extends CrudRepository<Experiment, ObjectId> {
-    Experiment findOne(String experimentId);
 }

@@ -262,7 +262,7 @@ public class PlayerController {
     @RequestMapping(value = "/resume", method = RequestMethod.GET)
     public void resume(@RequestParam("experimentId")String experimentId)
     {
-        Experiment experiment = experimentRepository.findOne(experimentId);
+        Experiment experiment = experimentRepository.findOne(new ObjectId(experimentId));
         if(experiment==null){
             throw new IllegalArgumentException("No experiment found by given id "+experimentId);
         }
