@@ -8,7 +8,7 @@ public class ScriptEventConfiguration
 
     private String filename = "";
 
-    private String script;
+    private String script="";
 
     public String getFilename()
     {

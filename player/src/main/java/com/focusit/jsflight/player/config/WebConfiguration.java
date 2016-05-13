@@ -1,11 +1,18 @@
 package com.focusit.jsflight.player.config;
 
+import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.io.InputStream;
+
 /**
  * Created by dkirpichenkov on 06.05.16.
  */
 public class WebConfiguration
 {
-
+    private static final Logger LOG = LoggerFactory.getLogger(WebConfiguration.class);
     private String lookupScriptFilename = "";
     private String lookupScript = "";
 
@@ -54,8 +61,31 @@ public class WebConfiguration
         this.duplicationScript = duplicationScript;
     }
 
-    public void loadDefaults(){
+    public void loadDefaults() {
+        loadDefaultLookupScript();
+        loadDefaultDuplicationScript();
+    }
 
+    private void loadDefaultDuplicationScript() {
+        try {
+            InputStream script = this.getClass().getClassLoader().getResourceAsStream("example-scripts/duplicateHandler.groovy");
+            if(script!=null) {
+                duplicationScript = IOUtils.toString(script, "UTF-8");
+            }
+        } catch (IOException e) {
+            LOG.error(e.toString(), e);
+        }
+    }
+
+    private void loadDefaultLookupScript(){
+        try {
+            InputStream script = this.getClass().getClassLoader().getResourceAsStream("example-scripts/weblookup.groovy");
+            if(script!=null) {
+                lookupScript = IOUtils.toString(script, "UTF-8");
+            }
+        } catch (IOException e) {
+            LOG.error(e.toString(), e);
+        }
     }
 
     public String getFindBrowserErrorScript() {

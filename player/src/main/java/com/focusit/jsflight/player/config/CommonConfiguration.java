@@ -145,6 +145,10 @@ public class CommonConfiguration
             setUiShownScript(
                     "return webdriver.findElement(org.openqa.selenium.By.xpath(\"//*[@id='gwt-debug-editProfile']\"));");
         }
+
+        if(getFormOrDialogXpath()==null){
+            setFormOrDialogXpath("//div[@id='gwt-debug-Form' or @id='gwt-debug-PropertyDialogBox']");
+        }
     }
 
     public void setCheckPageJs(String checkPageJs)

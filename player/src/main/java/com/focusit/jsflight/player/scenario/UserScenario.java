@@ -1,13 +1,5 @@
 package com.focusit.jsflight.player.scenario;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
-
 import com.focusit.jsflight.player.config.Configuration;
 import com.focusit.jsflight.player.constants.EventType;
 import com.focusit.jsflight.player.input.Events;
@@ -15,6 +7,13 @@ import com.focusit.jsflight.player.input.FileInput;
 import com.focusit.jsflight.player.script.PlayerScriptProcessor;
 import com.focusit.script.jmeter.JMeterJSFlightBridge;
 import com.focusit.script.player.PlayerContext;
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 /**
  * Recorded scenario encapsulation: parses file, plays the scenario by step, modifies the scenario, saves to a disk.
@@ -147,10 +146,10 @@ public class UserScenario
     public void next()
     {
         checks.set(position, true);
-        position++;
-        if (position == events.size())
+        setPosition(getPosition()+1);
+        if (getPosition() == getStepsCount())
         {
-            for (int i = 0; i < position; i++)
+            for (int i = 0; i < getPosition(); i++)
             {
                 checks.set(i, false);
             }
@@ -181,18 +180,18 @@ public class UserScenario
         {
             new PlayerScriptProcessor().postProcessScenario(postProcessScenarioScript, events);
         }
-        checks = new ArrayList<>(events.size());
-        for (int i = 0; i < events.size(); i++)
+        checks = new ArrayList<>(getStepsCount());
+        for (int i = 0; i < getStepsCount(); i++)
         {
             checks.add(new Boolean(false));
         }
 
         long secs = 0;
 
-        if (events.size() > 0)
+        if (getStepsCount() > 0)
         {
-            secs = events.get(events.size() - 1).getBigDecimal("timestamp").longValue()
-                    - events.get(0).getBigDecimal("timestamp").longValue();
+            secs = getStepAt(getStepsCount() - 1).getBigDecimal("timestamp").longValue()
+                    - getStepAt(0).getBigDecimal("timestamp").longValue();
         }
 
         return secs;
@@ -200,9 +199,9 @@ public class UserScenario
 
     public void prev()
     {
-        if (position > 0)
+        if (getPosition() > 0)
         {
-            position--;
+            setPosition(getPosition()-1);
         }
     }
 
@@ -212,7 +211,7 @@ public class UserScenario
             it = Boolean.FALSE;
         });
         context.reset();
-        position = 0;
+        setPosition(0);
     }
 
     public void runPostProcessor(String script)
@@ -243,7 +242,7 @@ public class UserScenario
 
     public void skip()
     {
-        position++;
+        setPosition(getPosition()+1);
     }
 
     public void updatePrevEvent(JSONObject event)

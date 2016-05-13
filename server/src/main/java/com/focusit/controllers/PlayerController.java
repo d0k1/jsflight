@@ -1,13 +1,15 @@
 package com.focusit.controllers;
 
-import com.focusit.jsflight.player.config.Configuration;
+import com.focusit.jsflight.player.webdriver.SeleniumDriver;
 import com.focusit.model.Event;
 import com.focusit.model.Experiment;
-import com.focusit.model.ExperimentStatus;
 import com.focusit.model.Recording;
 import com.focusit.repository.EventRepository;
 import com.focusit.repository.ExperimentRepository;
 import com.focusit.repository.RecordingRepository;
+import com.focusit.scenario.MongoDbScenario;
+import com.focusit.scenario.MongoDbScenarioProcessor;
+import com.focusit.service.ExperimentFactory;
 import com.google.gson.Gson;
 import org.apache.commons.io.IOUtils;
 import org.bson.types.ObjectId;
@@ -47,7 +49,9 @@ public class PlayerController {
     @Inject
     private EventRepository eventRepository;
     @Inject
-    private ExperimentRepository experimnetRepository;
+    private ExperimentRepository experimentRepository;
+
+    private List<CompletableFuture> playingFutures = new ArrayList<>();
 
     /**
      * Get list of uploaded scenarios
@@ -157,7 +161,7 @@ public class PlayerController {
     @RequestMapping(value = "/experiments", method = RequestMethod.GET)
     public List<Experiment> experiments(){
         ArrayList<Experiment> result = new ArrayList<>();
-        experimnetRepository.findAll().forEach(result::add);
+        experimentRepository.findAll().forEach(result::add);
         return result;
     }
 
@@ -179,24 +183,22 @@ public class PlayerController {
             throw new IllegalArgumentException("no recording found for id "+recordingId);
         }
 
-        Experiment experiment = new Experiment();
+        Experiment experiment = new ExperimentFactory().get();
         experiment.setCreated(new Date());
         experiment.setRecordingName(rec.getName());
         experiment.setRecordingId(rec.getId());
         experiment.setScreenshots(withScreenshots);
-
-        experiment.getStatus().setPosition(0L);
-        experiment.getStatus().setLimit(0L);
+        experiment.setSteps(eventRepository.countByRecordingId(recordingId));
+        experiment.setPosition(0L);
+        experiment.setLimit(0L);
 
         if(!Boolean.TRUE.equals(paused)) {
-            experiment.getStatus().setPlaying(true);
+            experiment.setPlaying(true);
         } else {
-            experiment.getStatus().setPlaying(false);
+            experiment.setPlaying(false);
         }
 
-        experiment.setConfiguration(new Configuration());
-
-        experimnetRepository.save(experiment);
+        experimentRepository.save(experiment);
         return experiment;
     }
 
@@ -206,15 +208,15 @@ public class PlayerController {
      * @param experimentId
      */
     @RequestMapping(value = "/status", method = RequestMethod.GET)
-    public ExperimentStatus status(@RequestParam("experimentId")String experimentId)
+    public Experiment status(@RequestParam("experimentId")String experimentId)
     {
-        Experiment experiment = experimnetRepository.findOne(new ObjectId(experimentId));
+        Experiment experiment = experimentRepository.findOne(new ObjectId(experimentId));
 
         if(experiment==null){
             throw new IllegalArgumentException("no experiment found for id "+experimentId);
         }
 
-        return experiment.getStatus();
+        return experiment;
     }
 
     /**
@@ -260,7 +262,18 @@ public class PlayerController {
     @RequestMapping(value = "/resume", method = RequestMethod.GET)
     public void resume(@RequestParam("experimentId")String experimentId)
     {
+        Experiment experiment = experimentRepository.findOne(experimentId);
+        if(experiment==null){
+            throw new IllegalArgumentException("No experiment found by given id "+experimentId);
+        }
 
+        experiment.setPlaying(true);
+        experimentRepository.save(experiment);
+
+        playingFutures.add(CompletableFuture.runAsync(() -> {
+            MongoDbScenario scenario = new MongoDbScenario(experiment, eventRepository);
+            new MongoDbScenarioProcessor().play(scenario, new SeleniumDriver(scenario));
+        }).whenCompleteAsync((aVoid, throwable) -> {}));
     }
 
     /**

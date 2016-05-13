@@ -1,15 +1,13 @@
 package com.focusit.model;
 
-import java.util.Date;
-
+import com.focusit.jsflight.player.config.Configuration;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import com.focusit.jsflight.player.config.Configuration;
-
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.util.Date;
 
 /**
  * Playing process state
@@ -41,7 +39,17 @@ public class Experiment {
 
     private Boolean screenshots = false;
 
-    private ExperimentStatus status = new ExperimentStatus();
+    private Long position = 0L;
+
+    private Long limit = 0L;
+
+    private Long steps = 0L;
+
+    private Boolean playing=false;
+
+    private Boolean error=false;
+
+    private String errorMessage="";
 
     public String getId() {
         return id.toString();
@@ -100,14 +108,6 @@ public class Experiment {
         this.screenshots = screenshots;
     }
 
-    public ExperimentStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(ExperimentStatus status) {
-        this.status = status;
-    }
-
     public String getTag() {
         return tag;
     }
@@ -130,5 +130,53 @@ public class Experiment {
 
     public void setConfiguration(Configuration configuration) {
         this.configuration = configuration;
+    }
+
+    public Long getPosition() {
+        return position;
+    }
+
+    public void setPosition(Long position) {
+        this.position = position;
+    }
+
+    public Long getLimit() {
+        return limit;
+    }
+
+    public void setLimit(Long limit) {
+        this.limit = limit;
+    }
+
+    public Boolean getPlaying() {
+        return playing;
+    }
+
+    public void setPlaying(Boolean playing) {
+        this.playing = playing;
+    }
+
+    public Boolean getError() {
+        return error;
+    }
+
+    public void setError(Boolean error) {
+        this.error = error;
+    }
+
+    public String getErrorMessage() {
+        return errorMessage;
+    }
+
+    public void setErrorMessage(String errorMessage) {
+        this.errorMessage = errorMessage;
+    }
+
+    public Long getSteps() {
+        return steps;
+    }
+
+    public void setSteps(Long steps) {
+        this.steps = steps;
     }
 }
