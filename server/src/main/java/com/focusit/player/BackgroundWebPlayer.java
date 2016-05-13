@@ -37,7 +37,7 @@ public class BackgroundWebPlayer {
     private ExperimentRepository experimentRepository;
     private Map<String, CompletableFuture> playingFutures = new HashMap<>();
 
-    public Experiment start(String recordingId, boolean withScreenshots, boolean paused, boolean background){
+    public Experiment start(String recordingId, boolean withScreenshots, boolean paused){
         Recording rec = recordingRepository.findOne(new ObjectId(recordingId));
         if(rec==null){
             throw new IllegalArgumentException("no recording found for id "+recordingId);
