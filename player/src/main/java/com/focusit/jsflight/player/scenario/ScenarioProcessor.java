@@ -1,5 +1,10 @@
 package com.focusit.jsflight.player.scenario;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.file.Paths;
+
 import org.json.JSONObject;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -39,13 +44,19 @@ public class ScenarioProcessor
      * @param wd
      * @throws Exception
      */
-    protected void hasBrowserAnError(UserScenario scenario, WebDriver wd) throws Exception {
-        try{
-            Object result = new PlayerScriptProcessor().executeWebLookupScript(scenario.getConfiguration().getWebConfiguration().getFindBrowserErrorScript(), wd, null, null);
-            if(Boolean.parseBoolean(result.toString())){
+    protected void hasBrowserAnError(UserScenario scenario, WebDriver wd) throws Exception
+    {
+        try
+        {
+            Object result = new PlayerScriptProcessor().executeWebLookupScript(
+                    scenario.getConfiguration().getWebConfiguration().getFindBrowserErrorScript(), wd, null, null);
+            if (Boolean.parseBoolean(result.toString()))
+            {
                 throw new IllegalStateException("Browser contains some error after step processing");
             }
-        } catch (Exception e){
+        }
+        catch (Exception e)
+        {
             LOG.error(e.toString(), e);
         }
     }
@@ -58,11 +69,45 @@ public class ScenarioProcessor
      * @param ex
      * @throws Exception
      */
-    protected void processClickExcpetion(int position, Exception ex) throws Exception{
+    protected void processClickExcpetion(int position, Exception ex) throws Exception
+    {
         LOG.error("Failed to process step: " + position, ex);
     }
 
-    public void applyStep(UserScenario scenario, SeleniumDriver seleniumDriver, int position) {
+    /**
+     * Make a screenshot and save to a file
+     * @param scenario
+     * @param seleniumDriver
+     * @param theWebDriver
+     * @param position
+     */
+    protected void makeAShot(UserScenario scenario, SeleniumDriver seleniumDriver, WebDriver theWebDriver, int position)
+    {
+        if (scenario.getConfiguration().getCommonConfiguration().getMakeShots())
+        {
+            String screenDir = scenario.getConfiguration().getCommonConfiguration().getScreenDir();
+            File dir = new File(
+                    screenDir + File.separator + Paths.get(scenario.getScenarioFilename()).getFileName().toString());
+
+            if (!dir.exists() && !dir.mkdirs())
+            {
+                return;
+            }
+
+            try (FileOutputStream fos = new FileOutputStream(
+                    new String(dir.getAbsolutePath() + File.separator + String.format("%05d", position) + ".png")))
+            {
+                seleniumDriver.makeAShot(theWebDriver, fos);
+            }
+            catch (IOException e)
+            {
+                LOG.error(e.toString(), e);
+            }
+        }
+    }
+
+    public void applyStep(UserScenario scenario, SeleniumDriver seleniumDriver, int position)
+    {
         scenario.getContext().setCurrentScenarioStep(scenario.getStepAt(position));
 
         new PlayerScriptProcessor().runStepPrePostScript(scenario, position, true);
@@ -144,11 +189,7 @@ public class ScenarioProcessor
                     break;
                 }
 
-                if (scenario.getConfiguration().getCommonConfiguration().getMakeShots())
-                {
-                    seleniumDriver.makeAShot(theWebDriver,
-                            scenario.getConfiguration().getCommonConfiguration().getScreenDir());
-                }
+                makeAShot(scenario, seleniumDriver, theWebDriver, position);
 
                 hasBrowserAnError(scenario, theWebDriver);
             }

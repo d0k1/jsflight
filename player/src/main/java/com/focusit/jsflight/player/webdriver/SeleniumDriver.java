@@ -1,11 +1,10 @@
 package com.focusit.jsflight.player.webdriver;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -13,17 +12,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.json.JSONObject;
-import org.openqa.selenium.By;
-import org.openqa.selenium.Dimension;
-import org.openqa.selenium.JavascriptExecutor;
-import org.openqa.selenium.Keys;
-import org.openqa.selenium.NoSuchElementException;
-import org.openqa.selenium.OutputType;
-import org.openqa.selenium.Proxy;
-import org.openqa.selenium.TakesScreenshot;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebDriverException;
-import org.openqa.selenium.WebElement;
+import org.openqa.selenium.*;
 import org.openqa.selenium.firefox.FirefoxBinary;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxProfile;
@@ -50,46 +39,14 @@ import com.google.common.collect.Lists;
 public class SeleniumDriver
 {
 
-    private static class CharStringGenerator implements StringGenerator
-    {
-
-        @Override
-        public String getAsString(char ch) throws UnsupportedEncodingException
-        {
-            return new String(new byte[] { (byte)ch }, StandardCharsets.UTF_8);
-        }
-
-    }
-
-    private static class RandomStringGenerator implements StringGenerator
-    {
-
-        @Override
-        public String getAsString(char ch)
-        {
-            return RandomStringUtils.randomAlphanumeric(1);
-        }
-
-    }
-
-    private interface StringGenerator
-    {
-        String getAsString(char ch) throws UnsupportedEncodingException;
-    }
-
     private static final Logger log = LoggerFactory.getLogger(SeleniumDriver.class);
-
     private HashMap<String, WebDriver> drivers = new HashMap<>();
-
     /**
      * Using BiMap for removing entries by value, because tabUuids and Windowhandles are unique
      */
     private BiMap<String, String> tabsWindow = HashBiMap.create();
-
     private HashMap<String, String> lastUrls = new HashMap<>();
-
     private StringGenerator stringGen;
-
     private UserScenario scenario;
 
     public SeleniumDriver(UserScenario scenario)
@@ -222,25 +179,12 @@ public class SeleniumDriver
 
     public void makeAShot(WebDriver wd, String screenDir)
     {
-        TakesScreenshot shoter = (TakesScreenshot)wd;
-        byte[] shot = shoter.getScreenshotAs(OutputType.BYTES);
-        File dir = new File(
-                screenDir + File.separator + Paths.get(scenario.getScenarioFilename()).getFileName().toString());
+    }
 
-        if (!dir.exists() && !dir.mkdirs())
-        {
-            return;
-        }
-
-        try (FileOutputStream fos = new FileOutputStream(new String(
-                dir.getAbsolutePath() + File.separator + String.format("%05d", scenario.getPosition()) + ".png")))
-        {
-            fos.write(shot);
-        }
-        catch (IOException e)
-        {
-            log.error(e.toString(), e);
-        }
+    public void makeAShot(WebDriver wd, OutputStream outputStream) throws IOException {
+        TakesScreenshot shooter = (TakesScreenshot)wd;
+        byte[] shot = shooter.getScreenshotAs(OutputType.BYTES);
+        outputStream.write(shot);
     }
 
     public void openEventUrl(WebDriver wd, JSONObject event, int pageTimeoutMs, String checkPageJs,
@@ -452,7 +396,7 @@ public class SeleniumDriver
             closeTabs(driver, tabsToCheck, xpath);
             driver.switchTo().window(handle);
         }
-        //Check if others are not necessary 
+        //Check if others are not necessary
         HashMap<String, WebDriver> m = new HashMap<>();
 
         drivers.entrySet().forEach(e -> {
@@ -649,5 +593,32 @@ public class SeleniumDriver
             }
         }
         throw new NoSuchElementException("UI didn't show up");
+    }
+
+    private interface StringGenerator
+    {
+        String getAsString(char ch) throws UnsupportedEncodingException;
+    }
+
+    private static class CharStringGenerator implements StringGenerator
+    {
+
+        @Override
+        public String getAsString(char ch) throws UnsupportedEncodingException
+        {
+            return new String(new byte[] { (byte)ch }, StandardCharsets.UTF_8);
+        }
+
+    }
+
+    private static class RandomStringGenerator implements StringGenerator
+    {
+
+        @Override
+        public String getAsString(char ch)
+        {
+            return RandomStringUtils.randomAlphanumeric(1);
+        }
+
     }
 }

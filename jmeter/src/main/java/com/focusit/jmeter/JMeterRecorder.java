@@ -1,7 +1,14 @@
 package com.focusit.jmeter;
 
-import com.focusit.script.jmeter.JMeterJSFlightBridge;
-import com.focusit.script.jmeter.JMeterRecorderContext;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
+
 import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.protocol.http.control.HeaderManager;
 import org.apache.jmeter.protocol.http.control.RecordingController;
@@ -17,13 +24,8 @@ import org.apache.jorphan.collections.HashTreeTraverser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Locale;
+import com.focusit.script.jmeter.JMeterJSFlightBridge;
+import com.focusit.script.jmeter.JMeterRecorderContext;
 
 /**
  * Interface to control jmeter proxy recorder
@@ -50,10 +52,6 @@ public class JMeterRecorder
 
     private JMeterScriptProcessor scriptProcessor;
 
-    public JMeterScriptProcessor getScriptProcessor() {
-        return scriptProcessor;
-    }
-
     public JMeterRecorder(){
         this.context = new JMeterRecorderContext();
         this.scriptProcessor = new JMeterScriptProcessor(this);
@@ -62,6 +60,10 @@ public class JMeterRecorder
     public JMeterRecorder(JMeterRecorderContext context, JMeterScriptProcessor scriptProcessor) {
         this.context = context;
         this.scriptProcessor = scriptProcessor;
+    }
+
+    public JMeterScriptProcessor getScriptProcessor() {
+        return scriptProcessor;
     }
 
     public void init() throws Exception
@@ -128,8 +130,7 @@ public class JMeterRecorder
         ctrl.setTargetTestElement(recCtrl);
     }
 
-    public void saveScenario(String filename) throws IOException
-    {
+    public void saveScenario(OutputStream outStream) throws IOException {
         TestElement sample1 = recCtrl.next();
 
         List<TestElement> samples = new ArrayList<>();
@@ -200,13 +201,17 @@ public class JMeterRecorder
 
             // TODO Groovy script should decide whether add cookie manager or not
             if(sample instanceof HTTPSamplerBase){
-            	HTTPSamplerBase http = (HTTPSamplerBase) sample;
+                HTTPSamplerBase http = (HTTPSamplerBase) sample;
 
                 scriptProcessor.processScenario(http, parent, vars);
             }
         }
+        SaveService.saveTree(hashTree, outStream);
+    }
 
-        SaveService.saveTree(hashTree, new FileOutputStream(new File(filename)));
+    public void saveScenario(String filename) throws IOException
+    {
+        saveScenario(new FileOutputStream(new File(filename)));
     }
 
     public void startRecording() throws IOException

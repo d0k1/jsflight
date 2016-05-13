@@ -1,13 +1,15 @@
 package com.focusit.model;
 
-import com.focusit.jsflight.player.config.Configuration;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.util.Date;
+
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.util.Date;
+import com.focusit.jsflight.player.config.Configuration;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * Playing process state
@@ -39,11 +41,11 @@ public class Experiment {
 
     private Boolean screenshots = false;
 
-    private Long position = 0L;
+    private int position = 0;
 
-    private Long limit = 0L;
+    private int limit = 0;
 
-    private Long steps = 0L;
+    private int steps = 0;
 
     private Boolean playing=false;
 
@@ -55,24 +57,24 @@ public class Experiment {
         return id.toString();
     }
 
-    public void setId(ObjectId id) {
-        this.id = id;
-    }
-
     public void setId(String id) {
         this.id = new ObjectId(id);
+    }
+
+    public void setId(ObjectId id) {
+        this.id = id;
     }
 
     public String getRecordingId() {
         return recordingId.toString();
     }
 
-    public void setRecordingId(ObjectId recordingId) {
-        this.recordingId = recordingId;
-    }
-
     public void setRecordingId(String recordingId) {
         this.recordingId = new ObjectId(recordingId);
+    }
+
+    public void setRecordingId(ObjectId recordingId) {
+        this.recordingId = recordingId;
     }
 
     public String getRecordingName() {
@@ -132,19 +134,19 @@ public class Experiment {
         this.configuration = configuration;
     }
 
-    public Long getPosition() {
+    public int getPosition() {
         return position;
     }
 
-    public void setPosition(Long position) {
+    public void setPosition(int position) {
         this.position = position;
     }
 
-    public Long getLimit() {
+    public int getLimit() {
         return limit;
     }
 
-    public void setLimit(Long limit) {
+    public void setLimit(int limit) {
         this.limit = limit;
     }
 
@@ -172,11 +174,11 @@ public class Experiment {
         this.errorMessage = errorMessage;
     }
 
-    public Long getSteps() {
+    public int getSteps() {
         return steps;
     }
 
-    public void setSteps(Long steps) {
+    public void setSteps(int steps) {
         this.steps = steps;
     }
 }
