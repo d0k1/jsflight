@@ -13,72 +13,93 @@ import com.focusit.repository.EventRepository;
 /**
  * Created by doki on 12.05.16.
  */
-public class MongoDbScenario extends UserScenario {
+public class MongoDbScenario extends UserScenario
+{
     private final Experiment experiment;
     private EventRepository repository;
 
-    public MongoDbScenario(Experiment experiment, EventRepository repository) {
+    public MongoDbScenario(Experiment experiment, EventRepository repository)
+    {
         this.experiment = experiment;
         this.repository = repository;
     }
 
     @Override
-    public Configuration getConfiguration() {
+    public Configuration getConfiguration()
+    {
         return experiment.getConfiguration();
     }
 
     @Override
-    public int getPosition() {
+    public int getPosition()
+    {
         return experiment.getPosition();
     }
 
     @Override
-    public int getStepsCount() {
+    public int getStepsCount()
+    {
         return experiment.getSteps();
     }
 
     @Override
-    public JSONObject getStepAt(int position) {
-        Event event = repository.findOneByRecordingId(experiment.getRecordingId(), new PageRequest(position, 1, new Sort(Sort.Direction.DESC, "eventId"))).getContent().get(0);
+    public JSONObject getStepAt(int position)
+    {
+        Event event = repository.findOneByRecordingId(experiment.getRecordingId(),
+                new PageRequest(position, 1, new Sort(Sort.Direction.DESC, "eventId"))).getContent().get(0);
         JSONObject object = new JSONObject(event);
         return object;
     }
 
     @Override
-    public void next() {
+    public void next()
+    {
         super.next();
     }
 
     @Override
-    public String getScenarioFilename() {
+    public String getScenarioFilename()
+    {
         return getRecordingName();
     }
 
-    public String getRecordingId(){
+    public String getRecordingId()
+    {
         return experiment.getRecordingId();
     }
 
-    public String getRecordingName(){
+    public String getRecordingName()
+    {
         return experiment.getRecordingName();
     }
 
-    public String getTag(){
+    public String getTag()
+    {
         return experiment.getTag();
     }
 
-    public String getTagHash(){
+    public String getTagHash()
+    {
         return experiment.getTagHash();
     }
 
-    public String getExperimentId(){
+    public String getExperimentId()
+    {
         return experiment.getId();
     }
 
-    public int getFirstStep(){
+    public int getFirstStep()
+    {
         return experiment.getPosition();
     }
 
-    public int getMaxStep(){
+    public int getMaxStep()
+    {
         return experiment.getLimit();
+    }
+
+    public int getProxyPort()
+    {
+        return Integer.parseInt(experiment.getConfiguration().getCommonConfiguration().getProxyPort());
     }
 }

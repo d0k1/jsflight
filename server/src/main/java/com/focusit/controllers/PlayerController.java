@@ -24,8 +24,9 @@ import com.focusit.service.RecordingsService;
  * Created by dkirpichenkov on 29.04.16.
  */
 @RestController
-@RequestMapping(value="/player")
-public class PlayerController {
+@RequestMapping(value = "/player")
+public class PlayerController
+{
 
     private final static Logger LOG = LoggerFactory.getLogger(PlayerController.class);
     @Inject
@@ -39,8 +40,9 @@ public class PlayerController {
      *
      * @return
      */
-    @RequestMapping(value = "/list", method= RequestMethod.GET)
-    public List<Recording> getRecordings(){
+    @RequestMapping(value = "/list", method = RequestMethod.GET)
+    public List<Recording> getRecordings()
+    {
         return recordingsService.getAllRecordings();
     }
 
@@ -55,10 +57,12 @@ public class PlayerController {
      * @param response
      */
     @RequestMapping(method = RequestMethod.POST, value = "/upload")
-    public void uploadScenario(@RequestParam("name") String name,
-                               @RequestParam("file") MultipartFile file, HttpServletRequest request, HttpServletResponse response) throws IOException {
+    public void uploadScenario(@RequestParam("name") String name, @RequestParam("file") MultipartFile file,
+            HttpServletRequest request, HttpServletResponse response) throws IOException
+    {
         response.setStatus(HttpServletResponse.SC_OK);
-        if(!recordingsService.importRecording(name, file.getInputStream())){
+        if (!recordingsService.importRecording(name, file.getInputStream()))
+        {
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
     }
@@ -69,7 +73,8 @@ public class PlayerController {
      * $ curl 127.0.0.1:8080/player/experiments
      */
     @RequestMapping(value = "/experiments", method = RequestMethod.GET)
-    public List<Experiment> experiments(){
+    public List<Experiment> experiments()
+    {
         return player.getAllExperiments();
     }
 
@@ -83,9 +88,10 @@ public class PlayerController {
      * @return
      */
     @RequestMapping(value = "/start", method = RequestMethod.GET)
-    public Experiment start(@RequestParam("recordingId")String recordingId,
-                            @RequestParam(value = "withScreenshots", defaultValue="false") Boolean withScreenshots,
-                            @RequestParam(value = "paused", defaultValue="true") Boolean paused) {
+    public Experiment start(@RequestParam("recordingId") String recordingId,
+            @RequestParam(value = "withScreenshots", defaultValue = "false") Boolean withScreenshots,
+            @RequestParam(value = "paused", defaultValue = "true") Boolean paused)
+    {
         return player.start(recordingId, withScreenshots, paused);
     }
 
@@ -95,7 +101,7 @@ public class PlayerController {
      * @param experimentId
      */
     @RequestMapping(value = "/status", method = RequestMethod.GET)
-    public Experiment status(@RequestParam("experimentId")String experimentId)
+    public Experiment status(@RequestParam("experimentId") String experimentId)
     {
         return player.status(experimentId);
     }
@@ -107,7 +113,7 @@ public class PlayerController {
      * @param step
      */
     @RequestMapping(value = "/screenshot", method = RequestMethod.GET)
-    public void screenshot(@RequestParam("experimentId")String experimentId, @RequestParam("step") Long step)
+    public void screenshot(@RequestParam("experimentId") String experimentId, @RequestParam("step") Long step)
     {
 
     }
@@ -119,7 +125,7 @@ public class PlayerController {
      * @param step
      */
     @RequestMapping(value = "/move", method = RequestMethod.GET)
-    public void move(@RequestParam("experimentId")String experimentId, @RequestParam("step") Long step)
+    public void move(@RequestParam("experimentId") String experimentId, @RequestParam("step") Long step)
     {
 
     }
@@ -130,7 +136,7 @@ public class PlayerController {
      * @param experimentId
      */
     @RequestMapping(value = "/pause", method = RequestMethod.GET)
-    public void pause(@RequestParam("experimentId")String experimentId)
+    public void pause(@RequestParam("experimentId") String experimentId)
     {
 
     }
@@ -141,7 +147,7 @@ public class PlayerController {
      * @param experimentId
      */
     @RequestMapping(value = "/resume", method = RequestMethod.GET)
-    public void resume(@RequestParam("experimentId")String experimentId)
+    public void resume(@RequestParam("experimentId") String experimentId)
     {
         player.resume(experimentId);
     }
@@ -151,7 +157,7 @@ public class PlayerController {
      * @param experimentId
      */
     @RequestMapping(value = "/cancel", method = RequestMethod.GET)
-    public void cancel(@RequestParam("experimentId")String experimentId)
+    public void cancel(@RequestParam("experimentId") String experimentId)
     {
 
     }
@@ -162,7 +168,7 @@ public class PlayerController {
      * @param experimentId
      */
     @RequestMapping(value = "/terminable", method = RequestMethod.GET)
-    public void terminable(@RequestParam("experimentId")String experimentId)
+    public void terminable(@RequestParam("experimentId") String experimentId)
     {
 
     }

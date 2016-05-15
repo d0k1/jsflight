@@ -49,6 +49,8 @@ public class Experiment {
 
     private Boolean playing=false;
 
+    private Boolean finished = false;
+
     private Boolean error=false;
 
     private String errorMessage="";
@@ -57,24 +59,24 @@ public class Experiment {
         return id.toString();
     }
 
-    public void setId(String id) {
-        this.id = new ObjectId(id);
-    }
-
     public void setId(ObjectId id) {
         this.id = id;
+    }
+
+    public void setId(String id) {
+        this.id = new ObjectId(id);
     }
 
     public String getRecordingId() {
         return recordingId.toString();
     }
 
-    public void setRecordingId(String recordingId) {
-        this.recordingId = new ObjectId(recordingId);
-    }
-
     public void setRecordingId(ObjectId recordingId) {
         this.recordingId = recordingId;
+    }
+
+    public void setRecordingId(String recordingId) {
+        this.recordingId = new ObjectId(recordingId);
     }
 
     public String getRecordingName() {
@@ -180,5 +182,13 @@ public class Experiment {
 
     public void setSteps(int steps) {
         this.steps = steps;
+    }
+
+    public Boolean getFinished() {
+        return finished;
+    }
+
+    public void setFinished(Boolean finished) {
+        this.finished = finished;
     }
 }

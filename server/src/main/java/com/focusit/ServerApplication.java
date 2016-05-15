@@ -20,15 +20,19 @@ import com.focusit.service.SettingsService;
 @ComponentScan
 @SpringBootApplication
 @EnableMongoRepositories(basePackages = "com.focusit.repository")
-public class ServerApplication implements CommandLineRunner {
-	@Inject
-	SettingsService settingsService;
-	public static void main(String[] args) {
-		SpringApplication.run(ServerApplication.class, args);
-	}
+public class ServerApplication implements CommandLineRunner
+{
+    @Inject
+    SettingsService settingsService;
 
-	@Override
-	public void run(String... strings) throws Exception {
-		settingsService.getSettings();
-	}
+    public static void main(String[] args)
+    {
+        SpringApplication.run(ServerApplication.class, args);
+    }
+
+    @Override
+    public void run(String... strings) throws Exception
+    {
+        settingsService.getSettings();
+    }
 }
