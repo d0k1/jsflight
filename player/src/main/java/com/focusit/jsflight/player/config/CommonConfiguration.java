@@ -12,7 +12,7 @@ public class CommonConfiguration
     private String proxyHost;
     private String ffPath;
     private String pjsPath;
-    private String pageReadyTimout;
+    private String pageReadyTimout = "30";
     private boolean makeShots;
     private String screenDir;
     private String webDriverTag;
@@ -20,6 +20,7 @@ public class CommonConfiguration
     private boolean usePhantomJs;
     private boolean useRandomChars;
     private String firefoxDisplay;
+    // TODO add path to xvfb start/stop scripts. To start xvfb on random display ondemand
     private String formOrDialogXpath;
 
     private String checkPageJs;
@@ -146,7 +147,8 @@ public class CommonConfiguration
                     "return webdriver.findElement(org.openqa.selenium.By.xpath(\"//*[@id='gwt-debug-editProfile']\"));");
         }
 
-        if(getFormOrDialogXpath()==null){
+        if (getFormOrDialogXpath() == null)
+        {
             setFormOrDialogXpath("//div[@id='gwt-debug-Form' or @id='gwt-debug-PropertyDialogBox']");
         }
     }

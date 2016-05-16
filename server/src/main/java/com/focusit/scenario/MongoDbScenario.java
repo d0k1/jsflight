@@ -1,6 +1,8 @@
 package com.focusit.scenario;
 
+import org.bson.types.ObjectId;
 import org.json.JSONObject;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 
@@ -9,6 +11,7 @@ import com.focusit.jsflight.player.scenario.UserScenario;
 import com.focusit.model.Event;
 import com.focusit.model.Experiment;
 import com.focusit.repository.EventRepository;
+import com.focusit.repository.ExperimentRepository;
 
 /**
  * Created by doki on 12.05.16.
@@ -17,11 +20,13 @@ public class MongoDbScenario extends UserScenario
 {
     private final Experiment experiment;
     private EventRepository repository;
+    private ExperimentRepository experimentRepository;
 
-    public MongoDbScenario(Experiment experiment, EventRepository repository)
+    public MongoDbScenario(Experiment experiment, EventRepository repository, ExperimentRepository experimentRepository)
     {
         this.experiment = experiment;
         this.repository = repository;
+        this.experimentRepository = experimentRepository;
     }
 
     @Override
@@ -45,8 +50,9 @@ public class MongoDbScenario extends UserScenario
     @Override
     public JSONObject getStepAt(int position)
     {
-        Event event = repository.findOneByRecordingId(experiment.getRecordingId(),
-                new PageRequest(position, 1, new Sort(Sort.Direction.DESC, "eventId"))).getContent().get(0);
+        Page<Event> page = repository.findOneByRecordingId(new ObjectId(experiment.getRecordingId()),
+                new PageRequest(position, 1, new Sort(Sort.Direction.ASC, "timestamp")));
+        Event event = page.getContent().get(0);
         JSONObject object = new JSONObject(event);
         return object;
     }
@@ -54,7 +60,11 @@ public class MongoDbScenario extends UserScenario
     @Override
     public void next()
     {
-        super.next();
+        setPosition(getPosition() + 1);
+        if (getPosition() == getStepsCount())
+        {
+            setPosition(0);
+        }
     }
 
     @Override
@@ -101,5 +111,12 @@ public class MongoDbScenario extends UserScenario
     public int getProxyPort()
     {
         return Integer.parseInt(experiment.getConfiguration().getCommonConfiguration().getProxyPort());
+    }
+
+    @Override
+    public void setPosition(int position)
+    {
+        experiment.setPosition(position);
+        experimentRepository.save(experiment);
     }
 }

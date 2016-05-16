@@ -10,7 +10,9 @@ import org.slf4j.LoggerFactory;
 
 import com.focusit.jsflight.player.scenario.ScenarioProcessor;
 import com.focusit.jsflight.player.scenario.UserScenario;
+import com.focusit.jsflight.player.script.PlayerScriptProcessor;
 import com.focusit.jsflight.player.webdriver.SeleniumDriver;
+import com.focusit.player.ErrorInBrowserPlaybackException;
 import com.focusit.service.MongoDbStorageService;
 
 /**
@@ -29,7 +31,26 @@ public class MongoDbScenarioProcessor extends ScenarioProcessor
     @Override
     protected void hasBrowserAnError(UserScenario scenario, WebDriver wd) throws Exception
     {
-        super.hasBrowserAnError(scenario, wd);
+        try
+        {
+            Object result = new PlayerScriptProcessor().executeWebLookupScript(
+                    scenario.getConfiguration().getWebConfiguration().getFindBrowserErrorScript(), wd, null, null);
+            if (Boolean.parseBoolean(result.toString()))
+            {
+                throw new ErrorInBrowserPlaybackException("Browser contains some error after step processing");
+            }
+        }
+        catch (Exception e)
+        {
+            LOG.debug(e.toString(), e);
+        }
+    }
+
+    @Override
+    public void applyStep(UserScenario scenario, SeleniumDriver seleniumDriver, int position)
+    {
+        LOG.info("Applying event: " + scenario.getStepAt(position).get("eventId"));
+        super.applyStep(scenario, seleniumDriver, position);
     }
 
     @Override

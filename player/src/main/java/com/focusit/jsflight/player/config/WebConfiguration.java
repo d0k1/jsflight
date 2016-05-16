@@ -1,11 +1,11 @@
 package com.focusit.jsflight.player.config;
 
+import java.io.IOException;
+import java.io.InputStream;
+
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.io.InputStream;
 
 /**
  * Created by dkirpichenkov on 06.05.16.
@@ -61,38 +61,61 @@ public class WebConfiguration
         this.duplicationScript = duplicationScript;
     }
 
-    public void loadDefaults() {
+    public void loadDefaults()
+    {
         loadDefaultLookupScript();
         loadDefaultDuplicationScript();
+        loadDefaultFindBrowserErrorScript();
     }
 
-    private void loadDefaultDuplicationScript() {
-        try {
-            InputStream script = this.getClass().getClassLoader().getResourceAsStream("example-scripts/duplicateHandler.groovy");
-            if(script!=null) {
+    private void loadDefaultDuplicationScript()
+    {
+        try
+        {
+            InputStream script = this.getClass().getClassLoader()
+                    .getResourceAsStream("example-scripts/duplicateHandler.groovy");
+            if (script != null)
+            {
                 duplicationScript = IOUtils.toString(script, "UTF-8");
             }
-        } catch (IOException e) {
+        }
+        catch (IOException e)
+        {
             LOG.error(e.toString(), e);
         }
     }
 
-    private void loadDefaultLookupScript(){
-        try {
-            InputStream script = this.getClass().getClassLoader().getResourceAsStream("example-scripts/weblookup.groovy");
-            if(script!=null) {
+    private void loadDefaultLookupScript()
+    {
+        try
+        {
+            InputStream script = this.getClass().getClassLoader()
+                    .getResourceAsStream("example-scripts/weblookup.groovy");
+            if (script != null)
+            {
                 lookupScript = IOUtils.toString(script, "UTF-8");
             }
-        } catch (IOException e) {
+        }
+        catch (IOException e)
+        {
             LOG.error(e.toString(), e);
         }
     }
 
-    public String getFindBrowserErrorScript() {
+    private void loadDefaultFindBrowserErrorScript()
+    {
+        setFindBrowserErrorScript("try {\n"
+                + "\treturn webdriver.findElement(org.openqa.selenium.By.xpath(\"//div[@id='gwt-debug-errorDialog']//div[@id='gwt-debug-dialogWidgetDescriptionElement']\"))!=null;\n"
+                + "} catch(org.openqa.selenium.NoSuchElementException ex) {\n" + "\treturn false;\n" + "}");
+    }
+
+    public String getFindBrowserErrorScript()
+    {
         return findBrowserErrorScript;
     }
 
-    public void setFindBrowserErrorScript(String findBrowserErrorScript) {
+    public void setFindBrowserErrorScript(String findBrowserErrorScript)
+    {
         this.findBrowserErrorScript = findBrowserErrorScript;
     }
 }

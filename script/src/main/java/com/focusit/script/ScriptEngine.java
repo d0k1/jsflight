@@ -1,12 +1,13 @@
 package com.focusit.script;
 
+import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
+
+import javax.annotation.Nullable;
+
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
 import groovy.lang.Script;
-
-import javax.annotation.Nullable;
-import java.util.HashMap;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Groovy script "compiler"
@@ -14,16 +15,19 @@ import java.util.concurrent.ConcurrentHashMap;
  * Also class provides a thread local storage for scripts.
  * Created by doki on 06.04.16.
  */
-public class ScriptEngine {
+public class ScriptEngine
+{
     // General purpose script storage.
     // Not Thread Safe, because compiled script has writable bindings. So one thread can easily change other one's bindings
     private final ConcurrentHashMap<String, Script> generalScripts = new ConcurrentHashMap<>();
-    private final ClassLoader loader = new ScriptsClassLoader(ClassLoader.getSystemClassLoader());
+    private volatile ClassLoader loader = new ScriptsClassLoader(ClassLoader.getSystemClassLoader());
     private final GroovyShell shell = new GroovyShell(loader);
     private static final ScriptEngine instance = new ScriptEngine();
-    private final Script NO_SCRIPT = new Script() {
+    private final Script NO_SCRIPT = new Script()
+    {
         @Override
-        public Object run() {
+        public Object run()
+        {
             return null;
         }
     };
@@ -31,60 +35,80 @@ public class ScriptEngine {
     // One script for one thread. No way to manipulate script's bindings outside calling thread
     private ThreadLocal<HashMap<String, Script>> threadBindedScripts = new ThreadLocal();
 
-    private ScriptEngine() {
+    private ScriptEngine()
+    {
     }
 
-    public static ScriptEngine getInstance(){
+    public static ScriptEngine getInstance()
+    {
         return instance;
     }
 
-    public ClassLoader getClassLoader(){
+    public ClassLoader getClassLoader()
+    {
         return this.loader;
     }
 
+    public void setClassLoader(ClassLoader loader)
+    {
+        this.loader = loader;
+    }
+
     @Nullable
-    public Script getScript(String script){
-        if(script==null) {
+    public Script getScript(String script)
+    {
+        if (script == null)
+        {
             return null;
         }
 
-        if(script.isEmpty()) {
+        if (script.isEmpty())
+        {
             return null;
         }
 
         Script result = generalScripts.get(script);
 
-        if(result==null){
-            if(script.trim().length()>0) {
+        if (result == null)
+        {
+            if (script.trim().length() > 0)
+            {
                 result = shell.parse(script);
-            } else {
+            }
+            else
+            {
                 result = NO_SCRIPT;
             }
             generalScripts.put(script, result);
         }
 
-        if(result.equals(NO_SCRIPT)) {
+        if (result.equals(NO_SCRIPT))
+        {
             return null;
         }
 
         return result;
     }
 
-    public Script getThreadBindedScript(String script){
+    public Script getThreadBindedScript(String script)
+    {
 
-        if(script==null) {
+        if (script == null)
+        {
             return null;
         }
 
         HashMap<String, Script> scripts = threadBindedScripts.get();
-        if(scripts==null) {
+        if (scripts == null)
+        {
             scripts = new HashMap<>();
             threadBindedScripts.set(scripts);
         }
 
         Script result = scripts.get(script);
 
-        if(result==null) {
+        if (result == null)
+        {
             result = shell.parse(script);
             result.setBinding(new Binding());
             scripts.put(script, result);

@@ -28,10 +28,15 @@ public class RecordingsService
 {
     private final static Logger LOG = LoggerFactory.getLogger(RecordingsService.class);
 
-    @Inject
     private RecordingRepository recordingRepository;
-    @Inject
     private EventRepository eventRepository;
+
+    @Inject
+    public RecordingsService(RecordingRepository recordingRepository, EventRepository eventRepository)
+    {
+        this.recordingRepository = recordingRepository;
+        this.eventRepository = eventRepository;
+    }
 
     public boolean importRecording(String name, InputStream stream)
     {

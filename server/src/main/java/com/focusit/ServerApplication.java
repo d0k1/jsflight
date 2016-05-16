@@ -10,6 +10,8 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
+import com.focusit.script.ScriptEngine;
+import com.focusit.script.ScriptsClassLoader;
 import com.focusit.service.SettingsService;
 
 /**
@@ -34,5 +36,6 @@ public class ServerApplication implements CommandLineRunner
     public void run(String... strings) throws Exception
     {
         settingsService.getSettings();
+        ScriptEngine.getInstance().setClassLoader(new ScriptsClassLoader(this.getClass().getClassLoader()));
     }
 }

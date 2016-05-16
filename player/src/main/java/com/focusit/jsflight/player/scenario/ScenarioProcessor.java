@@ -57,7 +57,7 @@ public class ScenarioProcessor
         }
         catch (Exception e)
         {
-            LOG.error(e.toString(), e);
+            LOG.debug("Tried to find an error dialog " + e.toString(), e);
         }
     }
 
@@ -108,7 +108,8 @@ public class ScenarioProcessor
 
     public void applyStep(UserScenario scenario, SeleniumDriver seleniumDriver, int position)
     {
-        scenario.getContext().setCurrentScenarioStep(scenario.getStepAt(position));
+        JSONObject step = scenario.getStepAt(position);
+        scenario.getContext().setCurrentScenarioStep(step);
 
         new PlayerScriptProcessor().runStepPrePostScript(scenario, position, true);
         JSONObject event = scenario.getStepAt(position);

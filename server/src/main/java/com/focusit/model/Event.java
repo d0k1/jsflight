@@ -334,7 +334,7 @@ public class Event
         this.recordName = recordName;
     }
 
-    public class UiRectangle
+    public static class UiRectangle
     {
         Float width;
         Float height;
@@ -360,7 +360,7 @@ public class Event
         }
     }
 
-    public class CSG
+    public static class CSG
     {
         String a;
         List<String> c;
@@ -419,7 +419,7 @@ public class Event
         }
     }
 
-    public class Target1
+    public static class Target1
     {
         String getxp;
         CSG csg;

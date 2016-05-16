@@ -1,8 +1,6 @@
 package com.focusit.service;
 
-import java.io.File;
 import java.io.InputStream;
-import java.nio.file.Paths;
 
 import javax.inject.Inject;
 
@@ -40,9 +38,8 @@ public class MongoDbStorageService
         metaData.put("tag", scenario.getTag());
         metaData.put("tagHash", scenario.getTagHash());
 
-        String dir = scenario.getConfiguration().getCommonConfiguration().getScreenDir() + File.separator
-                + Paths.get(scenario.getScenarioFilename()).getFileName().toString();
-        String fname = new String(dir.toString() + File.separator + String.format("%05d", position) + ".png");
+        String dir = scenario.getScenarioFilename();
+        String fname = new String(dir.toString() + "_" + String.format("%05d", position) + ".png");
 
         getGridFsTemplate().store(stream, fname, "image/png", metaData);
     }

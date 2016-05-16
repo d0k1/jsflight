@@ -81,7 +81,7 @@ public class BackgroundWebPlayer
         experiment.setRecordingName(rec.getName());
         experiment.setRecordingId(rec.getId());
         experiment.setScreenshots(withScreenshots);
-        experiment.setSteps(eventRepository.countByRecordingId(recordingId).intValue());
+        experiment.setSteps((int)eventRepository.countByRecordingId(new ObjectId(recordingId)));
         experiment.setPosition(0);
         experiment.setLimit(0);
 
@@ -91,7 +91,6 @@ public class BackgroundWebPlayer
         {
             resume(experiment.getId());
         }
-        ;
 
         return experiment;
 
@@ -160,9 +159,11 @@ public class BackgroundWebPlayer
         }
 
         experiment.setPlaying(true);
+        int stepCount = (int)eventRepository.countByRecordingId(new ObjectId(experiment.getRecordingId()));
+        experiment.setSteps(stepCount);
         experimentRepository.save(experiment);
 
-        MongoDbScenario scenario = new MongoDbScenario(experiment, eventRepository);
+        MongoDbScenario scenario = new MongoDbScenario(experiment, eventRepository, experimentRepository);
         MongoDbScenarioProcessor processor = new MongoDbScenarioProcessor(screenshotsService);
 
         playingFutures.put(experimentId, CompletableFuture.runAsync(() -> {
@@ -180,6 +181,7 @@ public class BackgroundWebPlayer
             }
             else
             {
+                LOG.error(throwable.toString(), throwable);
                 if (throwable instanceof PausePlaybackException)
                 {
                     experiment.setPlaying(false);
@@ -187,13 +189,30 @@ public class BackgroundWebPlayer
                     notificationService.notifyScenarioPaused(scenario);
                     return;
                 }
-                if (throwable instanceof TerminatePlaybackException)
+                else if (throwable instanceof ErrorInBrowserPlaybackException)
+                {
+                    experiment.setPlaying(false);
+                    experimentRepository.save(experiment);
+                    notificationService.notifyErrorInBrowserOccured(scenario);
+                    return;
+                }
+                else if (throwable instanceof TerminatePlaybackException)
                 {
                     experiment.setPlaying(false);
                     experiment.setFinished(true);
                     experimentRepository.save(experiment);
                     notificationService.notifyScenarioTerminated(scenario);
                 }
+                else
+                {
+                    experiment.setPlaying(false);
+                    experiment.setFinished(true);
+                    experiment.setError(true);
+                    experiment.setErrorMessage(throwable.toString());
+                    experimentRepository.save(experiment);
+                    notificationService.notifyUnknownException(scenario);
+                }
+
             }
             jmeters.remove(experimentId);
             stopJMeter(scenario);

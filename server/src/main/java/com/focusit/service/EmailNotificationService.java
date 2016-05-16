@@ -27,4 +27,14 @@ public class EmailNotificationService
     {
 
     }
+
+    public void notifyErrorInBrowserOccured(MongoDbScenario scenario)
+    {
+
+    }
+
+    public void notifyUnknownException(MongoDbScenario scenario)
+    {
+
+    }
 }

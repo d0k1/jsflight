@@ -1,5 +1,13 @@
 package com.focusit.jsflight.player.scenario;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import com.focusit.jsflight.player.config.Configuration;
 import com.focusit.jsflight.player.constants.EventType;
 import com.focusit.jsflight.player.input.Events;
@@ -7,13 +15,6 @@ import com.focusit.jsflight.player.input.FileInput;
 import com.focusit.jsflight.player.script.PlayerScriptProcessor;
 import com.focusit.script.jmeter.JMeterJSFlightBridge;
 import com.focusit.script.player.PlayerContext;
-import org.json.JSONArray;
-import org.json.JSONObject;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 
 /**
  * Recorded scenario encapsulation: parses file, plays the scenario by step, modifies the scenario, saves to a disk.
@@ -23,6 +24,7 @@ import java.util.List;
  */
 public class UserScenario
 {
+    // TODO add classpath for scripts
     private static HashMap<String, JSONObject> lastEvents = new HashMap<>();
     private volatile int position = 0;
     private List<JSONObject> events = new ArrayList<>();
@@ -146,7 +148,7 @@ public class UserScenario
     public void next()
     {
         checks.set(position, true);
-        setPosition(getPosition()+1);
+        setPosition(getPosition() + 1);
         if (getPosition() == getStepsCount())
         {
             for (int i = 0; i < getPosition(); i++)
@@ -201,7 +203,7 @@ public class UserScenario
     {
         if (getPosition() > 0)
         {
-            setPosition(getPosition()-1);
+            setPosition(getPosition() - 1);
         }
     }
 
@@ -242,7 +244,7 @@ public class UserScenario
 
     public void skip()
     {
-        setPosition(getPosition()+1);
+        setPosition(getPosition() + 1);
     }
 
     public void updatePrevEvent(JSONObject event)
