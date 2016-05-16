@@ -1,13 +1,27 @@
 package com.focusit.jsflight.player.config;
 
+import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantLock;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.focusit.script.ScriptsClassLoader;
+
 /**
  * Common configuration i.e. everything about player. browser settings, timeout settings
  * Created by dkirpichenkov on 06.05.16.
  */
 public class CommonConfiguration
 {
-
-    public static final String CHECK_PAGE_JS_DEFAULT = "return (document.getElementById('state.dispatch')==null || document.getElementById('state.dispatch').getAttribute('value')==0) &&  (document.getElementById('state.context')==null ||  document.getElementById('state.context').getAttribute('value')=='ready');";
+    private static final Logger LOG = LoggerFactory.getLogger(CommonConfiguration.class);
+    private static final String CHECK_PAGE_JS_DEFAULT = "return (document.getElementById('state.dispatch')==null || document.getElementById('state.dispatch').getAttribute('value')==0) &&  (document.getElementById('state.context')==null ||  document.getElementById('state.context').getAttribute('value')=='ready');";
+    private final ReentrantLock scriptClassloaderLock = new ReentrantLock();
     private String proxyPort;
     private String proxyHost;
     private String ffPath;
@@ -20,21 +34,49 @@ public class CommonConfiguration
     private boolean usePhantomJs;
     private boolean useRandomChars;
     private String firefoxDisplay;
-    // TODO add path to xvfb start/stop scripts. To start xvfb on random display ondemand
     private String formOrDialogXpath;
-
     private String checkPageJs;
     private String maxElementGroovy;
-
     private String uiShownScript;
-
     private int scrollTimeout;
-
     private int pageShownTimeout;
+    private ArrayList<URL> urls = new ArrayList<>();
+    private String extraClasspath = null;
+    private ScriptsClassLoader scriptClassloader = null;
+    private Map<String, Object> customProperties = new ConcurrentHashMap<>();
 
     public CommonConfiguration()
     {
         checkPageJs = CHECK_PAGE_JS_DEFAULT;
+    }
+
+    private void findClasspathForScripts(String path)
+    {
+        if (path == null)
+        {
+            return;
+        }
+
+        if (path.isEmpty())
+        {
+            return;
+        }
+
+        File f = new File(path);
+        if (f != null)
+        {
+            try
+            {
+                for (File file : f.listFiles())
+                {
+                    urls.add(file.toURI().toURL());
+                }
+            }
+            catch (MalformedURLException e)
+            {
+                LOG.error(e.toString(), e);
+            }
+        }
     }
 
     public String getCheckPageJs()
@@ -42,9 +84,19 @@ public class CommonConfiguration
         return checkPageJs;
     }
 
+    public void setCheckPageJs(String checkPageJs)
+    {
+        this.checkPageJs = checkPageJs;
+    }
+
     public String getFfPath()
     {
         return ffPath;
+    }
+
+    public void setFfPath(String ffPath)
+    {
+        this.ffPath = ffPath;
     }
 
     public String getFirefoxDisplay()
@@ -52,9 +104,19 @@ public class CommonConfiguration
         return firefoxDisplay;
     }
 
+    public void setFirefoxDisplay(String firefoxDisplay)
+    {
+        this.firefoxDisplay = firefoxDisplay;
+    }
+
     public boolean getMakeShots()
     {
         return Boolean.valueOf(makeShots);
+    }
+
+    public void setMakeShots(boolean makeShots)
+    {
+        this.makeShots = makeShots;
     }
 
     public String getMaxElementGroovy()
@@ -62,9 +124,19 @@ public class CommonConfiguration
         return maxElementGroovy;
     }
 
+    public void setMaxElementGroovy(String maxElementGroovy)
+    {
+        this.maxElementGroovy = maxElementGroovy;
+    }
+
     public String getPageReadyTimeout()
     {
         return pageReadyTimout;
+    }
+
+    public void setPageReadyTimeout(String pageReadyTimeout)
+    {
+        this.pageReadyTimout = pageReadyTimeout;
     }
 
     public int getPageShownTimeout()
@@ -72,9 +144,19 @@ public class CommonConfiguration
         return pageShownTimeout;
     }
 
+    public void setPageShownTimeout(int pageShownTimeout)
+    {
+        this.pageShownTimeout = pageShownTimeout;
+    }
+
     public String getPjsPath()
     {
         return pjsPath;
+    }
+
+    public void setPjsPath(String pjsPath)
+    {
+        this.pjsPath = pjsPath;
     }
 
     public String getProxyHost()
@@ -82,9 +164,19 @@ public class CommonConfiguration
         return proxyHost;
     }
 
+    public void setProxyHost(String proxyHost)
+    {
+        this.proxyHost = proxyHost;
+    }
+
     public String getProxyPort()
     {
         return proxyPort;
+    }
+
+    public void setProxyPort(String proxyPort)
+    {
+        this.proxyPort = proxyPort;
     }
 
     public String getScreenDir()
@@ -92,9 +184,19 @@ public class CommonConfiguration
         return screenDir;
     }
 
+    public void setScreenDir(String screenDir)
+    {
+        this.screenDir = screenDir;
+    }
+
     public int getScrollTimeout()
     {
         return scrollTimeout;
+    }
+
+    public void setScrollTimeout(int scrollTimeout)
+    {
+        this.scrollTimeout = scrollTimeout;
     }
 
     public String getUiShownScript()
@@ -102,9 +204,19 @@ public class CommonConfiguration
         return uiShownScript;
     }
 
+    public void setUiShownScript(String uiShownScript)
+    {
+        this.uiShownScript = uiShownScript;
+    }
+
     public String getWebDriverTag()
     {
         return webDriverTag;
+    }
+
+    public void setWebDriverTag(String webDriverTag)
+    {
+        this.webDriverTag = webDriverTag;
     }
 
     public boolean isUseFirefox()
@@ -112,14 +224,29 @@ public class CommonConfiguration
         return useFirefox;
     }
 
+    public void setUseFirefox(boolean useFirefox)
+    {
+        this.useFirefox = useFirefox;
+    }
+
     public boolean isUsePhantomJs()
     {
         return usePhantomJs;
     }
 
+    public void setUsePhantomJs(boolean usePhantomJs)
+    {
+        this.usePhantomJs = usePhantomJs;
+    }
+
     public boolean isUseRandomChars()
     {
         return useRandomChars;
+    }
+
+    public void setUseRandomChars(boolean useRandomChars)
+    {
+        this.useRandomChars = useRandomChars;
     }
 
     public void loadDefaultValues()
@@ -153,91 +280,6 @@ public class CommonConfiguration
         }
     }
 
-    public void setCheckPageJs(String checkPageJs)
-    {
-        this.checkPageJs = checkPageJs;
-    }
-
-    public void setFfPath(String ffPath)
-    {
-        this.ffPath = ffPath;
-    }
-
-    public void setFirefoxDisplay(String firefoxDisplay)
-    {
-        this.firefoxDisplay = firefoxDisplay;
-    }
-
-    public void setMakeShots(boolean makeShots)
-    {
-        this.makeShots = makeShots;
-    }
-
-    public void setMaxElementGroovy(String maxElementGroovy)
-    {
-        this.maxElementGroovy = maxElementGroovy;
-    }
-
-    public void setPageReadyTimeout(String pageReadyTimeout)
-    {
-        this.pageReadyTimout = pageReadyTimeout;
-    }
-
-    public void setPageShownTimeout(int pageShownTimeout)
-    {
-        this.pageShownTimeout = pageShownTimeout;
-    }
-
-    public void setPjsPath(String pjsPath)
-    {
-        this.pjsPath = pjsPath;
-    }
-
-    public void setProxyHost(String proxyHost)
-    {
-        this.proxyHost = proxyHost;
-    }
-
-    public void setProxyPort(String proxyPort)
-    {
-        this.proxyPort = proxyPort;
-    }
-
-    public void setScreenDir(String screenDir)
-    {
-        this.screenDir = screenDir;
-    }
-
-    public void setScrollTimeout(int scrollTimeout)
-    {
-        this.scrollTimeout = scrollTimeout;
-    }
-
-    public void setUiShownScript(String uiShownScript)
-    {
-        this.uiShownScript = uiShownScript;
-    }
-
-    public void setUseFirefox(boolean useFirefox)
-    {
-        this.useFirefox = useFirefox;
-    }
-
-    public void setUsePhantomJs(boolean usePhantomJs)
-    {
-        this.usePhantomJs = usePhantomJs;
-    }
-
-    public void setUseRandomChars(boolean useRandomChars)
-    {
-        this.useRandomChars = useRandomChars;
-    }
-
-    public void setWebDriverTag(String webDriverTag)
-    {
-        this.webDriverTag = webDriverTag;
-    }
-
     public String getFormOrDialogXpath()
     {
         return formOrDialogXpath;
@@ -246,5 +288,64 @@ public class CommonConfiguration
     public void setFormOrDialogXpath(String formOrDialogXpath)
     {
         this.formOrDialogXpath = formOrDialogXpath;
+    }
+
+    public ScriptsClassLoader getScriptClassloader()
+    {
+        scriptClassloaderLock.lock();
+        try
+        {
+            if (scriptClassloader == null)
+            {
+                urls.clear();
+                findClasspathForScripts(System.getProperty("cp"));
+                findClasspathForScripts(getExtraClasspath());
+                scriptClassloader = new ScriptsClassLoader(this.getClass().getClassLoader(),
+                        urls.toArray(new URL[urls.size()]));
+            }
+            return scriptClassloader;
+        }
+        finally
+        {
+            scriptClassloaderLock.unlock();
+        }
+    }
+
+    public void resetScriptClassloader()
+    {
+        scriptClassloaderLock.lock();
+        try
+        {
+            scriptClassloader = null;
+        }
+        finally
+        {
+            scriptClassloaderLock.unlock();
+        }
+    }
+
+    public String getExtraClasspath()
+    {
+        return extraClasspath;
+    }
+
+    public void setExtraClasspath(String extraClasspath)
+    {
+        this.extraClasspath = extraClasspath;
+    }
+
+    public void addCustomProperty(String property, Object value)
+    {
+        customProperties.put(property, value);
+    }
+
+    public Object getCustomProperty(String property)
+    {
+        return customProperties.get(property);
+    }
+
+    public void deleteCustomProperty(String property)
+    {
+        customProperties.remove(property);
     }
 }

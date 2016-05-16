@@ -18,6 +18,10 @@ public class Settings
     @Id
     private String id = SETTINGS_ID;
     private List<String> alarmEmail = new ArrayList<>();
+    private String smtpServer;
+    private String smtpPort;
+    private String stmpUser;
+    private String stmpPassword;
 
     public List<String> getAlarmEmail()
     {
@@ -27,5 +31,45 @@ public class Settings
     public void setAlarmEmail(List<String> alarmEmail)
     {
         this.alarmEmail = alarmEmail;
+    }
+
+    public String getSmtpServer()
+    {
+        return smtpServer;
+    }
+
+    public void setSmtpServer(String smtpServer)
+    {
+        this.smtpServer = smtpServer;
+    }
+
+    public String getSmtpPort()
+    {
+        return smtpPort;
+    }
+
+    public void setSmtpPort(String smtpPort)
+    {
+        this.smtpPort = smtpPort;
+    }
+
+    public String getStmpUser()
+    {
+        return stmpUser;
+    }
+
+    public void setStmpUser(String stmpUser)
+    {
+        this.stmpUser = stmpUser;
+    }
+
+    public String getStmpPassword()
+    {
+        return stmpPassword;
+    }
+
+    public void setStmpPassword(String stmpPassword)
+    {
+        this.stmpPassword = stmpPassword;
     }
 }

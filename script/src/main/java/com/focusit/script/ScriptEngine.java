@@ -17,12 +17,12 @@ import groovy.lang.Script;
  */
 public class ScriptEngine
 {
+    // Storage to hold compiled script(s) in thread's bounds. Thread safe!
+    // One script for one thread. No way to manipulate script's bindings outside calling thread
+    private static final ThreadLocal<HashMap<String, Script>> threadBindedScripts = new ThreadLocal();
     // General purpose script storage.
     // Not Thread Safe, because compiled script has writable bindings. So one thread can easily change other one's bindings
     private final ConcurrentHashMap<String, Script> generalScripts = new ConcurrentHashMap<>();
-    private volatile ClassLoader loader = new ScriptsClassLoader(ClassLoader.getSystemClassLoader());
-    private final GroovyShell shell = new GroovyShell(loader);
-    private static final ScriptEngine instance = new ScriptEngine();
     private final Script NO_SCRIPT = new Script()
     {
         @Override
@@ -31,27 +31,17 @@ public class ScriptEngine
             return null;
         }
     };
-    // Storage to hold compiled script(s) in thread's bounds. Thread safe!
-    // One script for one thread. No way to manipulate script's bindings outside calling thread
-    private ThreadLocal<HashMap<String, Script>> threadBindedScripts = new ThreadLocal();
+    private volatile ClassLoader loader;
+    private final GroovyShell shell = new GroovyShell(loader);
 
-    private ScriptEngine()
+    public ScriptEngine(ClassLoader classLoader)
     {
-    }
-
-    public static ScriptEngine getInstance()
-    {
-        return instance;
+        this.loader = classLoader;
     }
 
     public ClassLoader getClassLoader()
     {
         return this.loader;
-    }
-
-    public void setClassLoader(ClassLoader loader)
-    {
-        this.loader = loader;
     }
 
     @Nullable

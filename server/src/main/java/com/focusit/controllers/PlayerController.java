@@ -1,12 +1,14 @@
 package com.focusit.controllers;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.poi.util.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.focusit.model.Experiment;
 import com.focusit.model.Recording;
 import com.focusit.player.BackgroundWebPlayer;
+import com.focusit.service.MongoDbStorageService;
 import com.focusit.service.RecordingsService;
 
 /**
@@ -29,10 +32,18 @@ public class PlayerController
 {
 
     private final static Logger LOG = LoggerFactory.getLogger(PlayerController.class);
+    private RecordingsService recordingsService;
+    private BackgroundWebPlayer player;
+    private MongoDbStorageService storageService;
+
     @Inject
-    RecordingsService recordingsService;
-    @Inject
-    BackgroundWebPlayer player;
+    public PlayerController(RecordingsService recordingsService, BackgroundWebPlayer player,
+            MongoDbStorageService storageService)
+    {
+        this.recordingsService = recordingsService;
+        this.player = player;
+        this.storageService = storageService;
+    }
 
     /**
      * Get list of uploaded scenarios
@@ -113,9 +124,19 @@ public class PlayerController
      * @param step
      */
     @RequestMapping(value = "/screenshot", method = RequestMethod.GET)
-    public void screenshot(@RequestParam("experimentId") String experimentId, @RequestParam("step") Long step)
+    public void screenshot(@RequestParam("experimentId") String experimentId, @RequestParam("step") Integer step,
+            HttpServletRequest request, HttpServletResponse response) throws IOException
     {
+        InputStream stream = player.getScreenshot(experimentId, step);
+        if (stream == null)
+        {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
 
+        response.setContentType("image/png");
+        IOUtils.copy(stream, response.getOutputStream());
+        response.flushBuffer();
     }
 
     /**
@@ -125,9 +146,9 @@ public class PlayerController
      * @param step
      */
     @RequestMapping(value = "/move", method = RequestMethod.GET)
-    public void move(@RequestParam("experimentId") String experimentId, @RequestParam("step") Long step)
+    public void move(@RequestParam("experimentId") String experimentId, @RequestParam("step") Integer step)
     {
-
+        player.move(experimentId, step);
     }
 
     /**
@@ -138,7 +159,7 @@ public class PlayerController
     @RequestMapping(value = "/pause", method = RequestMethod.GET)
     public void pause(@RequestParam("experimentId") String experimentId)
     {
-
+        player.pause(experimentId);
     }
 
     /**
@@ -159,7 +180,7 @@ public class PlayerController
     @RequestMapping(value = "/cancel", method = RequestMethod.GET)
     public void cancel(@RequestParam("experimentId") String experimentId)
     {
-
+        player.cancel(experimentId);
     }
 
     /**
@@ -174,7 +195,7 @@ public class PlayerController
     }
 
     @RequestMapping(method = RequestMethod.POST, value = "/configure")
-    public void configure()
+    public void configure(@RequestParam("experimentId") String experimentId, HttpServletRequest request)
     {
 
     }

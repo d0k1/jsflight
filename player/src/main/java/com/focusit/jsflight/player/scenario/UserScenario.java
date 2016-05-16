@@ -55,6 +55,11 @@ public class UserScenario
         return configuration;
     }
 
+    public void setConfiguration(Configuration configuration)
+    {
+        this.configuration = configuration;
+    }
+
     public PlayerContext getContext()
     {
         return context;
@@ -63,6 +68,11 @@ public class UserScenario
     public int getPosition()
     {
         return position;
+    }
+
+    public void setPosition(int position)
+    {
+        this.position = position;
     }
 
     public JSONObject getPrevEvent(JSONObject event)
@@ -139,7 +149,7 @@ public class UserScenario
 
         if (prev != null)
         {
-            return new PlayerScriptProcessor().executeDuplicateHandlerScript(script, event, prev);
+            return new PlayerScriptProcessor(this).executeDuplicateHandlerScript(script, event, prev);
         }
 
         return false;
@@ -180,7 +190,7 @@ public class UserScenario
     {
         if (!postProcessScenarioScript.isEmpty())
         {
-            new PlayerScriptProcessor().postProcessScenario(postProcessScenarioScript, events);
+            new PlayerScriptProcessor(this).postProcessScenario(postProcessScenarioScript, events);
         }
         checks = new ArrayList<>(getStepsCount());
         for (int i = 0; i < getStepsCount(); i++)
@@ -218,23 +228,13 @@ public class UserScenario
 
     public void runPostProcessor(String script)
     {
-        PlayerScriptProcessor engine = new PlayerScriptProcessor();
+        PlayerScriptProcessor engine = new PlayerScriptProcessor(this);
         engine.testPostProcess(script, events);
     }
 
     public void saveScenario(String filename) throws IOException
     {
         FileInput.saveEvents(events, filename);
-    }
-
-    public void setConfiguration(Configuration configuration)
-    {
-        this.configuration = configuration;
-    }
-
-    public void setPosition(int position)
-    {
-        this.position = position;
     }
 
     public void setPostProcessScenarioScript(String postProcessScenarioScript)

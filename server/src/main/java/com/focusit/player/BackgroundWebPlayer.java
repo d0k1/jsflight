@@ -47,6 +47,7 @@ public class BackgroundWebPlayer
 
     private Map<String, CompletableFuture> playingFutures = new ConcurrentHashMap<>();
     private Map<String, JMeterRecorder> jmeters = new ConcurrentHashMap<>();
+
     private List<Integer> availablePorts = new ArrayList<>(64356);
     private Map<Integer, String> jmeterPortExperiment = new ConcurrentHashMap<>();
     private ReentrantLock jmeterStartStopLock = new ReentrantLock();
@@ -133,7 +134,7 @@ public class BackgroundWebPlayer
             }
             else
             {
-                LOG.error("Can't acquire a lock to start JMeter");
+                LOG.error("Can't acquire a lock to stop JMeter");
             }
             try
             {
@@ -166,8 +167,9 @@ public class BackgroundWebPlayer
         MongoDbScenario scenario = new MongoDbScenario(experiment, eventRepository, experimentRepository);
         MongoDbScenarioProcessor processor = new MongoDbScenarioProcessor(screenshotsService);
 
+        startJMeter(scenario);
+
         playingFutures.put(experimentId, CompletableFuture.runAsync(() -> {
-            startJMeter(scenario);
             processor.play(scenario, new SeleniumDriver(scenario), scenario.getFirstStep(), scenario.getMaxStep());
         }).whenCompleteAsync((aVoid, throwable) -> {
             playingFutures.remove(experimentId);
@@ -206,13 +208,13 @@ public class BackgroundWebPlayer
                 else
                 {
                     experiment.setPlaying(false);
-                    experiment.setFinished(true);
+                    experiment.setFinished(false);
                     experiment.setError(true);
                     experiment.setErrorMessage(throwable.toString());
                     experimentRepository.save(experiment);
                     notificationService.notifyUnknownException(scenario);
+                    return;
                 }
-
             }
             jmeters.remove(experimentId);
             stopJMeter(scenario);
@@ -253,12 +255,16 @@ public class BackgroundWebPlayer
 
     public InputStream getScreenshot(String experimentId, int step)
     {
+        Experiment experiment = experimentRepository.findOne(new ObjectId(experimentId));
+        screenshotsService.getScreenshot(experiment.getRecordingName(), experimentId, step);
         return null;
     }
 
     public void move(String experimentId, int step)
     {
-
+        Experiment experiment = experimentRepository.findOne(new ObjectId(experimentId));
+        experiment.setPosition(step);
+        experimentRepository.save(experiment);
     }
 
     public void terminable()

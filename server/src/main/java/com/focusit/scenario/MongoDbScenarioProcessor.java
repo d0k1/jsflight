@@ -33,7 +33,7 @@ public class MongoDbScenarioProcessor extends ScenarioProcessor
     {
         try
         {
-            Object result = new PlayerScriptProcessor().executeWebLookupScript(
+            Object result = new PlayerScriptProcessor(scenario).executeWebLookupScript(
                     scenario.getConfiguration().getWebConfiguration().getFindBrowserErrorScript(), wd, null, null);
             if (Boolean.parseBoolean(result.toString()))
             {

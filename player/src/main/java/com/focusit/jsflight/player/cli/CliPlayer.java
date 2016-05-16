@@ -20,13 +20,18 @@ public class CliPlayer
 
     private CliConfig config;
 
-    private JMeterRecorder jmeter = new JMeterRecorder();
+    private JMeterRecorder jmeter;
 
     private SeleniumDriver seleniumDriver;
 
     public CliPlayer(CliConfig config) throws Exception
     {
         this.config = config;
+    }
+
+    private void prepareJmeterIfNeeded(UserScenario scenario) throws Exception
+    {
+        jmeter = new JMeterRecorder(scenario.getConfiguration().getCommonConfiguration().getScriptClassloader());
         String templatePath = config.getJmxTemplatePath();
         if (templatePath.trim().isEmpty())
         {
@@ -38,6 +43,7 @@ public class CliPlayer
             LOG.info("Initializing Jmeter with jmx template: {}", templatePath);
             jmeter.init(templatePath);
         }
+
     }
 
     public SeleniumDriver getSeleniumDriver()
@@ -45,11 +51,12 @@ public class CliPlayer
         return seleniumDriver;
     }
 
-    public void play() throws IOException
+    public void play() throws Exception
     {
         UserScenario scenario = new UserScenario();
 
         updateControllers(scenario);
+        prepareJmeterIfNeeded(scenario);
 
         LOG.info("Loading {}", config.getPathToRecording());
         scenario.parse(config.getPathToRecording());

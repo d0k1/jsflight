@@ -1,7 +1,5 @@
 package com.focusit.script;
 
-import java.io.File;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 
@@ -15,35 +13,7 @@ public class ScriptsClassLoader extends URLClassLoader
 {
     private static final Logger log = LoggerFactory.getLogger(ScriptsClassLoader.class);
 
-    private static URL urls[] = new URL[] {};
-
-    static
-    {
-        if (System.getProperty("cp") != null)
-        {
-            File f = new File(System.getProperty("cp"));
-            if (f != null)
-            {
-                int size = f.listFiles().length;
-                urls = new URL[size];
-                int i = 0;
-
-                try
-                {
-                    for (File file : f.listFiles())
-                    {
-                        urls[i++] = file.toURI().toURL();
-                    }
-                }
-                catch (MalformedURLException e)
-                {
-                    log.error(e.toString(), e);
-                }
-            }
-        }
-    }
-
-    public ScriptsClassLoader(ClassLoader parent)
+    public ScriptsClassLoader(ClassLoader parent, URL urls[])
     {
         super(urls, parent);
     }

@@ -48,7 +48,7 @@ public class ScenarioProcessor
     {
         try
         {
-            Object result = new PlayerScriptProcessor().executeWebLookupScript(
+            Object result = new PlayerScriptProcessor(scenario).executeWebLookupScript(
                     scenario.getConfiguration().getWebConfiguration().getFindBrowserErrorScript(), wd, null, null);
             if (Boolean.parseBoolean(result.toString()))
             {
@@ -111,9 +111,9 @@ public class ScenarioProcessor
         JSONObject step = scenario.getStepAt(position);
         scenario.getContext().setCurrentScenarioStep(step);
 
-        new PlayerScriptProcessor().runStepPrePostScript(scenario, position, true);
+        new PlayerScriptProcessor(scenario).runStepPrePostScript(scenario, position, true);
         JSONObject event = scenario.getStepAt(position);
-        event = new PlayerScriptProcessor().runStepTemplating(scenario, event);
+        event = new PlayerScriptProcessor(scenario).runStepTemplating(scenario, event);
         boolean error = false;
         try
         {
@@ -135,7 +135,7 @@ public class ScenarioProcessor
 
             if (type.equalsIgnoreCase(EventType.SCRIPT))
             {
-                new PlayerScriptProcessor().executeScriptEvent(
+                new PlayerScriptProcessor(scenario).executeScriptEvent(
                         scenario.getConfiguration().getScriptEventConfiguration().getScript(), event);
                 return;
             }
@@ -212,7 +212,7 @@ public class ScenarioProcessor
             if (!error)
             {
                 scenario.updatePrevEvent(event);
-                new PlayerScriptProcessor().runStepPrePostScript(scenario, position, false);
+                new PlayerScriptProcessor(scenario).runStepPrePostScript(scenario, position, false);
             }
         }
     }

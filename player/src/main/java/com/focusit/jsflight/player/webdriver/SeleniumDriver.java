@@ -69,7 +69,7 @@ public class SeleniumDriver
         catch (NoSuchElementException e)
         {
             log.info("failed looking for {}. trying to restore xpath");
-            return (WebElement)new PlayerScriptProcessor().executeWebLookupScript(script, wd, target, event);
+            return (WebElement)new PlayerScriptProcessor(scenario).executeWebLookupScript(script, wd, target, event);
         }
     }
 
@@ -181,7 +181,8 @@ public class SeleniumDriver
     {
     }
 
-    public void makeAShot(WebDriver wd, OutputStream outputStream) throws IOException {
+    public void makeAShot(WebDriver wd, OutputStream outputStream) throws IOException
+    {
         TakesScreenshot shooter = (TakesScreenshot)wd;
         byte[] shot = shooter.getScreenshotAs(OutputType.BYTES);
         outputStream.write(shot);
@@ -337,7 +338,8 @@ public class SeleniumDriver
 
     public void processMouseWheel(String script, WebDriver wd, JSONObject event, String target)
     {
-        WebElement el = (WebElement)new PlayerScriptProcessor().executeWebLookupScript(script, wd, target, event);
+        WebElement el = (WebElement)new PlayerScriptProcessor(scenario).executeWebLookupScript(script, wd, target,
+                event);
         //Web lookup script MUST return /html element if scroll occurs not in a popup
         if (!el.getTagName().equalsIgnoreCase("html"))
         {
@@ -529,7 +531,7 @@ public class SeleniumDriver
 
     private WebElement getMax(WebDriver wd, String script)
     {
-        return (WebElement)new PlayerScriptProcessor().executeWebLookupScript(script, wd, null, null);
+        return (WebElement)new PlayerScriptProcessor(scenario).executeWebLookupScript(script, wd, null, null);
     }
 
     private void resizeForEvent(WebDriver wd, JSONObject event)
@@ -573,7 +575,7 @@ public class SeleniumDriver
         {
             try
             {
-                if (new PlayerScriptProcessor().executeWebLookupScript(script, wd, null, null) != null)
+                if (new PlayerScriptProcessor(scenario).executeWebLookupScript(script, wd, null, null) != null)
                 {
                     log.debug("Yeeepeee UI showed up!");
                     return;

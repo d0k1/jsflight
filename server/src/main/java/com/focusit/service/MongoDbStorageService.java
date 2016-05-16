@@ -6,12 +6,15 @@ import javax.inject.Inject;
 
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.stereotype.Service;
 
 import com.focusit.scenario.MongoDbScenario;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
+import com.mongodb.gridfs.GridFSDBFile;
 
 /**
  * Created by doki on 14.05.16.
@@ -38,10 +41,22 @@ public class MongoDbStorageService
         metaData.put("tag", scenario.getTag());
         metaData.put("tagHash", scenario.getTagHash());
 
-        String dir = scenario.getScenarioFilename();
-        String fname = new String(dir.toString() + "_" + String.format("%05d", position) + ".png");
+        String recordingName = scenario.getScenarioFilename();
+        String fname = new String(
+                recordingName + "_" + scenario.getExperimentId() + "_" + String.format("%05d", position) + ".png");
 
         getGridFsTemplate().store(stream, fname, "image/png", metaData);
+    }
+
+    public InputStream getScreenshot(String recordingName, String experimentId, int step)
+    {
+        String fname = new String(recordingName + "_" + experimentId + "_" + String.format("%05d", step) + ".png");
+        GridFSDBFile file = getGridFsTemplate().findOne(new Query().addCriteria(Criteria.where("filename").is(fname)));
+        if (file != null)
+        {
+            return file.getInputStream();
+        }
+        return null;
     }
 
     public void storeJMeterScenario(MongoDbScenario scenario)

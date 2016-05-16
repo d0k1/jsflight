@@ -37,8 +37,6 @@ public class Experiment
 
     private String tagHash;
 
-    private String selectQuery = "";
-
     private int position = 0;
 
     private int limit = 0;
@@ -58,14 +56,14 @@ public class Experiment
         return id.toString();
     }
 
-    public void setId(String id)
-    {
-        this.id = new ObjectId(id);
-    }
-
     public void setId(ObjectId id)
     {
         this.id = id;
+    }
+
+    public void setId(String id)
+    {
+        this.id = new ObjectId(id);
     }
 
     public String getRecordingId()
@@ -73,14 +71,14 @@ public class Experiment
         return recordingId.toString();
     }
 
-    public void setRecordingId(String recordingId)
-    {
-        this.recordingId = new ObjectId(recordingId);
-    }
-
     public void setRecordingId(ObjectId recordingId)
     {
         this.recordingId = recordingId;
+    }
+
+    public void setRecordingId(String recordingId)
+    {
+        this.recordingId = new ObjectId(recordingId);
     }
 
     public String getRecordingName()
@@ -91,16 +89,6 @@ public class Experiment
     public void setRecordingName(String recordingName)
     {
         this.recordingName = recordingName;
-    }
-
-    public String getSelectQuery()
-    {
-        return selectQuery;
-    }
-
-    public void setSelectQuery(String selectQuery)
-    {
-        this.selectQuery = selectQuery;
     }
 
     @SuppressFBWarnings("EI_EXPOSE_REP")
