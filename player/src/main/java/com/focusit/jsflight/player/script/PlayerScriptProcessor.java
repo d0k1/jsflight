@@ -28,18 +28,11 @@ import groovy.text.SimpleTemplateEngine;
 public class PlayerScriptProcessor
 {
     private static final Logger log = LoggerFactory.getLogger(PlayerScriptProcessor.class);
-    private UserScenario scenario;
     private ScriptEngine engine;
 
     public PlayerScriptProcessor(UserScenario scenario)
     {
-        this.scenario = scenario;
         engine = new ScriptEngine(scenario.getConfiguration().getCommonConfiguration().getScriptClassloader());
-    }
-
-    public PlayerScriptProcessor(String script, UserScenario scenario)
-    {
-        this(scenario);
     }
 
     /**

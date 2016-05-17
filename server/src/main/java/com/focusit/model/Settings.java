@@ -15,6 +15,7 @@ public class Settings
     @Id
     private String id = SETTINGS_ID;
     private String alarmEmails = "";
+    private String smtpFrom = "";
     private String smtpServer = "";
     private String smtpPort = "";
     private String stmpUser = "";
@@ -101,5 +102,15 @@ public class Settings
     public void setAlarmEmails(String alarmEmails)
     {
         this.alarmEmails = alarmEmails;
+    }
+
+    public String getSmtpFrom()
+    {
+        return smtpFrom;
+    }
+
+    public void setSmtpFrom(String smtpFrom)
+    {
+        this.smtpFrom = smtpFrom;
     }
 }

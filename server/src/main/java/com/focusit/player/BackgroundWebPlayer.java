@@ -179,7 +179,7 @@ public class BackgroundWebPlayer
                 experiment.setPlaying(false);
                 experiment.setFinished(true);
                 experimentRepository.save(experiment);
-                notificationService.notifyScenarioDone(scenario);
+                notificationService.notifyScenarioDone(scenario, throwable);
             }
             else
             {
@@ -188,14 +188,14 @@ public class BackgroundWebPlayer
                 {
                     experiment.setPlaying(false);
                     experimentRepository.save(experiment);
-                    notificationService.notifyScenarioPaused(scenario);
+                    notificationService.notifyScenarioPaused(scenario, null);
                     return;
                 }
                 else if (throwable instanceof ErrorInBrowserPlaybackException)
                 {
                     experiment.setPlaying(false);
                     experimentRepository.save(experiment);
-                    notificationService.notifyErrorInBrowserOccured(scenario);
+                    notificationService.notifyErrorInBrowserOccured(scenario, throwable);
                     return;
                 }
                 else if (throwable instanceof TerminatePlaybackException)
@@ -203,7 +203,7 @@ public class BackgroundWebPlayer
                     experiment.setPlaying(false);
                     experiment.setFinished(true);
                     experimentRepository.save(experiment);
-                    notificationService.notifyScenarioTerminated(scenario);
+                    notificationService.notifyScenarioTerminated(scenario, throwable);
                 }
                 else
                 {
@@ -212,7 +212,7 @@ public class BackgroundWebPlayer
                     experiment.setError(true);
                     experiment.setErrorMessage(throwable.toString());
                     experimentRepository.save(experiment);
-                    notificationService.notifyUnknownException(scenario);
+                    notificationService.notifyUnknownException(scenario, throwable);
                     return;
                 }
             }
