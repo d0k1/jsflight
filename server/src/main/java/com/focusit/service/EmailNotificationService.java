@@ -38,8 +38,14 @@ public class EmailNotificationService
         Settings settings = settingsService.getSettings();
         JavaMailSenderImpl javaMailSender = new JavaMailSenderImpl();
 
-        javaMailSender.setHost(settings.getSmtpServer());
-        javaMailSender.setPort(Integer.parseInt(settings.getSmtpPort()));
+        if (!settings.getSmtpServer().isEmpty())
+        {
+            javaMailSender.setHost(settings.getSmtpServer());
+        }
+        if (!settings.getSmtpPort().isEmpty())
+        {
+            javaMailSender.setPort(Integer.parseInt(settings.getSmtpPort()));
+        }
         javaMailSender.setUsername(settings.getStmpUser());
         javaMailSender.setPassword(settings.getStmpPassword());
 

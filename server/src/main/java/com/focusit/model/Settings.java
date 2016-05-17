@@ -1,8 +1,5 @@
 package com.focusit.model;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -17,24 +14,14 @@ public class Settings
 
     @Id
     private String id = SETTINGS_ID;
-    private List<String> alarmEmail = new ArrayList<>();
-    private String smtpServer;
-    private String smtpPort;
-    private String stmpUser;
-    private String stmpPassword;
-    private String smtpMailDebug;
-    private String smtpAuth;
-    private String smtpStarttls;
-
-    public List<String> getAlarmEmail()
-    {
-        return alarmEmail;
-    }
-
-    public void setAlarmEmail(List<String> alarmEmail)
-    {
-        this.alarmEmail = alarmEmail;
-    }
+    private String alarmEmails = "";
+    private String smtpServer = "";
+    private String smtpPort = "";
+    private String stmpUser = "";
+    private String stmpPassword = "";
+    private String smtpMailDebug = "false";
+    private String smtpAuth = "false";
+    private String smtpStarttls = "false";
 
     public String getSmtpServer()
     {
@@ -104,5 +91,15 @@ public class Settings
     public void setSmtpMailDebug(String smtpMailDebug)
     {
         this.smtpMailDebug = smtpMailDebug;
+    }
+
+    public String getAlarmEmails()
+    {
+        return alarmEmails;
+    }
+
+    public void setAlarmEmails(String alarmEmails)
+    {
+        this.alarmEmails = alarmEmails;
     }
 }

@@ -10,6 +10,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.annotation.Transient;
 
 import com.focusit.script.ScriptsClassLoader;
 
@@ -21,7 +22,8 @@ public class CommonConfiguration
 {
     private static final Logger LOG = LoggerFactory.getLogger(CommonConfiguration.class);
     private static final String CHECK_PAGE_JS_DEFAULT = "return (document.getElementById('state.dispatch')==null || document.getElementById('state.dispatch').getAttribute('value')==0) &&  (document.getElementById('state.context')==null ||  document.getElementById('state.context').getAttribute('value')=='ready');";
-    private final ReentrantLock scriptClassloaderLock = new ReentrantLock();
+    @Transient
+    private ReentrantLock scriptClassloaderLock;
     private String proxyPort;
     private String proxyHost;
     private String ffPath;
@@ -40,14 +42,19 @@ public class CommonConfiguration
     private String uiShownScript;
     private int scrollTimeout;
     private int pageShownTimeout;
-    private ArrayList<URL> urls = new ArrayList<>();
-    private String extraClasspath = null;
-    private ScriptsClassLoader scriptClassloader = null;
     private Map<String, Object> customProperties = new ConcurrentHashMap<>();
+    private String extraClasspath = null;
+
+    @Transient
+    transient private ArrayList<URL> urls = new ArrayList<>();
+
+    @Transient
+    transient private ScriptsClassLoader scriptClassloader = null;
 
     public CommonConfiguration()
     {
         checkPageJs = CHECK_PAGE_JS_DEFAULT;
+        scriptClassloaderLock = new ReentrantLock();
     }
 
     private void findClasspathForScripts(String path)
