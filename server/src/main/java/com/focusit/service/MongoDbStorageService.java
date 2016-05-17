@@ -2,6 +2,7 @@ package com.focusit.service;
 
 import java.io.InputStream;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 import org.springframework.data.mongodb.MongoDbFactory;
@@ -51,6 +52,12 @@ public class MongoDbStorageService
     public InputStream getScreenshot(String recordingName, String experimentId, int step)
     {
         String fname = new String(recordingName + "_" + experimentId + "_" + String.format("%05d", step) + ".png");
+        return getStreamByFilename(fname);
+    }
+
+    @Nullable
+    private InputStream getStreamByFilename(String fname)
+    {
         GridFSDBFile file = getGridFsTemplate().findOne(new Query().addCriteria(Criteria.where("filename").is(fname)));
         if (file != null)
         {
@@ -59,8 +66,23 @@ public class MongoDbStorageService
         return null;
     }
 
-    public void storeJMeterScenario(MongoDbScenario scenario)
+    public void storeJMeterScenario(MongoDbScenario scenario, InputStream stream)
     {
+        DBObject metaData = new BasicDBObject();
+        metaData.put("recordingName", scenario.getRecordingName());
+        metaData.put("recordingId", scenario.getRecordingId());
+        metaData.put("experimentId", scenario.getExperimentId());
+        metaData.put("tag", scenario.getTag());
+        metaData.put("tagHash", scenario.getTagHash());
 
+        String recordingName = scenario.getScenarioFilename();
+        String fname = new String(recordingName + "_" + scenario.getExperimentId() + ".jmx");
+        getGridFsTemplate().store(stream, fname, "text/xml", metaData);
+    }
+
+    public InputStream getJMeterScenario(String recordingName, String experimentId)
+    {
+        String fname = new String(recordingName + "_" + experimentId + ".jmx");
+        return getStreamByFilename(fname);
     }
 }

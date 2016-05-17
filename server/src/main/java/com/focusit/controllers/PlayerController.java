@@ -101,7 +101,7 @@ public class PlayerController
     @RequestMapping(value = "/start", method = RequestMethod.GET)
     public Experiment start(@RequestParam("recordingId") String recordingId,
             @RequestParam(value = "withScreenshots", defaultValue = "false") Boolean withScreenshots,
-            @RequestParam(value = "paused", defaultValue = "true") Boolean paused)
+            @RequestParam(value = "paused", defaultValue = "true") Boolean paused) throws Exception
     {
         return player.start(recordingId, withScreenshots, paused);
     }
@@ -120,6 +120,8 @@ public class PlayerController
     /**
      * Get screenshot after some step in experiment
      *
+     *  $ curl "127.0.0.1:8080/player/screenshot?experimentId=573b3169c92e9527bc805cc6&step=0"
+     *
      * @param experimentId
      * @param step
      */
@@ -135,12 +137,43 @@ public class PlayerController
         }
 
         response.setContentType("image/png");
+        response.setHeader("Content-Disposition",
+                String.format("attachment; filename=\"%s\"", experimentId + String.format("_%05d.png", step)));
+        IOUtils.copy(stream, response.getOutputStream());
+        response.flushBuffer();
+    }
+
+    /**
+     * Download recorded JMeter scenario
+     *
+     * $ curl "127.0.0.1:8080/player/jmx?experimentId=573b3169c92e9527bc805cc6"
+     *
+     * @param experimentId
+     * @param request
+     * @param response
+     * @throws IOException
+     */
+    @RequestMapping(value = "/jmx", method = RequestMethod.GET)
+    public void jmeter(@RequestParam("experimentId") String experimentId, HttpServletRequest request,
+            HttpServletResponse response) throws IOException
+    {
+        InputStream stream = player.getJMX(experimentId);
+        if (stream == null)
+        {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+
+        response.setContentType("text/xml");
+        response.setHeader("Content-Disposition", String.format("attachment; filename=\"%s\"", experimentId + ".jmx"));
         IOUtils.copy(stream, response.getOutputStream());
         response.flushBuffer();
     }
 
     /**
      * Skip some steps or go backward in experiment
+     *
+     * $ curl "127.0.0.1:8080/player/move?experimentId=573b3169c92e9527bc805cc6&step=0"
      *
      * @param experimentId
      * @param step
@@ -168,7 +201,7 @@ public class PlayerController
      * @param experimentId
      */
     @RequestMapping(value = "/resume", method = RequestMethod.GET)
-    public void resume(@RequestParam("experimentId") String experimentId)
+    public void resume(@RequestParam("experimentId") String experimentId) throws Exception
     {
         player.resume(experimentId);
     }

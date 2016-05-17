@@ -1,5 +1,8 @@
 package com.focusit.player;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Date;
@@ -49,7 +52,6 @@ public class BackgroundWebPlayer
     private Map<String, JMeterRecorder> jmeters = new ConcurrentHashMap<>();
 
     private List<Integer> availablePorts = new ArrayList<>(64356);
-    private Map<Integer, String> jmeterPortExperiment = new ConcurrentHashMap<>();
     private ReentrantLock jmeterStartStopLock = new ReentrantLock();
 
     @Inject
@@ -69,7 +71,7 @@ public class BackgroundWebPlayer
         }
     }
 
-    public Experiment start(String recordingId, boolean withScreenshots, boolean paused)
+    public Experiment start(String recordingId, boolean withScreenshots, boolean paused) throws Exception
     {
         Recording rec = recordingRepository.findOne(new ObjectId(recordingId));
         if (rec == null)
@@ -97,61 +99,91 @@ public class BackgroundWebPlayer
 
     }
 
-    private void startJMeter(MongoDbScenario scenario)
+    private void startJMeter(MongoDbScenario scenario) throws Exception
     {
-        try
+        if (!scenario.getConfiguration().getCommonConfiguration().getProxyPort().isEmpty())
         {
-            if (jmeterStartStopLock.tryLock() || jmeterStartStopLock.tryLock(10, TimeUnit.SECONDS))
+            return;
+        }
+        if (jmeterStartStopLock.tryLock() || jmeterStartStopLock.tryLock(10, TimeUnit.SECONDS))
+        {
+            if (availablePorts.size() < 0)
             {
-
-            }
-            else
-            {
-                LOG.error("Can't acquire a lock to start JMeter");
-            }
-            try
-            {
-
-            }
-            finally
-            {
-                jmeterStartStopLock.unlock();
+                throw new IllegalArgumentException("No ports left to start JMeter");
             }
         }
-        catch (InterruptedException e)
+        else
+        {
+            LOG.error("Can't acquire a lock to start JMeter");
+        }
+        try
+        {
+            int port = availablePorts.get(0);
+            availablePorts.remove(0);
+            scenario.getConfiguration().getCommonConfiguration().setProxyPort("" + port);
+            JMeterRecorder recorder = new JMeterRecorder(
+                    scenario.getConfiguration().getCommonConfiguration().getScriptClassloader());
+            recorder.init();
+            recorder.setProxyPort(port);
+            jmeters.put(scenario.getExperimentId(), recorder);
+            recorder.startRecording();
+        }
+        catch (IOException e)
         {
             LOG.error(e.toString(), e);
+            throw e;
+        }
+        finally
+        {
+            jmeterStartStopLock.unlock();
         }
     }
 
-    private void stopJMeter(MongoDbScenario scenario)
+    private void stopJMeter(MongoDbScenario scenario) throws Exception
     {
+        if (scenario.getConfiguration().getCommonConfiguration().getProxyPort().isEmpty())
+        {
+            return;
+        }
+
+        if (scenario.getConfiguration().getCommonConfiguration().getProxyPort().equalsIgnoreCase("-1"))
+        {
+            return;
+        }
+
+        if (!jmeterStartStopLock.tryLock() && !jmeterStartStopLock.tryLock(10, TimeUnit.SECONDS))
+        {
+            LOG.error("Can't acquire a lock to stop JMeter");
+        }
         try
         {
-            if (jmeterStartStopLock.tryLock() || jmeterStartStopLock.tryLock(10, TimeUnit.SECONDS))
+            JMeterRecorder recorder = jmeters.get(scenario.getExperimentId());
+            if (recorder == null)
             {
+                throw new IllegalStateException("Instance of JMeterRecorder not found");
+            }
 
-            }
-            else
-            {
-                LOG.error("Can't acquire a lock to stop JMeter");
-            }
-            try
-            {
+            recorder.stopRecording();
 
-            }
-            finally
+            availablePorts.add(Integer.parseInt(scenario.getConfiguration().getCommonConfiguration().getProxyPort()));
+            scenario.getConfiguration().getCommonConfiguration().setProxyPort("");
+
+            try (ByteArrayOutputStream baos = new ByteArrayOutputStream())
             {
-                jmeterStartStopLock.unlock();
+                recorder.saveScenario(baos);
+                try (ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray()))
+                {
+                    screenshotsService.storeJMeterScenario(scenario, bais);
+                }
             }
         }
-        catch (InterruptedException e)
+        finally
         {
-            LOG.error(e.toString(), e);
+            jmeterStartStopLock.unlock();
         }
     }
 
-    public void resume(String experimentId)
+    public void resume(String experimentId) throws Exception
     {
         Experiment experiment = experimentRepository.findOne(new ObjectId(experimentId));
         if (experiment == null)
@@ -168,6 +200,7 @@ public class BackgroundWebPlayer
         MongoDbScenarioProcessor processor = new MongoDbScenarioProcessor(screenshotsService);
 
         startJMeter(scenario);
+        experimentRepository.save(experiment);
 
         playingFutures.put(experimentId, CompletableFuture.runAsync(() -> {
             processor.play(scenario, new SeleniumDriver(scenario), scenario.getFirstStep(), scenario.getMaxStep());
@@ -216,8 +249,15 @@ public class BackgroundWebPlayer
                     return;
                 }
             }
-            jmeters.remove(experimentId);
-            stopJMeter(scenario);
+            try
+            {
+                stopJMeter(scenario);
+                experimentRepository.save(experiment);
+            }
+            catch (Exception e)
+            {
+                LOG.error(e.toString(), e);
+            }
         }));
     }
 
@@ -256,8 +296,7 @@ public class BackgroundWebPlayer
     public InputStream getScreenshot(String experimentId, int step)
     {
         Experiment experiment = experimentRepository.findOne(new ObjectId(experimentId));
-        screenshotsService.getScreenshot(experiment.getRecordingName(), experimentId, step);
-        return null;
+        return screenshotsService.getScreenshot(experiment.getRecordingName(), experimentId, step);
     }
 
     public void move(String experimentId, int step)
@@ -277,5 +316,11 @@ public class BackgroundWebPlayer
         ArrayList<Experiment> result = new ArrayList<>();
         experimentRepository.findAll().forEach(result::add);
         return result;
+    }
+
+    public InputStream getJMX(String experimentId)
+    {
+        Experiment experiment = experimentRepository.findOne(new ObjectId(experimentId));
+        return screenshotsService.getJMeterScenario(experiment.getRecordingName(), experimentId);
     }
 }
