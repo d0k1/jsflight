@@ -22,6 +22,9 @@ public class Settings
     private String smtpPort;
     private String stmpUser;
     private String stmpPassword;
+    private String smtpMailDebug;
+    private String smtpAuth;
+    private String smtpStarttls;
 
     public List<String> getAlarmEmail()
     {
@@ -71,5 +74,35 @@ public class Settings
     public void setStmpPassword(String stmpPassword)
     {
         this.stmpPassword = stmpPassword;
+    }
+
+    public String getSmtpAuth()
+    {
+        return smtpAuth;
+    }
+
+    public void setSmtpAuth(String smtpAuth)
+    {
+        this.smtpAuth = smtpAuth;
+    }
+
+    public String getSmtpStarttls()
+    {
+        return smtpStarttls;
+    }
+
+    public void setSmtpStarttls(String smtpStarttls)
+    {
+        this.smtpStarttls = smtpStarttls;
+    }
+
+    public String getSmtpMailDebug()
+    {
+        return smtpMailDebug;
+    }
+
+    public void setSmtpMailDebug(String smtpMailDebug)
+    {
+        this.smtpMailDebug = smtpMailDebug;
     }
 }

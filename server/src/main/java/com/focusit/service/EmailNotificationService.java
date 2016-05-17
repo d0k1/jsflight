@@ -1,7 +1,17 @@
 package com.focusit.service;
 
+import java.util.Properties;
+
+import javax.annotation.PostConstruct;
+import javax.inject.Inject;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.stereotype.Service;
 
+import com.focusit.model.Settings;
 import com.focusit.scenario.MongoDbScenario;
 
 /**
@@ -12,6 +22,41 @@ import com.focusit.scenario.MongoDbScenario;
 @Service
 public class EmailNotificationService
 {
+    private static final Logger LOG = LoggerFactory.getLogger(EmailNotificationService.class);
+    private SettingsService settingsService;
+    private JavaMailSender sender;
+
+    @Inject
+    public EmailNotificationService(SettingsService settingsService)
+    {
+        this.settingsService = settingsService;
+    }
+
+    @PostConstruct
+    public void init()
+    {
+        Settings settings = settingsService.getSettings();
+        JavaMailSenderImpl javaMailSender = new JavaMailSenderImpl();
+
+        javaMailSender.setHost(settings.getSmtpServer());
+        javaMailSender.setPort(Integer.parseInt(settings.getSmtpPort()));
+        javaMailSender.setUsername(settings.getStmpUser());
+        javaMailSender.setPassword(settings.getStmpPassword());
+
+        javaMailSender.setJavaMailProperties(getMailProperties(settings));
+
+        sender = javaMailSender;
+    }
+
+    private Properties getMailProperties(Settings settings)
+    {
+        Properties properties = new Properties();
+        properties.setProperty("mail.transport.protocol", "smtp");
+        properties.setProperty("mail.smtp.auth", settings.getSmtpAuth());
+        properties.setProperty("mail.smtp.starttls.enable", settings.getSmtpStarttls());
+        properties.setProperty("mail.debug", settings.getSmtpMailDebug());
+        return properties;
+    }
 
     public void notifyScenarioPaused(MongoDbScenario scenario)
     {
