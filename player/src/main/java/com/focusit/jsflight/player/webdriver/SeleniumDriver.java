@@ -5,14 +5,12 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.json.JSONObject;
 import org.openqa.selenium.*;
+import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.firefox.FirefoxBinary;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxProfile;
@@ -39,19 +37,25 @@ import com.google.common.collect.Lists;
 public class SeleniumDriver
 {
 
-    private static final Logger log = LoggerFactory.getLogger(SeleniumDriver.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SeleniumDriver.class);
     private HashMap<String, WebDriver> drivers = new HashMap<>();
     /**
      * Using BiMap for removing entries by value, because tabUuids and Windowhandles are unique
      */
     private BiMap<String, String> tabsWindow = HashBiMap.create();
-    private HashMap<String, String> lastUrls = new HashMap<>();
+    private Map<String, String> lastUrls = new HashMap<>();
     private StringGenerator stringGen;
     private UserScenario scenario;
 
     public SeleniumDriver(UserScenario scenario)
     {
         this.scenario = scenario;
+    }
+
+    public SeleniumDriver(UserScenario scenario, Map<String, String> externalLastUrls)
+    {
+        this.scenario = scenario;
+        this.lastUrls = externalLastUrls;
     }
 
     public void closeWebDrivers()
@@ -63,12 +67,12 @@ public class SeleniumDriver
     {
         try
         {
-            log.info("looking for " + target);
+            LOG.info("looking for " + target);
             return wd.findElement(By.xpath(target));
         }
         catch (NoSuchElementException e)
         {
-            log.info("failed looking for {}. trying to restore xpath");
+            LOG.info("failed looking for {}. trying to restore xpath");
             return (WebElement)new PlayerScriptProcessor(scenario).executeWebLookupScript(script, wd, target, event);
         }
     }
@@ -139,7 +143,7 @@ public class SeleniumDriver
         }
         catch (Throwable ex)
         {
-            log.error(ex.toString(), ex);
+            LOG.error(ex.toString(), ex);
             throw ex;
         }
         finally
@@ -148,11 +152,11 @@ public class SeleniumDriver
             String window = tabsWindow.get(tabUuid);
             if (window == null)
             {
-                ArrayList<String> tabs = new ArrayList<String>(driver.getWindowHandles());
+                ArrayList<String> tabs = new ArrayList<>(driver.getWindowHandles());
                 if (tabsWindow.values().contains(tabs.get(0)))
                 {
                     ((JavascriptExecutor)driver).executeScript("window.open()");
-                    tabs = new ArrayList<String>(driver.getWindowHandles());
+                    tabs = new ArrayList<>(driver.getWindowHandles());
                 }
                 window = tabs.get(tabs.size() - 1);
                 tabsWindow.put(tabUuid, window);
@@ -295,14 +299,14 @@ public class SeleniumDriver
                 {
                     try
                     {
-                        log.warn("Error simulation right click. Retrying after 2 sec.");
+                        LOG.warn("Error simulation right click. Retrying after 2 sec.");
                         Thread.sleep(2000);
 
                         new Actions(wd).contextClick(element).perform();
                     }
                     catch (Exception e)
                     {
-                        log.error(e.toString(), e);
+                        LOG.error(e.toString(), e);
                     }
                 }
             }
@@ -314,7 +318,7 @@ public class SeleniumDriver
                 }
                 catch (Exception ex)
                 {
-                    log.warn(ex.toString(), ex);
+                    LOG.warn(ex.toString(), ex);
 
                     try
                     {
@@ -323,7 +327,7 @@ public class SeleniumDriver
                     }
                     catch (Exception ex1)
                     {
-                        log.error(ex1.toString(), ex1);
+                        LOG.error(ex1.toString(), ex1);
                         throw new WebDriverException(ex1);
                     }
                 }
@@ -375,7 +379,7 @@ public class SeleniumDriver
             }
             catch (Exception ex)
             {
-                log.error(ex.toString(), ex);
+                LOG.error(ex.toString(), ex);
             }
         }
         while (System.currentTimeMillis() < timeout);
@@ -386,7 +390,7 @@ public class SeleniumDriver
     {
         if (!(null != formOrDialogXpath && !formOrDialogXpath.isEmpty()))
         {
-            log.debug("Form or dialog xpath is not specified. Aborting release process");
+            LOG.debug("Form or dialog xpath is not specified. Aborting release process");
             return;
         }
         String xpath = formOrDialogXpath;
@@ -464,7 +468,7 @@ public class SeleniumDriver
         }
         catch (InterruptedException e)
         {
-            log.error(e.toString(), e);
+            LOG.error(e.toString(), e);
             throw new IllegalStateException(e);
         }
     }
@@ -480,7 +484,6 @@ public class SeleniumDriver
         {
             return false;
         }
-
     }
 
     private List<String> closeTabs(WebDriver driver, Collection<String> tabs, String formDialogXpath)
@@ -492,6 +495,7 @@ public class SeleniumDriver
             {
                 tabsWindow.inverse().remove(tab);
                 tabDriver.close();
+                LOG.info("Closed tab " + tab);
             }
             else
             {
@@ -577,7 +581,7 @@ public class SeleniumDriver
             {
                 if (new PlayerScriptProcessor(scenario).executeWebLookupScript(script, wd, null, null) != null)
                 {
-                    log.debug("Yeeepeee UI showed up!");
+                    LOG.debug("Yeeepeee UI showed up!");
                     return;
                 }
             }
@@ -590,7 +594,7 @@ public class SeleniumDriver
                 catch (InterruptedException e1)
                 {
                     //Should never happen
-                    log.error(e1.toString(), e1);
+                    LOG.error(e1.toString(), e1);
                 }
             }
         }

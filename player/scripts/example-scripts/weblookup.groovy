@@ -78,5 +78,7 @@ if (event.type in applicableForSearch) {
         }
     }
     logger.info("new xpath for target element {}", String.join("", presentElements));
+
+
     return targetElement;
 }

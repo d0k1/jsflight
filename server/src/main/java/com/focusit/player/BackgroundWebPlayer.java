@@ -54,6 +54,8 @@ public class BackgroundWebPlayer
     private List<Integer> availablePorts = new ArrayList<>(64356);
     private ReentrantLock jmeterStartStopLock = new ReentrantLock();
 
+    private Map<String, Map<String, String>> experimentLastUrls = new ConcurrentHashMap<>();
+
     @Inject
     public BackgroundWebPlayer(MongoDbStorageService screenshotsService, RecordingRepository recordingRepository,
             EventRepository eventRepository, ExperimentRepository experimentRepository,
@@ -202,8 +204,16 @@ public class BackgroundWebPlayer
         startJMeter(scenario);
         experimentRepository.save(experiment);
 
+        Map lastUrls = experimentLastUrls.get(experimentId);
+        if (lastUrls == null)
+        {
+            lastUrls = new ConcurrentHashMap<>();
+        }
+
+        Map finalLastUrls = lastUrls;
         playingFutures.put(experimentId, CompletableFuture.runAsync(() -> {
-            processor.play(scenario, new SeleniumDriver(scenario), scenario.getFirstStep(), scenario.getMaxStep());
+            processor.play(scenario, new SeleniumDriver(scenario, finalLastUrls), scenario.getFirstStep(),
+                    scenario.getMaxStep());
         }).whenCompleteAsync((aVoid, throwable) -> {
             playingFutures.remove(experimentId);
 
@@ -212,6 +222,7 @@ public class BackgroundWebPlayer
                 experiment.setPlaying(false);
                 experiment.setFinished(true);
                 experimentRepository.save(experiment);
+                experimentLastUrls.remove(experimentId);
                 notificationService.notifyScenarioDone(scenario, throwable);
             }
             else
@@ -236,6 +247,7 @@ public class BackgroundWebPlayer
                     experiment.setPlaying(false);
                     experiment.setFinished(true);
                     experimentRepository.save(experiment);
+                    experimentLastUrls.remove(experimentId);
                     notificationService.notifyScenarioTerminated(scenario, throwable);
                 }
                 else
