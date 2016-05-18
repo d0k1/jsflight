@@ -345,6 +345,7 @@ public class SeleniumDriver
         if (!event.has("deltaY"))
         {
             LOG.error("event has no deltaY - cant process scroll", new Exception());
+            return;
         }
         WebElement el = (WebElement)new PlayerScriptProcessor(scenario).executeWebLookupScript(script, wd, target,
                 event);
