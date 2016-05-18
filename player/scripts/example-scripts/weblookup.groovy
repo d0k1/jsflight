@@ -17,6 +17,10 @@ import java.util.stream.Collectors
 
 java.lang.Thread.currentThread().setContextClassLoader(classloader);
 
+if (target.isEmpty()) {
+    return webdriver.findElement(By.xpath('/html'));
+}
+
 List<String> elements = Arrays.stream(target.split("//\\*"))
         .filter { element -> !element.isEmpty() }
         .map { element -> "//*" + element }
