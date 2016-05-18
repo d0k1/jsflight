@@ -342,6 +342,10 @@ public class SeleniumDriver
 
     public void processMouseWheel(String script, WebDriver wd, JSONObject event, String target)
     {
+        if (!event.has("deltaY"))
+        {
+            LOG.error("event has no deltaY - cant process scroll", new Exception());
+        }
         WebElement el = (WebElement)new PlayerScriptProcessor(scenario).executeWebLookupScript(script, wd, target,
                 event);
         //Web lookup script MUST return /html element if scroll occurs not in a popup
