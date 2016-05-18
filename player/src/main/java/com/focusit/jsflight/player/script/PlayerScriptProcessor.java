@@ -49,7 +49,7 @@ public class PlayerScriptProcessor
         binding.setVariable("previous", prevEvent);
         Script scr = engine.getThreadBindedScript(script);
 
-        if (scr != null)
+        if (scr == null)
         {
             return false;
         }
