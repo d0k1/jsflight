@@ -1,4 +1,4 @@
-package com.focusit
+package com.focusit.specs.unit
 
 import spock.lang.Specification
 

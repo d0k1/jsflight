@@ -2,9 +2,6 @@ package com.focusit.scenario;
 
 import org.bson.types.ObjectId;
 import org.json.JSONObject;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 
 import com.focusit.jsflight.player.config.Configuration;
 import com.focusit.jsflight.player.scenario.UserScenario;
@@ -50,9 +47,10 @@ public class MongoDbScenario extends UserScenario
     @Override
     public JSONObject getStepAt(int position)
     {
-        Page<Event> page = repository.findOneByRecordingId(new ObjectId(experiment.getRecordingId()),
-                new PageRequest(position, 1, new Sort(Sort.Direction.ASC, "timestamp")));
-        Event event = page.getContent().get(0);
+        //        Page<Event> page = repository.findOneByRecordingId(new ObjectId(experiment.getRecordingId()),
+        //                new PageRequest(position, 1, new Sort(Sort.Direction.ASC, "timestamp")));
+        //        Event event = page.getContent().get(0);
+        Event event = repository.findOneByRecordingIdOrderByTimestampDesc(new ObjectId(experiment.getRecordingId()));
         JSONObject object = new JSONObject(event);
         return object;
     }

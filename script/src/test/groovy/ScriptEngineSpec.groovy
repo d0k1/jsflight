@@ -6,7 +6,7 @@ import spock.lang.Specification
  */
 
 class ScriptEngineSpec extends Specification {
-    public final static SCRIPT_WITH_RETURN = "return 1;";
+    public static final String SCRIPT_WITH_RETURN = "return 1;";
     public static final String MULTITHREAD_SCRIPT = "return Thread.currentThread().getId();"
     public static final String VAR1 = "var1"
     public static final String VAL1 = "val1"
@@ -46,7 +46,7 @@ class ScriptEngineSpec extends Specification {
         script == null;
     }
 
-    def "call getScript from diffrent threads returns same object"() {
+    def "call getScript from different threads returns same object"() {
         def script1;
         def scriptFromThread = [];
 

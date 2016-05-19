@@ -42,7 +42,8 @@ import com.focusit.service.MongoDbStorageService;
 public class BackgroundWebPlayer
 {
     private static final Logger LOG = LoggerFactory.getLogger(BackgroundWebPlayer.class);
-    private MongoDbStorageService screenshotsService;
+    private MongoDbStorageService storageService;
+
     private RecordingRepository recordingRepository;
     private EventRepository eventRepository;
     private ExperimentRepository experimentRepository;
@@ -61,7 +62,7 @@ public class BackgroundWebPlayer
             EventRepository eventRepository, ExperimentRepository experimentRepository,
             EmailNotificationService notificationService)
     {
-        this.screenshotsService = screenshotsService;
+        this.storageService = screenshotsService;
         this.recordingRepository = recordingRepository;
         this.eventRepository = eventRepository;
         this.experimentRepository = experimentRepository;
@@ -175,7 +176,7 @@ public class BackgroundWebPlayer
                 recorder.saveScenario(baos);
                 try (ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray()))
                 {
-                    screenshotsService.storeJMeterScenario(scenario, bais);
+                    storageService.storeJMeterScenario(scenario, bais);
                 }
             }
         }
@@ -199,7 +200,7 @@ public class BackgroundWebPlayer
         experimentRepository.save(experiment);
 
         MongoDbScenario scenario = new MongoDbScenario(experiment, eventRepository, experimentRepository);
-        MongoDbScenarioProcessor processor = new MongoDbScenarioProcessor(screenshotsService);
+        MongoDbScenarioProcessor processor = new MongoDbScenarioProcessor(storageService);
 
         startJMeter(scenario);
         experimentRepository.save(experiment);
@@ -308,7 +309,7 @@ public class BackgroundWebPlayer
     public InputStream getScreenshot(String experimentId, int step)
     {
         Experiment experiment = experimentRepository.findOne(new ObjectId(experimentId));
-        return screenshotsService.getScreenshot(experiment.getRecordingName(), experimentId, step);
+        return storageService.getScreenshot(experiment.getRecordingName(), experimentId, step);
     }
 
     public void move(String experimentId, int step)
@@ -333,6 +334,6 @@ public class BackgroundWebPlayer
     public InputStream getJMX(String experimentId)
     {
         Experiment experiment = experimentRepository.findOne(new ObjectId(experimentId));
-        return screenshotsService.getJMeterScenario(experiment.getRecordingName(), experimentId);
+        return storageService.getJMeterScenario(experiment.getRecordingName(), experimentId);
     }
 }

@@ -108,11 +108,10 @@ public class ScenarioProcessor
 
     public void applyStep(UserScenario scenario, SeleniumDriver seleniumDriver, int position)
     {
-        JSONObject step = scenario.getStepAt(position);
-        scenario.getContext().setCurrentScenarioStep(step);
+        JSONObject event = scenario.getStepAt(position);
+        scenario.getContext().setCurrentScenarioStep(event);
 
         new PlayerScriptProcessor(scenario).runStepPrePostScript(scenario, position, true);
-        JSONObject event = scenario.getStepAt(position);
         event = new PlayerScriptProcessor(scenario).runStepTemplating(scenario, event);
         boolean error = false;
         try

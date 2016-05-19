@@ -20,7 +20,6 @@ import org.springframework.web.multipart.MultipartFile;
 import com.focusit.model.Experiment;
 import com.focusit.model.Recording;
 import com.focusit.player.BackgroundWebPlayer;
-import com.focusit.service.MongoDbStorageService;
 import com.focusit.service.RecordingsService;
 
 /**
@@ -30,19 +29,15 @@ import com.focusit.service.RecordingsService;
 @RequestMapping(value = "/player")
 public class PlayerController
 {
-
     private final static Logger LOG = LoggerFactory.getLogger(PlayerController.class);
     private RecordingsService recordingsService;
     private BackgroundWebPlayer player;
-    private MongoDbStorageService storageService;
 
     @Inject
-    public PlayerController(RecordingsService recordingsService, BackgroundWebPlayer player,
-            MongoDbStorageService storageService)
+    public PlayerController(RecordingsService recordingsService, BackgroundWebPlayer player)
     {
         this.recordingsService = recordingsService;
         this.player = player;
-        this.storageService = storageService;
     }
 
     /**

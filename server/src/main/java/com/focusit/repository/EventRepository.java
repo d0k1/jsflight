@@ -1,8 +1,6 @@
 package com.focusit.repository;
 
 import org.bson.types.ObjectId;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.repository.PagingAndSortingRepository;
 
@@ -17,5 +15,6 @@ public interface EventRepository extends PagingAndSortingRepository<Event, Objec
     @Query(value = "{'recordingId': ?0}", count = true)
     long countByRecordingId(ObjectId recordingId);
 
-    Page<Event> findOneByRecordingId(ObjectId recordingId, Pageable pageable);
+    @Query(value = "{'recordingId': ?0}")
+    Event findOneByRecordingIdOrderByTimestampDesc(ObjectId recordingId);
 }
