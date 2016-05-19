@@ -1,8 +1,5 @@
 package com.focusit.player;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Date;
@@ -10,8 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.ReentrantLock;
 
 import javax.inject.Inject;
 
@@ -20,7 +15,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import com.focusit.jmeter.JMeterRecorder;
 import com.focusit.jsflight.player.webdriver.SeleniumDriver;
 import com.focusit.model.Experiment;
 import com.focusit.model.Recording;
@@ -31,6 +25,7 @@ import com.focusit.scenario.MongoDbScenario;
 import com.focusit.scenario.MongoDbScenarioProcessor;
 import com.focusit.service.EmailNotificationService;
 import com.focusit.service.ExperimentFactory;
+import com.focusit.service.JMeterRecorderService;
 import com.focusit.service.MongoDbStorageService;
 
 /**
@@ -42,36 +37,28 @@ import com.focusit.service.MongoDbStorageService;
 public class BackgroundWebPlayer
 {
     private static final Logger LOG = LoggerFactory.getLogger(BackgroundWebPlayer.class);
-    private MongoDbStorageService storageService;
 
+    private MongoDbStorageService storageService;
     private RecordingRepository recordingRepository;
     private EventRepository eventRepository;
     private ExperimentRepository experimentRepository;
     private EmailNotificationService notificationService;
-
-    private Map<String, CompletableFuture> playingFutures = new ConcurrentHashMap<>();
-    private Map<String, JMeterRecorder> jmeters = new ConcurrentHashMap<>();
-
-    private List<Integer> availablePorts = new ArrayList<>(64356);
-    private ReentrantLock jmeterStartStopLock = new ReentrantLock();
+    private JMeterRecorderService recorderService;
 
     private Map<String, Map<String, String>> experimentLastUrls = new ConcurrentHashMap<>();
+    private Map<String, CompletableFuture> playingFutures = new ConcurrentHashMap<>();
 
     @Inject
     public BackgroundWebPlayer(MongoDbStorageService screenshotsService, RecordingRepository recordingRepository,
             EventRepository eventRepository, ExperimentRepository experimentRepository,
-            EmailNotificationService notificationService)
+            EmailNotificationService notificationService, JMeterRecorderService recorderService)
     {
         this.storageService = screenshotsService;
         this.recordingRepository = recordingRepository;
         this.eventRepository = eventRepository;
         this.experimentRepository = experimentRepository;
         this.notificationService = notificationService;
-
-        for (int i = 1025; i < 64530; i++)
-        {
-            availablePorts.add(i);
-        }
+        this.recorderService = recorderService;
     }
 
     public Experiment start(String recordingId, boolean withScreenshots, boolean paused) throws Exception
@@ -104,86 +91,12 @@ public class BackgroundWebPlayer
 
     private void startJMeter(MongoDbScenario scenario) throws Exception
     {
-        if (!scenario.getConfiguration().getCommonConfiguration().getProxyPort().isEmpty())
-        {
-            return;
-        }
-        if (jmeterStartStopLock.tryLock() || jmeterStartStopLock.tryLock(10, TimeUnit.SECONDS))
-        {
-            if (availablePorts.size() < 0)
-            {
-                throw new IllegalArgumentException("No ports left to start JMeter");
-            }
-        }
-        else
-        {
-            LOG.error("Can't acquire a lock to start JMeter");
-        }
-        try
-        {
-            int port = availablePorts.get(0);
-            availablePorts.remove(0);
-            scenario.getConfiguration().getCommonConfiguration().setProxyPort("" + port);
-            JMeterRecorder recorder = new JMeterRecorder(
-                    scenario.getConfiguration().getCommonConfiguration().getScriptClassloader());
-            recorder.init();
-            recorder.setProxyPort(port);
-            jmeters.put(scenario.getExperimentId(), recorder);
-            recorder.startRecording();
-        }
-        catch (IOException e)
-        {
-            LOG.error(e.toString(), e);
-            throw e;
-        }
-        finally
-        {
-            jmeterStartStopLock.unlock();
-        }
+        recorderService.startJMeter(scenario);
     }
 
     private void stopJMeter(MongoDbScenario scenario) throws Exception
     {
-        if (scenario.getConfiguration().getCommonConfiguration().getProxyPort().isEmpty())
-        {
-            return;
-        }
-
-        if (scenario.getConfiguration().getCommonConfiguration().getProxyPort().equalsIgnoreCase("-1"))
-        {
-            return;
-        }
-
-        if (!jmeterStartStopLock.tryLock() && !jmeterStartStopLock.tryLock(10, TimeUnit.SECONDS))
-        {
-            LOG.error("Can't acquire a lock to stop JMeter");
-        }
-        try
-        {
-            JMeterRecorder recorder = jmeters.get(scenario.getExperimentId());
-            if (recorder == null)
-            {
-                throw new IllegalStateException("Instance of JMeterRecorder not found");
-            }
-
-            recorder.stopRecording();
-
-            availablePorts.add(Integer.parseInt(scenario.getConfiguration().getCommonConfiguration().getProxyPort()));
-            scenario.getConfiguration().getCommonConfiguration().setProxyPort("");
-
-            try (ByteArrayOutputStream baos = new ByteArrayOutputStream())
-            {
-                recorder.saveScenario(baos);
-                try (ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray()))
-                {
-                    storageService.storeJMeterScenario(scenario, bais);
-                }
-            }
-        }
-        finally
-        {
-            jmeterStartStopLock.unlock();
-        }
+        recorderService.stopJMeter(scenario);
     }
 
     public void resume(String experimentId) throws Exception
