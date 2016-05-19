@@ -6,9 +6,9 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration
 import org.springframework.boot.autoconfigure.mongo.embedded.EmbeddedMongoAutoConfiguration
 import org.springframework.boot.test.SpringApplicationContextLoader
 import org.springframework.boot.test.WebIntegrationTest
-import org.springframework.context.annotation.PropertySource
 import org.springframework.http.ResponseEntity
 import org.springframework.test.context.ContextConfiguration
+import org.springframework.test.context.TestPropertySource
 import org.springframework.web.client.RestTemplate
 import spock.lang.Specification
 
@@ -19,7 +19,7 @@ import spock.lang.Specification
 @EnableAutoConfiguration(exclude = [EmbeddedMongoAutoConfiguration.class])
 @ContextConfiguration(loader = SpringApplicationContextLoader.class, classes = [ServerApplication.class])
 @WebIntegrationTest
-@PropertySource("classpath:app.integration.test.properties")
+@TestPropertySource("classpath:app.integration.test.properties")
 class AppContextSpec extends Specification {
     @Value('${local.server.port}')
     int port

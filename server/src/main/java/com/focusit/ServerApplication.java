@@ -8,6 +8,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
 import com.focusit.service.SettingsService;
@@ -20,6 +21,7 @@ import com.focusit.service.SettingsService;
 @ComponentScan
 @SpringBootApplication
 @EnableMongoRepositories(basePackages = "com.focusit.repository")
+@PropertySource("classpath:application.properties")
 public class ServerApplication implements CommandLineRunner
 {
     @Inject
