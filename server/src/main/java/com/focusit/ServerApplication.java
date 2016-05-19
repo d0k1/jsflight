@@ -21,7 +21,7 @@ import com.focusit.service.SettingsService;
 @ComponentScan
 @SpringBootApplication
 @EnableMongoRepositories(basePackages = "com.focusit.repository")
-@PropertySource("classpath:application.properties")
+@PropertySource(value = "classpath:application.properties", ignoreResourceNotFound = true)
 public class ServerApplication implements CommandLineRunner
 {
     @Inject

@@ -8,4 +8,13 @@ import org.springframework.stereotype.Service;
 @Service
 public class JMeterRecorderService
 {
+    public void startJMeter(String experimentId)
+    {
+
+    }
+
+    public void stopJMeter(String experimentId)
+    {
+
+    }
 }
