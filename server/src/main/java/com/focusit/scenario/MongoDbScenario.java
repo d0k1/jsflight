@@ -47,10 +47,8 @@ public class MongoDbScenario extends UserScenario
     @Override
     public JSONObject getStepAt(int position)
     {
-        //        Page<Event> page = repository.findOneByRecordingId(new ObjectId(experiment.getRecordingId()),
-        //                new PageRequest(position, 1, new Sort(Sort.Direction.ASC, "timestamp")));
-        //        Event event = page.getContent().get(0);
-        Event event = repository.findOneByRecordingIdOrderByTimestampDesc(new ObjectId(experiment.getRecordingId()));
+        Event event = repository.findOneByRecordingIdOrderByTimestampAsc(new ObjectId(experiment.getRecordingId()),
+                position);
         JSONObject object = new JSONObject(event);
         return object;
     }

@@ -9,12 +9,9 @@ import com.focusit.model.Event;
 /**
  * Created by dkirpichenkov on 04.05.16.
  */
-public interface EventRepository extends PagingAndSortingRepository<Event, ObjectId>
+public interface EventRepository extends PagingAndSortingRepository<Event, ObjectId>, EventRepositoryCustom
 {
 
     @Query(value = "{'recordingId': ?0}", count = true)
     long countByRecordingId(ObjectId recordingId);
-
-    @Query(value = "{'recordingId': ?0}")
-    Event findOneByRecordingIdOrderByTimestampDesc(ObjectId recordingId);
 }
