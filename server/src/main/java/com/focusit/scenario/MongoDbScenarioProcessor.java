@@ -16,6 +16,11 @@ import com.focusit.player.ErrorInBrowserPlaybackException;
 import com.focusit.service.MongoDbStorageService;
 
 /**
+ * This class user scenario process based on mongodb
+ * It add some specific to ordinal scenario processor such as:
+ * - storing screenshot in mongodb's gridfs
+ * - throws an exception if something went wrong to interrupt a player
+ * - validates browser's DOM looking for modal dialogs with an error
  * Created by doki on 12.05.16.
  */
 public class MongoDbScenarioProcessor extends ScenarioProcessor
@@ -54,9 +59,9 @@ public class MongoDbScenarioProcessor extends ScenarioProcessor
     }
 
     @Override
-    protected void processClickExcpetion(int position, Exception ex) throws Exception
+    protected void processClickException(int position, Exception ex) throws Exception
     {
-        super.processClickExcpetion(position, ex);
+        super.processClickException(position, ex);
         throw ex;
     }
 
@@ -73,7 +78,6 @@ public class MongoDbScenarioProcessor extends ScenarioProcessor
             {
                 screenshotsService.storeScreenshot(mongoDbScenario, position, bais);
             }
-
         }
         catch (IOException e)
         {

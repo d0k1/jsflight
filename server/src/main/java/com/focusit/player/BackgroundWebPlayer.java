@@ -125,66 +125,67 @@ public class BackgroundWebPlayer
         }
 
         Map finalLastUrls = lastUrls;
-        playingFutures.put(experimentId, CompletableFuture.runAsync(() -> {
-            processor.play(scenario, new SeleniumDriver(scenario, finalLastUrls), scenario.getFirstStep(),
-                    scenario.getMaxStep());
-        }).whenCompleteAsync((aVoid, throwable) -> {
-            playingFutures.remove(experimentId);
+        playingFutures.put(experimentId,
+                CompletableFuture
+                        .runAsync(() -> processor.play(scenario, new SeleniumDriver(scenario, finalLastUrls),
+                                scenario.getFirstStep(), scenario.getMaxStep()))
+                        .whenCompleteAsync((aVoid, throwable) -> {
+                            playingFutures.remove(experimentId);
 
-            if (throwable == null)
-            {
-                experiment.setPlaying(false);
-                experiment.setFinished(true);
-                experimentRepository.save(experiment);
-                experimentLastUrls.remove(experimentId);
-                notificationService.notifyScenarioDone(scenario, throwable);
-            }
-            else
-            {
-                LOG.error(throwable.toString(), throwable);
-                if (throwable instanceof PausePlaybackException)
-                {
-                    experiment.setPlaying(false);
-                    experimentRepository.save(experiment);
-                    notificationService.notifyScenarioPaused(scenario, null);
-                    return;
-                }
-                else if (throwable instanceof ErrorInBrowserPlaybackException)
-                {
-                    experiment.setPlaying(false);
-                    experimentRepository.save(experiment);
-                    notificationService.notifyErrorInBrowserOccured(scenario, throwable);
-                    return;
-                }
-                else if (throwable instanceof TerminatePlaybackException)
-                {
-                    experiment.setPlaying(false);
-                    experiment.setFinished(true);
-                    experimentRepository.save(experiment);
-                    experimentLastUrls.remove(experimentId);
-                    notificationService.notifyScenarioTerminated(scenario, throwable);
-                }
-                else
-                {
-                    experiment.setPlaying(false);
-                    experiment.setFinished(false);
-                    experiment.setError(true);
-                    experiment.setErrorMessage(throwable.toString());
-                    experimentRepository.save(experiment);
-                    notificationService.notifyUnknownException(scenario, throwable);
-                    return;
-                }
-            }
-            try
-            {
-                stopJMeter(scenario);
-                experimentRepository.save(experiment);
-            }
-            catch (Exception e)
-            {
-                LOG.error(e.toString(), e);
-            }
-        }));
+                            if (throwable == null)
+                            {
+                                experiment.setPlaying(false);
+                                experiment.setFinished(true);
+                                experimentRepository.save(experiment);
+                                experimentLastUrls.remove(experimentId);
+                                notificationService.notifyScenarioDone(scenario, throwable);
+                            }
+                            else
+                            {
+                                LOG.error(throwable.toString(), throwable);
+                                if (throwable instanceof PausePlaybackException)
+                                {
+                                    experiment.setPlaying(false);
+                                    experimentRepository.save(experiment);
+                                    notificationService.notifyScenarioPaused(scenario, null);
+                                    return;
+                                }
+                                else if (throwable instanceof ErrorInBrowserPlaybackException)
+                                {
+                                    experiment.setPlaying(false);
+                                    experimentRepository.save(experiment);
+                                    notificationService.notifyErrorInBrowserOccured(scenario, throwable);
+                                    return;
+                                }
+                                else if (throwable instanceof TerminatePlaybackException)
+                                {
+                                    experiment.setPlaying(false);
+                                    experiment.setFinished(true);
+                                    experimentRepository.save(experiment);
+                                    experimentLastUrls.remove(experimentId);
+                                    notificationService.notifyScenarioTerminated(scenario, throwable);
+                                }
+                                else
+                                {
+                                    experiment.setPlaying(false);
+                                    experiment.setFinished(false);
+                                    experiment.setError(true);
+                                    experiment.setErrorMessage(throwable.toString());
+                                    experimentRepository.save(experiment);
+                                    notificationService.notifyUnknownException(scenario, throwable);
+                                    return;
+                                }
+                            }
+                            try
+                            {
+                                stopJMeter(scenario);
+                                experimentRepository.save(experiment);
+                            }
+                            catch (Exception e)
+                            {
+                                LOG.error(e.toString(), e);
+                            }
+                        }));
     }
 
     public void pause(String experimentId)

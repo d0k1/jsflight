@@ -41,15 +41,21 @@ public class MongoDbScenarioSpec extends Specification {
         e1.timestamp = System.currentTimeMillis();
         e1.recordingId = recordingId1;
 
+        Thread.sleep(10);
+
         Event e2 = new Event();
         e2.uuid = UUID.randomUUID().toString();
         e2.timestamp = System.currentTimeMillis();
         e2.recordingId = recordingId1;
 
+        Thread.sleep(10);
+
         Event e3 = new Event();
         e3.uuid = UUID.randomUUID().toString();
         e3.timestamp = System.currentTimeMillis();
         e3.recordingId = recordingId1;
+
+        Thread.sleep(10);
 
         Event e4 = new Event();
         e4.uuid = UUID.randomUUID().toString();
@@ -75,7 +81,7 @@ public class MongoDbScenarioSpec extends Specification {
         event2.get("uuid").toString().equals(e3.uuid.toString());
 
         time0 == e1.timestamp;
-        time2 == e2.timestamp;
+        time2 == e3.timestamp;
 
         time0 < time2
 
@@ -83,5 +89,66 @@ public class MongoDbScenarioSpec extends Specification {
         scenario.getStepAt(3);
         then:
         thrown IllegalArgumentException
+    }
+
+    def "getStepAt with wrong position throws an IllegalStateException"() {
+        given:
+        String recordingId1 = new ObjectId();
+
+        Event e1 = new Event();
+        e1.uuid = UUID.randomUUID().toString();
+        e1.timestamp = System.currentTimeMillis();
+        e1.recordingId = recordingId1;
+
+        Experiment experiment = new Experiment();
+        experiment.recordingId = recordingId1;
+
+        MongoDbScenario scenario = new MongoDbScenario(experiment, eventRepositoryCustom, experimentRepository);
+        eventRepositoryCustom.save([e1]);
+        experimentRepository.save(experiment);
+
+        when:
+        JSONObject event0 = scenario.getStepAt(0);
+        then:
+        event0 != null
+
+        when:
+        scenario.getStepAt(2);
+        then:
+        thrown IllegalArgumentException
+    }
+
+    def "next increments position in experiment and persists it"() {
+        given:
+        String recordingId1 = new ObjectId();
+        int position = 0;
+        Experiment experiment = new Experiment();
+        experiment.position = position;
+        experiment.recordingId = recordingId1;
+        experiment.setSteps(2);
+        experimentRepository.save(experiment);
+
+        MongoDbScenario scenario = new MongoDbScenario(experiment, eventRepositoryCustom, experimentRepository);
+        when:
+        scenario.next();
+        then:
+        experimentRepository.findOne(experiment.getId()).position == position + 1;
+    }
+
+    def "next zeroes position in experiment and persists it when no more steps left in the experiment"() {
+        given:
+        String recordingId1 = new ObjectId();
+        int position = 10;
+        Experiment experiment = new Experiment();
+        experiment.recordingId = recordingId1;
+        experiment.position = position;
+        experiment.setSteps(position);
+        experimentRepository.save(experiment);
+
+        MongoDbScenario scenario = new MongoDbScenario(experiment, eventRepositoryCustom, experimentRepository);
+        when:
+        scenario.next();
+        then:
+        experimentRepository.findOne(experiment.getId()).position == 0;
     }
 }

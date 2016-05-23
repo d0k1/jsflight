@@ -69,7 +69,7 @@ public class ScenarioProcessor
      * @param ex
      * @throws Exception
      */
-    protected void processClickExcpetion(int position, Exception ex) throws Exception
+    protected void processClickException(int position, Exception ex) throws Exception
     {
         LOG.error("Failed to process step: " + position, ex);
     }
@@ -195,7 +195,7 @@ public class ScenarioProcessor
             }
             catch (Exception e)
             {
-                processClickExcpetion(position, e);
+                processClickException(position, e);
             }
 
             seleniumDriver.releaseBrowser(theWebDriver,

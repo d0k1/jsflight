@@ -11,6 +11,8 @@ import com.focusit.repository.EventRepositoryCustom;
 import com.focusit.repository.ExperimentRepository;
 
 /**
+ * This class wraps an experiment in user scenario.
+ *
  * Created by doki on 12.05.16.
  */
 public class MongoDbScenario extends UserScenario
@@ -40,13 +42,20 @@ public class MongoDbScenario extends UserScenario
     }
 
     @Override
+    public void setPosition(int position)
+    {
+        experiment.setPosition(position);
+        experimentRepository.save(experiment);
+    }
+
+    @Override
     public int getStepsCount()
     {
         return experiment.getSteps();
     }
 
     @Override
-    public JSONObject getStepAt(int position)
+    public JSONObject getStepAt(int position) throws IllegalArgumentException
     {
         Event event = repository.getEventToReplay(new ObjectId(experiment.getRecordingId()), position);
         if (event == null)
@@ -61,7 +70,7 @@ public class MongoDbScenario extends UserScenario
     public void next()
     {
         setPosition(getPosition() + 1);
-        if (getPosition() == getStepsCount())
+        if (getPosition() >= getStepsCount())
         {
             setPosition(0);
         }
@@ -106,17 +115,5 @@ public class MongoDbScenario extends UserScenario
     public int getMaxStep()
     {
         return experiment.getLimit();
-    }
-
-    public int getProxyPort()
-    {
-        return Integer.parseInt(experiment.getConfiguration().getCommonConfiguration().getProxyPort());
-    }
-
-    @Override
-    public void setPosition(int position)
-    {
-        experiment.setPosition(position);
-        experimentRepository.save(experiment);
     }
 }
