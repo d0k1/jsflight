@@ -15,112 +15,52 @@ public class Event
 {
 
     @Id
-    ObjectId id;
+    private ObjectId id;
     @Indexed
-    ObjectId recordingId;
+    private ObjectId recordingId;
     @Indexed
-    String recordName;
+    private String recordName;
     @Indexed
-    Long eventId;
+    private Long eventId;
     @Indexed
-    Long timestamp;
+    private Long timestamp;
     @Indexed
-    String type;
+    private String type;
     @Indexed
-    String login;
+    private String login;
     @Indexed
-    String uuid;
-    String url;
-    String hash;
+    private String uuid;
+    private String url;
+    private String hash;
     @Indexed
-    String tabuuid;
-    String target;
-    List<Target1> target1;
-    String target2;
+    private String tabuuid;
+    private String target;
+    private List<Target1> target1;
+    private String target2;
     @Indexed
-    String agent;
+    private String agent;
     @Indexed
-    Integer button;
-    Integer which;
-    Boolean ctrlKey;
-    Boolean shiftKey;
-    Boolean altKey;
-    Boolean metaKey;
-    UiRectangle screen;
-    UiRectangle window;
-    UiRectangle page;
-    Float pageX;
-    Float pageY;
-    Float screenX;
-    Float screenY;
+    private Integer button;
+    private Integer which;
+    private Boolean ctrlKey;
+    private Boolean shiftKey;
+    private Boolean altKey;
+    private Boolean metaKey;
+    private UiRectangle screen;
+    private UiRectangle window;
+    private UiRectangle page;
+    private Float pageX;
+    private Float pageY;
+    private Float screenX;
+    private Float screenY;
 
-    Integer keyCode;
-    Integer charCode;
+    private Float keyCode;
+    private Float charCode;
 
-    Integer deltaX;
-    Integer deltaY;
-    Integer deltaZ;
-    Integer wheelDelta;
-
-    public Integer getDeltaX()
-    {
-        return deltaX;
-    }
-
-    public void setDeltaX(Integer deltaX)
-    {
-        this.deltaX = deltaX;
-    }
-
-    public Integer getDeltaZ()
-    {
-        return deltaZ;
-    }
-
-    public void setDeltaZ(Integer deltaZ)
-    {
-        this.deltaZ = deltaZ;
-    }
-
-    public Integer getDeltaY()
-    {
-        return deltaY;
-    }
-
-    public void setDeltaY(Integer deltaY)
-    {
-        this.deltaY = deltaY;
-    }
-
-    public Integer getWheelDelta()
-    {
-        return wheelDelta;
-    }
-
-    public void setWheelDelta(Integer wheelDelta)
-    {
-        this.wheelDelta = wheelDelta;
-    }
-
-    public Integer getKeyCode()
-    {
-        return keyCode;
-    }
-
-    public void setKeyCode(Integer keyCode)
-    {
-        this.keyCode = keyCode;
-    }
-
-    public Integer getCharCode()
-    {
-        return charCode;
-    }
-
-    public void setCharCode(Integer charCode)
-    {
-        this.charCode = charCode;
-    }
+    private Float deltaX;
+    private Float deltaY;
+    private Float deltaZ;
+    private Float wheelDelta;
 
     public ObjectId getRecordingId()
     {
