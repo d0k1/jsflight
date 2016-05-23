@@ -49,6 +49,10 @@ public class MongoDbScenario extends UserScenario
     public JSONObject getStepAt(int position)
     {
         Event event = repository.getEventToReplay(new ObjectId(experiment.getRecordingId()), position);
+        if (event == null)
+        {
+            throw new IllegalArgumentException("No event found at position " + position);
+        }
         JSONObject object = new JSONObject(event);
         return object;
     }
