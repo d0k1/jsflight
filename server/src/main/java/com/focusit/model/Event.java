@@ -342,6 +342,66 @@ public class Event
         this.recordName = recordName;
     }
 
+    public Float getKeyCode()
+    {
+        return keyCode;
+    }
+
+    public void setKeyCode(Float keyCode)
+    {
+        this.keyCode = keyCode;
+    }
+
+    public Float getCharCode()
+    {
+        return charCode;
+    }
+
+    public void setCharCode(Float charCode)
+    {
+        this.charCode = charCode;
+    }
+
+    public Float getDeltaX()
+    {
+        return deltaX;
+    }
+
+    public void setDeltaX(Float deltaX)
+    {
+        this.deltaX = deltaX;
+    }
+
+    public Float getDeltaY()
+    {
+        return deltaY;
+    }
+
+    public void setDeltaY(Float deltaY)
+    {
+        this.deltaY = deltaY;
+    }
+
+    public Float getDeltaZ()
+    {
+        return deltaZ;
+    }
+
+    public void setDeltaZ(Float deltaZ)
+    {
+        this.deltaZ = deltaZ;
+    }
+
+    public Float getWheelDelta()
+    {
+        return wheelDelta;
+    }
+
+    public void setWheelDelta(Float wheelDelta)
+    {
+        this.wheelDelta = wheelDelta;
+    }
+
     public static class UiRectangle
     {
         Float width;
