@@ -54,6 +54,74 @@ public class Event
     Float screenX;
     Float screenY;
 
+    Integer keyCode;
+    Integer charCode;
+
+    Integer deltaX;
+    Integer deltaY;
+    Integer deltaZ;
+    Integer wheelDelta;
+
+    public Integer getDeltaX()
+    {
+        return deltaX;
+    }
+
+    public void setDeltaX(Integer deltaX)
+    {
+        this.deltaX = deltaX;
+    }
+
+    public Integer getDeltaZ()
+    {
+        return deltaZ;
+    }
+
+    public void setDeltaZ(Integer deltaZ)
+    {
+        this.deltaZ = deltaZ;
+    }
+
+    public Integer getDeltaY()
+    {
+        return deltaY;
+    }
+
+    public void setDeltaY(Integer deltaY)
+    {
+        this.deltaY = deltaY;
+    }
+
+    public Integer getWheelDelta()
+    {
+        return wheelDelta;
+    }
+
+    public void setWheelDelta(Integer wheelDelta)
+    {
+        this.wheelDelta = wheelDelta;
+    }
+
+    public Integer getKeyCode()
+    {
+        return keyCode;
+    }
+
+    public void setKeyCode(Integer keyCode)
+    {
+        this.keyCode = keyCode;
+    }
+
+    public Integer getCharCode()
+    {
+        return charCode;
+    }
+
+    public void setCharCode(Integer charCode)
+    {
+        this.charCode = charCode;
+    }
+
     public ObjectId getRecordingId()
     {
         return recordingId;

@@ -16,7 +16,7 @@ import org.springframework.stereotype.Service;
 
 import com.focusit.model.Event;
 import com.focusit.model.Recording;
-import com.focusit.repository.EventRepository;
+import com.focusit.repository.EventRepositoryCustom;
 import com.focusit.repository.RecordingRepository;
 import com.google.gson.Gson;
 
@@ -29,10 +29,10 @@ public class RecordingsService
     private final static Logger LOG = LoggerFactory.getLogger(RecordingsService.class);
 
     private RecordingRepository recordingRepository;
-    private EventRepository eventRepository;
+    private EventRepositoryCustom eventRepository;
 
     @Inject
-    public RecordingsService(RecordingRepository recordingRepository, EventRepository eventRepository)
+    public RecordingsService(RecordingRepository recordingRepository, EventRepositoryCustom eventRepository)
     {
         this.recordingRepository = recordingRepository;
         this.eventRepository = eventRepository;

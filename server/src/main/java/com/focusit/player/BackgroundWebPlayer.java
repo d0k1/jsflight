@@ -18,7 +18,7 @@ import org.springframework.stereotype.Service;
 import com.focusit.jsflight.player.webdriver.SeleniumDriver;
 import com.focusit.model.Experiment;
 import com.focusit.model.Recording;
-import com.focusit.repository.EventRepository;
+import com.focusit.repository.EventRepositoryCustom;
 import com.focusit.repository.ExperimentRepository;
 import com.focusit.repository.RecordingRepository;
 import com.focusit.scenario.MongoDbScenario;
@@ -40,7 +40,7 @@ public class BackgroundWebPlayer
 
     private MongoDbStorageService storageService;
     private RecordingRepository recordingRepository;
-    private EventRepository eventRepository;
+    private EventRepositoryCustom eventRepository;
     private ExperimentRepository experimentRepository;
     private EmailNotificationService notificationService;
     private JMeterRecorderService recorderService;
@@ -50,7 +50,7 @@ public class BackgroundWebPlayer
 
     @Inject
     public BackgroundWebPlayer(MongoDbStorageService screenshotsService, RecordingRepository recordingRepository,
-            EventRepository eventRepository, ExperimentRepository experimentRepository,
+            EventRepositoryCustom eventRepository, ExperimentRepository experimentRepository,
             EmailNotificationService notificationService, JMeterRecorderService recorderService)
     {
         this.storageService = screenshotsService;

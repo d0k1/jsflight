@@ -7,7 +7,7 @@ import com.focusit.jsflight.player.config.Configuration;
 import com.focusit.jsflight.player.scenario.UserScenario;
 import com.focusit.model.Event;
 import com.focusit.model.Experiment;
-import com.focusit.repository.EventRepository;
+import com.focusit.repository.EventRepositoryCustom;
 import com.focusit.repository.ExperimentRepository;
 
 /**
@@ -16,10 +16,11 @@ import com.focusit.repository.ExperimentRepository;
 public class MongoDbScenario extends UserScenario
 {
     private final Experiment experiment;
-    private EventRepository repository;
+    private EventRepositoryCustom repository;
     private ExperimentRepository experimentRepository;
 
-    public MongoDbScenario(Experiment experiment, EventRepository repository, ExperimentRepository experimentRepository)
+    public MongoDbScenario(Experiment experiment, EventRepositoryCustom repository,
+            ExperimentRepository experimentRepository)
     {
         this.experiment = experiment;
         this.repository = repository;
@@ -47,8 +48,7 @@ public class MongoDbScenario extends UserScenario
     @Override
     public JSONObject getStepAt(int position)
     {
-        Event event = repository.findOneByRecordingIdOrderByTimestampAsc(new ObjectId(experiment.getRecordingId()),
-                position);
+        Event event = repository.getEventToReplay(new ObjectId(experiment.getRecordingId()), position);
         JSONObject object = new JSONObject(event);
         return object;
     }

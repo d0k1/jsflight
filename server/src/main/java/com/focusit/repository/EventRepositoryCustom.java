@@ -1,5 +1,7 @@
 package com.focusit.repository;
 
+import java.util.List;
+
 import org.bson.types.ObjectId;
 
 import com.focusit.model.Event;
@@ -9,5 +11,9 @@ import com.focusit.model.Event;
  */
 public interface EventRepositoryCustom
 {
-    Event findOneByRecordingIdOrderByTimestampAsc(ObjectId recordingId, int offset);
+    Event getEventToReplay(ObjectId recordingId, int offset);
+
+    long countByRecordingId(ObjectId recordingId);
+
+    void save(List<Event> lineEvents);
 }
