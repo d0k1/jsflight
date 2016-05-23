@@ -31,7 +31,7 @@ public class MongoDbScenarioSpec extends Specification {
     @Inject
     ExperimentRepository experimentRepository;
 
-    def "getNextStepAt returns an event at given position from event list filtered by recordingId and ordered by timestamp"() {
+    def "getNextStepAt returns an event at given position from event list filtered by recordingId and ordered by timestamp asc"() {
         given:
         String recordingId1 = new ObjectId();
         String recordingId4 = new ObjectId();
