@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.json.JSONObject;
 import org.openqa.selenium.NoSuchElementException;
@@ -29,10 +28,12 @@ public class PlayerScriptProcessor
 {
     private static final Logger log = LoggerFactory.getLogger(PlayerScriptProcessor.class);
     private ScriptEngine engine;
+    private UserScenario scenario;
 
     public PlayerScriptProcessor(UserScenario scenario)
     {
         engine = new ScriptEngine(scenario.getConfiguration().getCommonConfiguration().getScriptClassloader());
+        this.scenario = scenario;
     }
 
     /**
@@ -106,11 +107,9 @@ public class PlayerScriptProcessor
         s.run();
     }
 
-    public void runStepPrePostScript(UserScenario scenario, int step, boolean pre)
+    public void runStepPrePostScript(JSONObject event, int step, boolean pre)
     {
         String script = "";
-        JSONObject event = scenario.getStepAt(step);
-
         if (pre)
         {
             script = event.has("pre") ? event.getString("pre") : "";
@@ -126,7 +125,6 @@ public class PlayerScriptProcessor
         }
 
         Binding binding = getBasicBinding();
-        binding.setVariable("context", scenario.getContext());
         binding.setVariable("scenario", scenario);
         binding.setVariable("step", step);
         binding.setVariable("pre", pre);
@@ -154,19 +152,7 @@ public class PlayerScriptProcessor
                 {
                     String source = result.getString(key);
 
-                    String pattern = "[^\\\\](\\$)(.)";
-                    Pattern r = Pattern.compile(pattern);
-                    Matcher m = r.matcher(source);
-                    while (m.find())
-                    {
-                        if (!m.group(1).equalsIgnoreCase("{"))
-                        {
-                            int start = m.start(0);
-                            source = source.substring(0, start + 1) + "\\$"
-                                    + source.substring(start + 2, source.length());
-                        }
-                        m = r.matcher(source);
-                    }
+                    source = source.replaceAll("(\\$)(?!\\{)", Matcher.quoteReplacement("\\$"));
 
                     String parsed = templateEngine.createTemplate(source).make(binding.getVariables()).toString();
                     result.put(key, parsed);
@@ -198,10 +184,13 @@ public class PlayerScriptProcessor
 
     private Binding getBasicBinding()
     {
-        Binding binding = new Binding();
-        binding.setVariable("logger", log);
-        binding.setVariable("classloader", engine.getClassLoader());
-        return binding;
+
+        Binding basicBinding = new Binding();
+        basicBinding.setVariable("logger", log);
+        basicBinding.setVariable("classloader", engine.getClassLoader());
+        basicBinding.setVariable("playerContext", scenario.getContext());
+
+        return basicBinding;
     }
 
 }

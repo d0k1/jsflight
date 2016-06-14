@@ -1,10 +1,12 @@
 package com.focusit.script.player;
 
-import com.focusit.script.jmeter.JMeterJSFlightBridge;
-import groovy.lang.Binding;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.json.JSONObject;
 
-import java.util.concurrent.ConcurrentHashMap;
+import com.focusit.script.jmeter.JMeterJSFlightBridge;
+
+import groovy.lang.Binding;
 
 public class PlayerContext
 {
@@ -24,7 +26,8 @@ public class PlayerContext
 
     public void setCurrentScenarioStep(JSONObject currentScenarioStep)
     {
-        if(jmeterBridge!=null) {
+        if (jmeterBridge != null)
+        {
             jmeterBridge.setCurrentScenarioStep(currentScenarioStep);
         }
     }
@@ -41,7 +44,8 @@ public class PlayerContext
         });
     }
 
-    public void setJMeterBridge(JMeterJSFlightBridge JMeterBridge) {
-        this.jmeterBridge=JMeterBridge;
+    public void setJMeterBridge(JMeterJSFlightBridge JMeterBridge)
+    {
+        this.jmeterBridge = JMeterBridge;
     }
 }
