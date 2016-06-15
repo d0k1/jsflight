@@ -7,7 +7,6 @@ import java.nio.file.Paths;
 
 import org.json.JSONObject;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -111,7 +110,7 @@ public class ScenarioProcessor
         JSONObject event = scenario.getStepAt(position);
         scenario.getContext().setCurrentScenarioStep(event);
 
-        new PlayerScriptProcessor(scenario).runStepPrePostScript(scenario, position, true);
+        new PlayerScriptProcessor(scenario).runStepPrePostScript(event, position, true);
         event = new PlayerScriptProcessor(scenario).runStepTemplating(scenario, event);
         boolean error = false;
         try
@@ -141,49 +140,45 @@ public class ScenarioProcessor
 
             WebDriver theWebDriver = getWebDriver(scenario, seleniumDriver, event);
 
-            int pageTimeoutMs = Integer
-                    .parseInt(scenario.getConfiguration().getCommonConfiguration().getPageReadyTimeout());
-            String checkPageJs = scenario.getConfiguration().getCommonConfiguration().getCheckPageJs();
-            String maxElementGroovy = scenario.getConfiguration().getCommonConfiguration().getMaxElementGroovy();
-            String lookupScript = scenario.getConfiguration().getWebConfiguration().getLookupScript();
-            String uiShownScript = scenario.getConfiguration().getCommonConfiguration().getUiShownScript();
+            //Configure webdriver for this event, setting params here so we can change parameters while playback is
+            //paused
+            seleniumDriver
+                    .setPageTimeoutMs(Integer
+                            .parseInt(scenario.getConfiguration().getCommonConfiguration().getPageReadyTimeout()))
+                    .setCheckPageJs(scenario.getConfiguration().getCommonConfiguration().getCheckPageJs())
 
-            seleniumDriver.openEventUrl(theWebDriver, event, pageTimeoutMs,
-                    scenario.getConfiguration().getCommonConfiguration().getCheckPageJs(), uiShownScript);
-
-            WebElement element = null;
+                    .setMaxElementGroovy(scenario.getConfiguration().getCommonConfiguration().getMaxElementGroovy())
+                    .setLookupScript(scenario.getConfiguration().getWebConfiguration().getLookupScript())
+                    .setUiShownScript(scenario.getConfiguration().getCommonConfiguration().getUiShownScript())
+                    .setUseRandomChars(scenario.getConfiguration().getCommonConfiguration().isUseRandomChars());
+            seleniumDriver.openEventUrl(theWebDriver, event);
 
             String target = scenario.getTargetForEvent(event);
 
             LOG.info("Event type: {}", type);
-            seleniumDriver.waitPageReady(theWebDriver, event, pageTimeoutMs,
-                    scenario.getConfiguration().getCommonConfiguration().getCheckPageJs());
+            seleniumDriver.waitPageReady(theWebDriver, event);
 
             try
             {
                 switch (type)
                 {
                 case EventType.MOUSEWHEEL:
-                    seleniumDriver.processMouseWheel(lookupScript, theWebDriver, event, target);
+                    seleniumDriver.processMouseWheel(theWebDriver, event, target);
                     break;
                 case EventType.SCROLL_EMULATION:
-                    seleniumDriver.processScroll(theWebDriver, event, target, pageTimeoutMs, checkPageJs,
-                            maxElementGroovy);
+                    seleniumDriver.processScroll(theWebDriver, event, target);
                     break;
 
                 case EventType.MOUSEDOWN:
                 case EventType.CLICK:
-                    element = seleniumDriver.findTargetWebElement(lookupScript, theWebDriver, event, target);
-                    seleniumDriver.processMouseEvent(theWebDriver, event, element);
-                    seleniumDriver.waitPageReady(theWebDriver, event, pageTimeoutMs, checkPageJs);
+                    seleniumDriver.processMouseEvent(theWebDriver, event);
+                    seleniumDriver.waitPageReady(theWebDriver, event);
                     break;
                 case EventType.KEY_UP:
                 case EventType.KEY_DOWN:
                 case EventType.KEY_PRESS:
-                    element = seleniumDriver.findTargetWebElement(lookupScript, theWebDriver, event, target);
-                    seleniumDriver.processKeyboardEvent(theWebDriver, event, element,
-                            scenario.getConfiguration().getCommonConfiguration().isUseRandomChars());
-                    seleniumDriver.waitPageReady(theWebDriver, event, pageTimeoutMs, checkPageJs);
+                    seleniumDriver.processKeyboardEvent(theWebDriver, event);
+                    seleniumDriver.waitPageReady(theWebDriver, event);
                     break;
                 default:
                     break;
@@ -211,7 +206,7 @@ public class ScenarioProcessor
             if (!error)
             {
                 scenario.updatePrevEvent(event);
-                new PlayerScriptProcessor(scenario).runStepPrePostScript(scenario, position, false);
+                new PlayerScriptProcessor(scenario).runStepPrePostScript(event, position, false);
             }
         }
     }

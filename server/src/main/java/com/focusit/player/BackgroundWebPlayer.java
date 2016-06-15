@@ -47,6 +47,7 @@ public class BackgroundWebPlayer
 
     private Map<String, Map<String, String>> experimentLastUrls = new ConcurrentHashMap<>();
     private Map<String, CompletableFuture> playingFutures = new ConcurrentHashMap<>();
+    private Map<String, SeleniumDriver> experimentDriver = new ConcurrentHashMap<>();
 
     @Inject
     public BackgroundWebPlayer(MongoDbStorageService screenshotsService, RecordingRepository recordingRepository,
@@ -118,17 +119,19 @@ public class BackgroundWebPlayer
         startJMeter(scenario);
         experimentRepository.save(experiment);
 
-        Map lastUrls = experimentLastUrls.get(experimentId);
-        if (lastUrls == null)
-        {
-            lastUrls = new ConcurrentHashMap<>();
-        }
+        Map lastUrls = experimentLastUrls.getOrDefault(experimentId, new ConcurrentHashMap<>());
+        experimentLastUrls.put(experimentId, lastUrls);
 
         Map finalLastUrls = lastUrls;
+
+        SeleniumDriver driver = experimentDriver.getOrDefault(experimentId, new SeleniumDriver(scenario))
+                .setLastUrls(finalLastUrls);
+        experimentDriver.put(experimentId, driver);
+
         playingFutures.put(experimentId,
                 CompletableFuture
-                        .runAsync(() -> processor.play(scenario, new SeleniumDriver(scenario, finalLastUrls),
-                                scenario.getFirstStep(), scenario.getMaxStep()))
+                        .runAsync(
+                                () -> processor.play(scenario, driver, scenario.getFirstStep(), scenario.getMaxStep()))
                         .whenCompleteAsync((aVoid, throwable) -> {
                             playingFutures.remove(experimentId);
 
@@ -138,6 +141,7 @@ public class BackgroundWebPlayer
                                 experiment.setFinished(true);
                                 experimentRepository.save(experiment);
                                 experimentLastUrls.remove(experimentId);
+                                experimentDriver.remove(experimentId);
                                 notificationService.notifyScenarioDone(scenario, throwable);
                             }
                             else
@@ -163,6 +167,7 @@ public class BackgroundWebPlayer
                                     experiment.setFinished(true);
                                     experimentRepository.save(experiment);
                                     experimentLastUrls.remove(experimentId);
+                                    experimentDriver.remove(experimentId);
                                     notificationService.notifyScenarioTerminated(scenario, throwable);
                                 }
                                 else
