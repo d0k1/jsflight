@@ -150,4 +150,10 @@ public class WebDriverWrapper implements WebDriver, JavascriptExecutor, TakesScr
     {
         return ((HasInputDevices)driver).getMouse();
     }
+
+    @Override
+    public String toString()
+    {
+        return driver.toString();
+    }
 }
