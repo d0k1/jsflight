@@ -139,6 +139,30 @@ public class PlayerController
     }
 
     /**
+     * Get screenshot of error which occured during a step of the experiment
+     * @param experimentId
+     * @param step
+     * @throws IOException
+     */
+    @RequestMapping(value = "/errorScreenShot", method = RequestMethod.GET)
+    public void errorScreenshot(@RequestParam("experimentId") String experimentId, @RequestParam("step") Integer step,
+            HttpServletRequest request, HttpServletResponse response) throws IOException
+    {
+        InputStream stream = player.getErrorScreenshot(experimentId, step);
+        if (stream == null)
+        {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+
+        response.setContentType("image/png");
+        response.setHeader("Content-Disposition", String.format("attachment; filename=\"%s\"",
+                experimentId + "_error_" + String.format("_%05d.png", step)));
+        IOUtils.copy(stream, response.getOutputStream());
+        response.flushBuffer();
+    }
+
+    /**
      * Download recorded JMeter scenario
      *
      * $ curl "127.0.0.1:8080/player/jmx?experimentId=573b3169c92e9527bc805cc6"

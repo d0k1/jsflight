@@ -278,7 +278,7 @@ public class LocatedElement implements WebElement, WrapsElement, Locatable
     private void reLocateElement()
     {
         LOG.warn("Stale element. Relocating");
-        WebDriverWait wait = new WebDriverWait(driver, 10, 50l);
+        WebDriverWait wait = new WebDriverWait(driver, 20, 50l);
         try
         {
             delegate = wait.until(new Function<WebDriver, WebElement>()

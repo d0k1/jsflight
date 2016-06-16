@@ -20,18 +20,19 @@ import org.openqa.selenium.phantomjs.PhantomJSDriver;
 import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebElement;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.focusit.jsflight.player.constants.EventType;
 import com.focusit.jsflight.player.scenario.UserScenario;
 import com.focusit.jsflight.player.script.PlayerScriptProcessor;
+import com.google.common.base.Predicate;
 
 /**
  * Selenium webdriver proxy: runs a browser, sends events, make screenshots
  *
  * @author Denis V. Kirpichenkov
- *
  */
 public class SeleniumDriver
 {
@@ -44,6 +45,8 @@ public class SeleniumDriver
     private static final Logger LOG = LoggerFactory.getLogger(SeleniumDriver.class);
 
     private static final int DISPLAY_CAPACITY = 200;
+
+    private static final String UI_NOT_SHOWED_UP_MSG = "UI didn't show up";
 
     static
     {
@@ -68,6 +71,26 @@ public class SeleniumDriver
     private String uiShownScript;
     private boolean useRandomChars;
 
+    /**
+     * Interval in milliseconds between select clicks
+     */
+    private long intervalBetweenSelectClicksMs;
+
+    /**
+     * Interval in seconds between awaiting UI attempts
+     */
+    private long intervalBetweenUiChecksMs;
+
+    /**
+     * Number of performed clicks during ClickEventProcessing in selects
+     */
+    private int numberOfPerformedClicksInSelect;
+
+    /**
+     * Timeout in seconds for UI to appear
+     */
+    private int uiShowTimeoutSeconds;
+
     public SeleniumDriver(UserScenario scenario)
     {
         this.scenario = scenario;
@@ -83,6 +106,17 @@ public class SeleniumDriver
     public static RemoteWebElement getNoOpElement()
     {
         return NO_OP_ELEMENT;
+    }
+
+    public int getUiShowTimeoutSeconds()
+    {
+        return uiShowTimeoutSeconds;
+    }
+
+    public SeleniumDriver setUiShowTimeoutSeconds(int uiShowTimeoutSeconds)
+    {
+        this.uiShowTimeoutSeconds = uiShowTimeoutSeconds;
+        return this;
     }
 
     public SeleniumDriver setLastUrls(Map<String, String> externalUrls)
@@ -250,7 +284,7 @@ public class SeleniumDriver
         {
             wd.get(event_url);
 
-            waitUiShow(uiShownScript, wd);
+            waitUi(wd);
             waitPageReady(wd, event);
             updateLastUrl(event, event_url);
         }
@@ -364,6 +398,35 @@ public class SeleniumDriver
             return;
         }
         ensureElementInWindow(wd, element);
+        boolean isSelect = element.getAttribute("class").contains("select") || !element
+                .findElements(By.xpath(scenario.getTargetForEvent(event) + "//*[contains(@class, 'select')]"))
+                .isEmpty();
+        click(wd, event, element);
+        if (isSelect)
+        {
+            performAdditionalClicks(wd, event, element);
+        }
+
+    }
+
+    private void performAdditionalClicks(WebDriver wd, JSONObject event, WebElement element)
+    {
+        for (int i = 1; i < numberOfPerformedClicksInSelect; i++)
+        {
+            click(wd, event, element);
+            try
+            {
+                Thread.sleep((long)intervalBetweenSelectClicksMs);
+            }
+            catch (InterruptedException e)
+            {
+                //Never happens
+            }
+        }
+    }
+
+    private void click(WebDriver wd, JSONObject event, WebElement element)
+    {
         if (element.isDisplayed())
         {
 
@@ -516,26 +579,28 @@ public class SeleniumDriver
         {
             return;
         }
-        int timeout = pageTimeoutMs * 1000;
         try
         {
-            int sleeps = 0;
-            JavascriptExecutor js = (JavascriptExecutor)wd;
-            while (sleeps < timeout)
+            new WebDriverWait(wd, pageTimeoutMs, 500).until(new Predicate<WebDriver>()
             {
-                Object result = js.executeScript(checkPageJs);
-                if (result != null && Boolean.parseBoolean(result.toString().toLowerCase()))
+                @Override
+                public boolean apply(WebDriver input)
                 {
-                    break;
+                    try
+                    {
+                        Object result = ((JavascriptExecutor)wd).executeScript(checkPageJs);
+                        return result != null && Boolean.parseBoolean(result.toString().toLowerCase());
+                    }
+                    catch (WebDriverException e)
+                    {
+                        return false;
+                    }
                 }
-                Thread.sleep(1 * 1000);
-                sleeps += 1000;
-            }
+            });
         }
-        catch (InterruptedException e)
+        catch (TimeoutException e)
         {
-            LOG.error(e.toString(), e);
-            throw new IllegalStateException(e);
+            throw new IllegalStateException("Page was not ready within specified timeout");
         }
     }
 
@@ -626,33 +691,49 @@ public class SeleniumDriver
         js.executeScript("arguments[0].scrollIntoView(true)", element);
     }
 
-    private void waitUiShow(String script, WebDriver wd)
+    private void waitUi(WebDriver wd)
     {
-        long timeout = System.currentTimeMillis() + 20000L;
-        while (System.currentTimeMillis() < timeout)
+        try
         {
-            try
+            new WebDriverWait(wd, uiShowTimeoutSeconds, intervalBetweenUiChecksMs).until(new Predicate<WebDriver>()
             {
-                if (new PlayerScriptProcessor(scenario).executeWebLookupScript(script, wd, null, null) != null)
+                @Override
+                public boolean apply(WebDriver input)
                 {
-                    LOG.debug("Yeeepeee UI showed up!");
-                    return;
+                    try
+                    {
+                        return new PlayerScriptProcessor(scenario).executeWebLookupScript(uiShownScript, input, null,
+                                null) != null;
+                    }
+                    catch (WebDriverException e)
+                    {
+                        return false;
+                    }
                 }
-            }
-            catch (NoSuchElementException e)
-            {
-                try
-                {
-                    Thread.sleep(500);
-                }
-                catch (InterruptedException e1)
-                {
-                    //Should never happen
-                    LOG.error(e1.toString(), e1);
-                }
-            }
+            });
         }
-        throw new NoSuchElementException("UI didn't show up");
+        catch (TimeoutException e)
+        {
+            throw new NoSuchElementException(UI_NOT_SHOWED_UP_MSG);
+        }
+    }
+
+    public SeleniumDriver setNumberOfPerformedClicksInSelect(int numberOfPerformedClicksInSelect)
+    {
+        this.numberOfPerformedClicksInSelect = numberOfPerformedClicksInSelect;
+        return this;
+    }
+
+    public SeleniumDriver setIntervalBetweenSelectClicksMs(long intervalBetweenSelectClicksMs)
+    {
+        this.intervalBetweenSelectClicksMs = intervalBetweenSelectClicksMs;
+        return this;
+    }
+
+    public SeleniumDriver setIntervalBetweenUiChecksMs(long intervalBetweenUiChecksMs)
+    {
+        this.intervalBetweenUiChecksMs = intervalBetweenUiChecksMs;
+        return this;
     }
 
     private interface StringGenerator

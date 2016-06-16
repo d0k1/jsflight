@@ -66,7 +66,8 @@ public class MongoDbScenarioProcessor extends ScenarioProcessor
     }
 
     @Override
-    protected void makeAShot(UserScenario scenario, SeleniumDriver seleniumDriver, WebDriver theWebDriver, int position)
+    protected void makeAShot(UserScenario scenario, SeleniumDriver seleniumDriver, WebDriver theWebDriver, int position,
+            boolean isError)
     {
         MongoDbScenario mongoDbScenario = (MongoDbScenario)scenario;
 
@@ -76,7 +77,7 @@ public class MongoDbScenarioProcessor extends ScenarioProcessor
 
             try (ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray()))
             {
-                screenshotsService.storeScreenshot(mongoDbScenario, position, bais);
+                screenshotsService.storeScreenshot(mongoDbScenario, position, bais, isError);
             }
         }
         catch (IOException e)
