@@ -5,12 +5,13 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.json.JSONObject;
 import org.openqa.selenium.*;
-import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.firefox.FirefoxBinary;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxProfile;
@@ -27,7 +28,6 @@ import com.focusit.jsflight.player.scenario.UserScenario;
 import com.focusit.jsflight.player.script.PlayerScriptProcessor;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
-import com.google.common.collect.Lists;
 
 /**
  * Selenium webdriver proxy: runs a browser, sends events, make screenshots
@@ -44,6 +44,20 @@ public class SeleniumDriver
      */
     public static final RemoteWebElement NO_OP_ELEMENT = new RemoteWebElement();
     private static final Logger LOG = LoggerFactory.getLogger(SeleniumDriver.class);
+
+    private static final int DISPLAY_CAPACITY = 200;
+
+    static
+    {
+        //This must be set due to equals of WebElement
+        NO_OP_ELEMENT.setId("NO_OP");
+    }
+
+    /**
+     * As we close unsued browsers, 100 number of displays is more than enough
+     */
+    private ArrayList<String> availiableDisplays = new ArrayList<>(DISPLAY_CAPACITY);
+    private HashMap<String, String> tagDisplay = new HashMap<>();
     private HashMap<String, WebDriver> drivers = new HashMap<>();
     /**
      * Using BiMap for removing entries by value, because tabUuids and Windowhandles are unique
@@ -62,8 +76,18 @@ public class SeleniumDriver
     public SeleniumDriver(UserScenario scenario)
     {
         this.scenario = scenario;
-        //This must be set due to equals of WebElement
-        NO_OP_ELEMENT.setId("NO_OP");
+
+        //init queue
+        //staring from 1, rather than 0, cuz on :0 firefox open on real display
+        for (int i = 1; i < DISPLAY_CAPACITY; i++)
+        {
+            availiableDisplays.add(":" + i);
+        }
+    }
+
+    public static RemoteWebElement getNoOpElement()
+    {
+        return NO_OP_ELEMENT;
     }
 
     public SeleniumDriver setLastUrls(Map<String, String> externalUrls)
@@ -122,9 +146,8 @@ public class SeleniumDriver
     public WebDriver getDriverForEvent(JSONObject event, boolean firefox, String path, String display, String proxyHost,
             String proxyPort)
     {
-        String tag = scenario.getTagForEvent(event);
-
-        WebDriver driver = drivers.get(tag);
+        String tabUuid = event.getString("tabuuid");
+        WebDriver driver = drivers.get(tabUuid);
 
         try
         {
@@ -162,6 +185,9 @@ public class SeleniumDriver
                 }
                 if (display != null && !display.trim().isEmpty())
                 {
+                    display = availiableDisplays.get(0);
+                    availiableDisplays.remove(display);
+                    LOG.info("Binding to {} display", display);
                     binary.setEnvironmentProperty("DISPLAY", display);
                 }
                 driver = new FirefoxDriver(binary, profile, cap);
@@ -181,33 +207,18 @@ public class SeleniumDriver
                 }
             }
             driver = WebDriverWrapper.wrap(driver);
-            drivers.put(tag, driver);
+
+            drivers.put(tabUuid, driver);
+
+            //as actual webdriver is RemoteWebdriver, calling to string return browser name, platform and sessionid
+            //which are not subject to change, so we can use it as key;
+            tagDisplay.put(driver.toString(), display);
             return driver;
         }
         catch (Throwable ex)
         {
             LOG.error(ex.toString(), ex);
             throw ex;
-        }
-        finally
-        {
-            String tabUuid = event.getString("tabuuid");
-            String window = tabsWindow.get(tabUuid);
-            if (window == null)
-            {
-                ArrayList<String> tabs = new ArrayList<>(driver.getWindowHandles());
-                if (tabsWindow.values().contains(tabs.get(0)))
-                {
-                    ((JavascriptExecutor)driver).executeScript("window.open()");
-                    tabs = new ArrayList<>(driver.getWindowHandles());
-                }
-                window = tabs.get(tabs.size() - 1);
-                tabsWindow.put(tabUuid, window);
-            }
-            if (!driver.getWindowHandle().equals(window))
-            {
-                driver.switchTo().window(window);
-            }
         }
     }
 
@@ -468,46 +479,24 @@ public class SeleniumDriver
         throw new NoSuchElementException("Element was not found during scroll");
     }
 
-    public void releaseBrowser(WebDriver driver, String formOrDialogXpath)
+    public void releaseBrowser(WebDriver driver, String formOrDialogXpath, JSONObject event)
     {
         if (!(null != formOrDialogXpath && !formOrDialogXpath.isEmpty()))
         {
             LOG.debug("Form or dialog xpath is not specified. Aborting release process");
             return;
         }
-        String xpath = formOrDialogXpath;
-        if (driver.getWindowHandles().size() > 1)
+        if (driver.findElements(By.xpath(formOrDialogXpath)).isEmpty())
         {
-            List<String> tabsToCheck = Lists.newArrayList(driver.getWindowHandles());
-            String handle = driver.getWindowHandle();
-            tabsToCheck.remove(handle);
-            closeTabs(driver, tabsToCheck, xpath);
-            driver.switchTo().window(handle);
+            String display = tagDisplay.get(driver.toString());
+            LOG.info("Display {} is available again", display);
+            availiableDisplays.add(display);
+
+            String tabUuid = event.getString("tabuuid");
+            drivers.remove(tabUuid);
+            driver.quit();
         }
-        //Check if others are not necessary
-        HashMap<String, WebDriver> m = new HashMap<>();
 
-        drivers.entrySet().forEach(e -> {
-            if (!e.getValue().equals(driver))
-            {
-                m.put(e.getKey(), e.getValue());
-            }
-        });
-
-        m.forEach((k, d) -> {
-            List<String> surv = closeTabs(d, d.getWindowHandles(), xpath);
-            //It is crucial to switch driver to a survived tab if none survived -
-            //driver is dead and won`t respond to commands leading to UnreachebleBrowserException
-            if (!surv.isEmpty())
-            {
-                d.switchTo().window(surv.get(0));
-            }
-            else
-            {
-                //Nothing survived - remove webdriver
-                drivers.remove(k);
-            }
-        });
     }
 
     public void resetLastUrls()
@@ -566,25 +555,6 @@ public class SeleniumDriver
         {
             return false;
         }
-    }
-
-    private List<String> closeTabs(WebDriver driver, Collection<String> tabs, String formDialogXpath)
-    {
-        List<String> survived = new ArrayList<>();
-        tabs.forEach(tab -> {
-            WebDriver tabDriver = driver.switchTo().window(tab);
-            if (tabDriver.findElements(By.xpath(formDialogXpath)).size() == 0)
-            {
-                tabsWindow.inverse().remove(tab);
-                tabDriver.close();
-                LOG.info("Closed tab " + tab);
-            }
-            else
-            {
-                survived.add(tab);
-            }
-        });
-        return survived;
     }
 
     private void ensureElementInWindow(WebDriver wd, WebElement element)

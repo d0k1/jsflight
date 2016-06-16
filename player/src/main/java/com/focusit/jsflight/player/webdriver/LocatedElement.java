@@ -322,4 +322,15 @@ public class LocatedElement implements WebElement, WrapsElement, Locatable
             return getCoordinates();
         }
     }
+
+    public boolean equals(WebElement obj)
+    {
+        return delegate.equals(obj);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return delegate.hashCode();
+    }
 }
