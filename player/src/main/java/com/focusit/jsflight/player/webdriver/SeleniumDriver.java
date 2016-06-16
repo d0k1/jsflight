@@ -26,8 +26,6 @@ import org.slf4j.LoggerFactory;
 import com.focusit.jsflight.player.constants.EventType;
 import com.focusit.jsflight.player.scenario.UserScenario;
 import com.focusit.jsflight.player.script.PlayerScriptProcessor;
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
 
 /**
  * Selenium webdriver proxy: runs a browser, sends events, make screenshots
@@ -59,10 +57,7 @@ public class SeleniumDriver
     private ArrayList<String> availiableDisplays = new ArrayList<>(DISPLAY_CAPACITY);
     private HashMap<String, String> tagDisplay = new HashMap<>();
     private HashMap<String, WebDriver> drivers = new HashMap<>();
-    /**
-     * Using BiMap for removing entries by value, because tabUuids and Windowhandles are unique
-     */
-    private BiMap<String, String> tabsWindow = HashBiMap.create();
+
     private Map<String, String> lastUrls = new HashMap<>();
     private StringGenerator stringGen;
     private UserScenario scenario;
