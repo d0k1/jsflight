@@ -28,7 +28,7 @@ public class CommonConfiguration
     private String proxyHost;
     private String ffPath;
     private String pjsPath;
-    private String pageReadyTimout = "30";
+    private String pageReadyTimeout = "30";
     private boolean makeShots;
     private String screenDir;
     private String webDriverTag;
@@ -45,9 +45,27 @@ public class CommonConfiguration
     private Map<String, Object> customProperties = new ConcurrentHashMap<>();
     private String extraClasspath = null;
 
+    /**
+     * Timeout in seconds for UI to appear
+     */
+    private int uiShowTimeoutSeconds = 180;
+
+    /**
+     * Number of performed clicks during ClickEventProcessing in selects
+     */
+    private int numberOfPerformedClicksIntoSelect = 3;
+
+    /**
+     * Interval in milliseconds between select clicks
+     */
+    private long intervalBetweenSelectClicksMs = 200;
+
+    /**
+     * Interval in seconds between awaiting UI attempts
+     */
+    private long intervalBetweenUiChecksMs = 2000;
     @Transient
     transient private ArrayList<URL> urls = new ArrayList<>();
-
     @Transient
     transient private ScriptsClassLoader scriptClassloader = null;
 
@@ -55,6 +73,46 @@ public class CommonConfiguration
     {
         checkPageJs = CHECK_PAGE_JS_DEFAULT;
         scriptClassloaderLock = new ReentrantLock();
+    }
+
+    public long getIntervalBetweenSelectClicksMs()
+    {
+        return intervalBetweenSelectClicksMs;
+    }
+
+    public void setIntervalBetweenSelectClicksMs(long intervalBetweenSelectClicksMs)
+    {
+        this.intervalBetweenSelectClicksMs = intervalBetweenSelectClicksMs;
+    }
+
+    public long getIntervalBetweenUiChecksMs()
+    {
+        return intervalBetweenUiChecksMs;
+    }
+
+    public void setIntervalBetweenUiChecksMs(long intervalBetweenUiChecksMs)
+    {
+        this.intervalBetweenUiChecksMs = intervalBetweenUiChecksMs;
+    }
+
+    public int getNumberOfPerformedClicksIntoSelect()
+    {
+        return numberOfPerformedClicksIntoSelect;
+    }
+
+    public void setNumberOfPerformedClicksIntoSelect(int numberOfPerformedClicksIntoSelect)
+    {
+        this.numberOfPerformedClicksIntoSelect = numberOfPerformedClicksIntoSelect;
+    }
+
+    public int getUiShowTimeoutSeconds()
+    {
+        return uiShowTimeoutSeconds;
+    }
+
+    public void setUiShowTimeoutSeconds(int uiShowTimeoutSeconds)
+    {
+        this.uiShowTimeoutSeconds = uiShowTimeoutSeconds;
     }
 
     private void findClasspathForScripts(String path)
@@ -138,12 +196,12 @@ public class CommonConfiguration
 
     public String getPageReadyTimeout()
     {
-        return pageReadyTimout;
+        return pageReadyTimeout;
     }
 
     public void setPageReadyTimeout(String pageReadyTimeout)
     {
-        this.pageReadyTimout = pageReadyTimeout;
+        this.pageReadyTimeout = pageReadyTimeout;
     }
 
     public int getPageShownTimeout()

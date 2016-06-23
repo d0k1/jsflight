@@ -33,7 +33,7 @@ public class MongoDbStorageService
         return new GridFsTemplate(mongoDbFactory, mappingMongoConverter);
     }
 
-    public void storeScreenshot(MongoDbScenario scenario, int position, InputStream stream)
+    public void storeScreenshot(MongoDbScenario scenario, int position, InputStream stream, boolean error)
     {
         DBObject metaData = new BasicDBObject();
         metaData.put("recordingName", scenario.getRecordingName());
@@ -43,8 +43,9 @@ public class MongoDbStorageService
         metaData.put("tagHash", scenario.getTagHash());
 
         String recordingName = scenario.getScenarioFilename();
-        String fname = new String(
-                recordingName + "_" + scenario.getExperimentId() + "_" + String.format("%05d", position) + ".png");
+        String errorPart = error ? "error_" : "";
+        String fname = new String(recordingName + "_" + scenario.getExperimentId() + "_" + errorPart
+                + String.format("%05d", position) + ".png");
 
         getGridFsTemplate().store(stream, fname, "image/png", metaData);
     }
@@ -52,6 +53,13 @@ public class MongoDbStorageService
     public InputStream getScreenshot(String recordingName, String experimentId, int step)
     {
         String fname = new String(recordingName + "_" + experimentId + "_" + String.format("%05d", step) + ".png");
+        return getStreamByFilename(fname);
+    }
+
+    public InputStream getErrorScreenShot(String recordingName, String experimentId, int step)
+    {
+        String fname = new String(
+                recordingName + "_" + experimentId + "_error_" + String.format("%05d", step) + ".png");
         return getStreamByFilename(fname);
     }
 

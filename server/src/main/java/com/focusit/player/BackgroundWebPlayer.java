@@ -231,6 +231,12 @@ public class BackgroundWebPlayer
         return storageService.getScreenshot(experiment.getRecordingName(), experimentId, step);
     }
 
+    public InputStream getErrorScreenshot(String experimentId, int step)
+    {
+        Experiment experiment = experimentRepository.findOne(new ObjectId(experimentId));
+        return storageService.getErrorScreenShot(experiment.getRecordingName(), experimentId, step);
+    }
+
     public void move(String experimentId, int step)
     {
         Experiment experiment = experimentRepository.findOne(new ObjectId(experimentId));
