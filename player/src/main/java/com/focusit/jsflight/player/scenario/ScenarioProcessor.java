@@ -166,6 +166,7 @@ public class ScenarioProcessor
             String target = scenario.getTargetForEvent(event);
 
             LOG.info("Event type: {}", type);
+            LOG.info("Event {}, Display {}", position, seleniumDriver.getDriverDisplay(theWebDriver));
             seleniumDriver.waitPageReady(theWebDriver, event);
 
             try
