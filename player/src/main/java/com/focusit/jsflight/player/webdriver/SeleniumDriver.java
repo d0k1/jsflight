@@ -58,7 +58,7 @@ public class SeleniumDriver
      * As we close unsued browsers, 100 number of displays is more than enough
      */
     private ArrayList<String> availiableDisplays = new ArrayList<>(DISPLAY_CAPACITY);
-    private HashMap<String, String> tagDisplay = new HashMap<>();
+    private HashMap<String, String> driverDisplay = new HashMap<>();
     private HashMap<String, WebDriver> drivers = new HashMap<>();
 
     private Map<String, String> lastUrls = new HashMap<>();
@@ -241,7 +241,7 @@ public class SeleniumDriver
 
             //as actual webdriver is RemoteWebdriver, calling to string return browser name, platform and sessionid
             //which are not subject to change, so we can use it as key;
-            tagDisplay.put(driver.toString(), display);
+            driverDisplay.put(driver.toString(), display);
             return driver;
         }
         catch (Throwable ex)
@@ -249,6 +249,11 @@ public class SeleniumDriver
             LOG.error(ex.toString(), ex);
             throw ex;
         }
+    }
+
+    public String getDriverDisplay(WebDriver webdriver)
+    {
+        return driverDisplay.getOrDefault(webdriver.toString(), "No display");
     }
 
     public String getLastUrl(JSONObject event)
@@ -546,7 +551,7 @@ public class SeleniumDriver
         }
         if (driver.findElements(By.xpath(formOrDialogXpath)).isEmpty())
         {
-            String display = tagDisplay.get(driver.toString());
+            String display = driverDisplay.get(driver.toString());
             LOG.info("Display {} is available again", display);
             availiableDisplays.add(display);
 
