@@ -18,8 +18,18 @@ public class WebConfiguration
 
     private String duplicationScriptFilename = "";
     private String duplicationScript = "";
+    private String errorTextToSkipStep = "default text. Never skip errors";
+    private String findBrowserErrorScript = "return null;";
 
-    private String findBrowserErrorScript = "return false;";
+    public String getErrorTextToSkipStep()
+    {
+        return errorTextToSkipStep;
+    }
+
+    public void setErrorTextToSkipStep(String errorTextToSkipStep)
+    {
+        this.errorTextToSkipStep = errorTextToSkipStep;
+    }
 
     public String getLookupScriptFilename()
     {

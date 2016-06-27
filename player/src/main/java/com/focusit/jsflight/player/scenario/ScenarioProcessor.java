@@ -7,10 +7,12 @@ import java.nio.file.Paths;
 
 import org.json.JSONObject;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.focusit.jsflight.player.config.CommonConfiguration;
+import com.focusit.jsflight.player.config.WebConfiguration;
 import com.focusit.jsflight.player.constants.EventType;
 import com.focusit.jsflight.player.script.PlayerScriptProcessor;
 import com.focusit.jsflight.player.webdriver.SeleniumDriver;
@@ -37,8 +39,27 @@ public class ScenarioProcessor
     }
 
     /**
+     * Check if browser has error dialog displayed with text contains {@link WebConfiguration#errorTextToSkipStep}.
+     * if so - current step must be skipped, otherwise - error should be dealt with later
+     * @param scenario
+     * @param wd
+     * @return true - step must be skipped, false - continue processing
+     */
+    private boolean stepShouldBeSkippedDueToError(UserScenario scenario, WebDriver wd)
+    {
+        final WebConfiguration webConfiguration = scenario.getConfiguration().getWebConfiguration();
+        Object result = new PlayerScriptProcessor(scenario)
+                .executeWebLookupScript(webConfiguration.getFindBrowserErrorScript(), wd, null, null);
+        if (result instanceof WebElement)
+        {
+            return ((WebElement)result).getText().contains(webConfiguration.getErrorTextToSkipStep());
+        }
+        return false;
+    }
+
+    /**
      * Method that check if a browser has error dialog visible.
-     * aand if it has then throws an exception.
+     * and if it has then throws an exception.
      * A browser after any step should not contain any error
      *
      * @param scenario
@@ -51,7 +72,7 @@ public class ScenarioProcessor
         {
             Object result = new PlayerScriptProcessor(scenario).executeWebLookupScript(
                     scenario.getConfiguration().getWebConfiguration().getFindBrowserErrorScript(), wd, null, null);
-            if (Boolean.parseBoolean(result.toString()))
+            if (result != null)
             {
                 throw new IllegalStateException("Browser contains some error after step processing");
             }
@@ -162,6 +183,16 @@ public class ScenarioProcessor
                     .setIntervalBetweenUiChecksMs(commonConfiguration.getIntervalBetweenUiChecksMs())
                     .setUiShowTimeoutSeconds(commonConfiguration.getUiShowTimeoutSeconds());
             seleniumDriver.openEventUrl(theWebDriver, event);
+
+            if (stepShouldBeSkippedDueToError(scenario, theWebDriver))
+            {
+                LOG.warn(
+                        "Step at {} position is skipped due to page has error which text contains message configured in webConfiguration.\n"
+                                + "Configured text message: {}. Please check screenshot of this step.",
+                        position, scenario.getConfiguration().getWebConfiguration().getErrorTextToSkipStep());
+                makeAShot(scenario, seleniumDriver, theWebDriver, position, false);
+                return;
+            }
 
             String target = scenario.getTargetForEvent(event);
 

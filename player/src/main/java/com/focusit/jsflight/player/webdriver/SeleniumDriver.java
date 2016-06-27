@@ -290,7 +290,6 @@ public class SeleniumDriver
             wd.get(event_url);
 
             waitUi(wd);
-            waitPageReady(wd, event);
             updateLastUrl(event, event_url);
         }
     }

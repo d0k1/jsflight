@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 
+import javax.annotation.Nullable;
+
 import org.json.JSONObject;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriver;
@@ -69,6 +71,10 @@ public class PlayerScriptProcessor
         scr.run();
     }
 
+    /**
+     * @return found element for further processing or null
+     */
+    @Nullable
     public Object executeWebLookupScript(String script, WebDriver wd, String target, JSONObject event)
     {
         Binding binding = getBasicBinding();
