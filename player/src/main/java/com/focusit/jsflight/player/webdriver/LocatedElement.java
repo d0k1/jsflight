@@ -149,7 +149,7 @@ public class LocatedElement implements WebElement, WrapsElement, Locatable
     {
         try
         {
-            return getText();
+            return delegate.getText();
         }
         catch (StaleElementReferenceException e)
         {

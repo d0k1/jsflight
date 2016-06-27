@@ -40,7 +40,7 @@ public class MongoDbScenarioProcessor extends ScenarioProcessor
         {
             String script = scenario.getConfiguration().getWebConfiguration().getFindBrowserErrorScript();
             Object result = new PlayerScriptProcessor(scenario).executeWebLookupScript(script, wd, null, null);
-            if (Boolean.parseBoolean(result.toString()))
+            if (null != result.toString())
             {
                 throw new ErrorInBrowserPlaybackException("Browser contains some error after step processing");
             }
