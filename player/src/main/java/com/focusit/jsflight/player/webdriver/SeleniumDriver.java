@@ -5,13 +5,12 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.json.JSONObject;
 import org.openqa.selenium.*;
+import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.firefox.FirefoxBinary;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxProfile;
@@ -20,6 +19,7 @@ import org.openqa.selenium.phantomjs.PhantomJSDriver;
 import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebElement;
+import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,22 +70,21 @@ public class SeleniumDriver
     private String maxElementGroovy;
     private String uiShownScript;
     private boolean useRandomChars;
-
+    private List<String> emptySelections;
+    private String selectXpath;
+    private String selectDeterminerScript;
     /**
      * Interval in milliseconds between select clicks
      */
     private long intervalBetweenSelectClicksMs;
-
     /**
      * Interval in seconds between awaiting UI attempts
      */
     private long intervalBetweenUiChecksMs;
-
     /**
      * Number of performed clicks during ClickEventProcessing in selects
      */
     private int numberOfPerformedClicksInSelect;
-
     /**
      * Timeout in seconds for UI to appear
      */
@@ -106,6 +105,24 @@ public class SeleniumDriver
     public static RemoteWebElement getNoOpElement()
     {
         return NO_OP_ELEMENT;
+    }
+
+    public SeleniumDriver setSelectDeterminerScript(String selectDeterminerScript)
+    {
+        this.selectDeterminerScript = selectDeterminerScript;
+        return this;
+    }
+
+    public SeleniumDriver setSelectXpath(String selectXpath)
+    {
+        this.selectXpath = selectXpath;
+        return this;
+    }
+
+    public SeleniumDriver setEmptySelections(String emptySelections)
+    {
+        this.emptySelections = Arrays.asList(emptySelections.split(","));
+        return this;
     }
 
     public int getUiShowTimeoutSeconds()
@@ -168,7 +185,7 @@ public class SeleniumDriver
 
     public WebElement findTargetWebElement(WebDriver wd, JSONObject event, String target)
     {
-        waitPageReady(wd, event);
+        waitPageReadyWithRefresh(wd, event);
         return (WebElement)new PlayerScriptProcessor(scenario).executeWebLookupScript(lookupScript, wd, target, event);
     }
 
@@ -294,6 +311,32 @@ public class SeleniumDriver
         }
     }
 
+    public WebElement waitElement(WebDriver wd, String xpath)
+    {
+        try
+        {
+            return new WebDriverWait(wd, 20l, 500).until(new ExpectedCondition<WebElement>()
+            {
+                @Override
+                public WebElement apply(WebDriver input)
+                {
+                    try
+                    {
+                        return wd.findElement(By.xpath(xpath));
+                    }
+                    catch (NoSuchElementException e)
+                    {
+                        return null;
+                    }
+                }
+            });
+        }
+        catch (TimeoutException e)
+        {
+            throw new NoSuchElementException("Element was not found within timeout. Xpath " + xpath);
+        }
+    }
+
     public void processKeyboardEvent(WebDriver wd, JSONObject event) throws UnsupportedEncodingException
     {
         WebElement element = findTargetWebElement(wd, event, scenario.getTargetForEvent(event));
@@ -327,6 +370,11 @@ public class SeleniumDriver
                 if (!element.getTagName().contains("iframe"))
                 {
                     String prevText = element.getAttribute("value");
+                    //If current value indicates a empty selection it must be discarded
+                    if (emptySelections.contains(prevText))
+                    {
+                        prevText = "";
+                    }
                     element.clear();
                     element.sendKeys(prevText + keys);
 
@@ -402,31 +450,15 @@ public class SeleniumDriver
             return;
         }
         ensureElementInWindow(wd, element);
-        boolean isSelect = element.getAttribute("class").contains("select") || !element
-                .findElements(By.xpath(scenario.getTargetForEvent(event) + "//*[contains(@class, 'select')]"))
-                .isEmpty();
+        boolean isSelect = new PlayerScriptProcessor(scenario).executeSelectDeterminerScript(selectDeterminerScript, wd,
+                element);
         click(wd, event, element);
         if (isSelect)
         {
-            performAdditionalClicks(wd, event, element);
+            //Wait for select to popup
+            waitElement(wd, selectXpath);
         }
 
-    }
-
-    private void performAdditionalClicks(WebDriver wd, JSONObject event, WebElement element)
-    {
-        for (int i = 1; i < numberOfPerformedClicksInSelect; i++)
-        {
-            click(wd, event, element);
-            try
-            {
-                Thread.sleep((long)intervalBetweenSelectClicksMs);
-            }
-            catch (InterruptedException e)
-            {
-                //Never happens
-            }
-        }
     }
 
     private void click(WebDriver wd, JSONObject event, WebElement element)
@@ -457,25 +489,7 @@ public class SeleniumDriver
             }
             else
             {
-                try
-                {
-                    element.click();
-                }
-                catch (Exception ex)
-                {
-                    LOG.warn(ex.toString(), ex);
-
-                    try
-                    {
-                        JavascriptExecutor executor = (JavascriptExecutor)wd;
-                        executor.executeScript("arguments[0].click();", element);
-                    }
-                    catch (Exception ex1)
-                    {
-                        LOG.error(ex1.toString(), ex1);
-                        throw new WebDriverException(ex1);
-                    }
-                }
+                element.click();
             }
         }
         else
@@ -521,7 +535,7 @@ public class SeleniumDriver
         }
         do
         {
-            waitPageReady(wd, event);
+            waitPageReadyWithRefresh(wd, event);
             // TODO WebLookup script must return the element
             try
             {
@@ -574,6 +588,28 @@ public class SeleniumDriver
     public void updateLastUrl(JSONObject event, String url)
     {
         lastUrls.put(scenario.getTagForEvent(event), url);
+    }
+
+    public void waitPageReadyWithRefresh(WebDriver wd, JSONObject event)
+    {
+        String formDialogXpath = scenario.getConfiguration().getCommonConfiguration().getFormOrDialogXpath();
+        try
+        {
+            waitPageReady(wd, event);
+        }
+        catch (IllegalStateException e)
+        {
+            if (formDialogXpath != null && !formDialogXpath.isEmpty()
+                    && wd.findElements(By.xpath(formDialogXpath)).isEmpty())
+            {
+                wd.navigate().refresh();
+                waitPageReady(wd, event);
+            }
+            else
+            {
+                throw e;
+            }
+        }
     }
 
     public void waitPageReady(WebDriver wd, JSONObject event)

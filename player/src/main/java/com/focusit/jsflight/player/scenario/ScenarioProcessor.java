@@ -181,7 +181,11 @@ public class ScenarioProcessor
                     .setIntervalBetweenSelectClicksMs(commonConfiguration.getIntervalBetweenSelectClicksMs())
                     .setNumberOfPerformedClicksInSelect(commonConfiguration.getNumberOfPerformedClicksIntoSelect())
                     .setIntervalBetweenUiChecksMs(commonConfiguration.getIntervalBetweenUiChecksMs())
-                    .setUiShowTimeoutSeconds(commonConfiguration.getUiShowTimeoutSeconds());
+                    .setUiShowTimeoutSeconds(commonConfiguration.getUiShowTimeoutSeconds())
+                    .setEmptySelections(scenario.getConfiguration().getWebConfiguration().getEmptySelections())
+                    .setSelectXpath(scenario.getConfiguration().getWebConfiguration().getSelectXpath())
+                    .setSelectDeterminerScript(
+                            scenario.getConfiguration().getWebConfiguration().getSelectDeterminerScript());
             seleniumDriver.openEventUrl(theWebDriver, event);
 
             if (stepShouldBeSkippedDueToError(scenario, theWebDriver))
@@ -198,7 +202,7 @@ public class ScenarioProcessor
 
             LOG.info("Event type: {}", type);
             LOG.info("Event {}, Display {}", position, seleniumDriver.getDriverDisplay(theWebDriver));
-            seleniumDriver.waitPageReady(theWebDriver, event);
+            seleniumDriver.waitPageReadyWithRefresh(theWebDriver, event);
 
             try
             {
@@ -214,13 +218,13 @@ public class ScenarioProcessor
                 case EventType.MOUSEDOWN:
                 case EventType.CLICK:
                     seleniumDriver.processMouseEvent(theWebDriver, event);
-                    seleniumDriver.waitPageReady(theWebDriver, event);
+                    seleniumDriver.waitPageReadyWithRefresh(theWebDriver, event);
                     break;
                 case EventType.KEY_UP:
                 case EventType.KEY_DOWN:
                 case EventType.KEY_PRESS:
                     seleniumDriver.processKeyboardEvent(theWebDriver, event);
-                    seleniumDriver.waitPageReady(theWebDriver, event);
+                    seleniumDriver.waitPageReadyWithRefresh(theWebDriver, event);
                     break;
                 default:
                     break;

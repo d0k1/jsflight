@@ -20,6 +20,39 @@ public class WebConfiguration
     private String duplicationScript = "";
     private String errorTextToSkipStep = "default text. Never skip errors";
     private String findBrowserErrorScript = "return null;";
+    private String emptySelections = "";
+    private String selectXpath = "";
+    private String selectDeterminerScript = "element.getAttribute(\"class\").contains(\"select\")";
+
+    public String getSelectDeterminerScript()
+    {
+        return selectDeterminerScript;
+    }
+
+    public void setSelectDeterminerScript(String selectDeterminerScript)
+    {
+        this.selectDeterminerScript = selectDeterminerScript;
+    }
+
+    public String getSelectXpath()
+    {
+        return selectXpath;
+    }
+
+    public void setSelectXpath(String selectXpath)
+    {
+        this.selectXpath = selectXpath;
+    }
+
+    public String getEmptySelections()
+    {
+        return emptySelections;
+    }
+
+    public void setEmptySelections(String emptySelections)
+    {
+        this.emptySelections = emptySelections;
+    }
 
     public String getErrorTextToSkipStep()
     {
