@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.focusit.jsflight.player.scenario.UserScenario;
+import com.focusit.jsflight.player.webdriver.WebDriverWrapper;
 import com.focusit.script.ScriptEngine;
 
 import groovy.lang.Binding;
@@ -198,6 +199,18 @@ public class PlayerScriptProcessor
         Script s = engine.getThreadBindedScript(script);
         s.setBinding(binding);
         s.run();
+    }
+
+    public void executeDriverSignalScript(String script, WebDriver wd, int signal)
+    {
+        Binding binding = getBasicBinding();
+        binding.setVariable("signal", signal);
+        WebDriver d = wd instanceof WebDriverWrapper ? ((WebDriverWrapper)wd).getWrappedDriver() : wd;
+        binding.setVariable("webdriver", d);
+
+        Script scr = engine.getThreadBindedScript(script);
+        scr.setBinding(binding);
+        scr.run();
     }
 
     private Binding getBasicBinding()

@@ -44,22 +44,11 @@ public class CommonConfiguration
     private int pageShownTimeout;
     private Map<String, Object> customProperties = new ConcurrentHashMap<>();
     private String extraClasspath = null;
-
+    private String driverSignalScript = "\"kill ${signal} ${webDriver.binary.process.process.executeWatchdog.getPID()}\".execute()";
     /**
      * Timeout in seconds for UI to appear
      */
     private int uiShowTimeoutSeconds = 180;
-
-    /**
-     * Number of performed clicks during ClickEventProcessing in selects
-     */
-    private int numberOfPerformedClicksIntoSelect = 3;
-
-    /**
-     * Interval in milliseconds between select clicks
-     */
-    private long intervalBetweenSelectClicksMs = 200;
-
     /**
      * Interval in seconds between awaiting UI attempts
      */
@@ -75,14 +64,14 @@ public class CommonConfiguration
         scriptClassloaderLock = new ReentrantLock();
     }
 
-    public long getIntervalBetweenSelectClicksMs()
+    public String getDriverSignalScript()
     {
-        return intervalBetweenSelectClicksMs;
+        return driverSignalScript;
     }
 
-    public void setIntervalBetweenSelectClicksMs(long intervalBetweenSelectClicksMs)
+    public void setDriverSignalScript(String driverSignalScript)
     {
-        this.intervalBetweenSelectClicksMs = intervalBetweenSelectClicksMs;
+        this.driverSignalScript = driverSignalScript;
     }
 
     public long getIntervalBetweenUiChecksMs()
@@ -93,16 +82,6 @@ public class CommonConfiguration
     public void setIntervalBetweenUiChecksMs(long intervalBetweenUiChecksMs)
     {
         this.intervalBetweenUiChecksMs = intervalBetweenUiChecksMs;
-    }
-
-    public int getNumberOfPerformedClicksIntoSelect()
-    {
-        return numberOfPerformedClicksIntoSelect;
-    }
-
-    public void setNumberOfPerformedClicksIntoSelect(int numberOfPerformedClicksIntoSelect)
-    {
-        this.numberOfPerformedClicksIntoSelect = numberOfPerformedClicksIntoSelect;
     }
 
     public int getUiShowTimeoutSeconds()
