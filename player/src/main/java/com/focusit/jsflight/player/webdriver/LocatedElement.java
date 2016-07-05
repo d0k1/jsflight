@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.openqa.selenium.*;
+import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.interactions.internal.Coordinates;
 import org.openqa.selenium.internal.Locatable;
 import org.openqa.selenium.internal.WrapsElement;
@@ -37,7 +38,7 @@ public class LocatedElement implements WebElement, WrapsElement, Locatable
     {
         try
         {
-            delegate.click();
+            clickInternal();
         }
         catch (StaleElementReferenceException e)
         {
@@ -332,5 +333,27 @@ public class LocatedElement implements WebElement, WrapsElement, Locatable
     public int hashCode()
     {
         return delegate.hashCode();
+    }
+
+    /**
+     * Click implementation with javascript click if conventional click fails
+     */
+    private void clickInternal()
+    {
+        try
+        {
+            //Clicking with offset so driver won`t recalculate click point to a clickable point
+            //Clicking as is.
+            new Actions(driver).moveToElement(delegate).click().build().perform();
+        }
+        catch (WebDriverException e)
+        {
+            if (e instanceof StaleElementReferenceException)
+            {
+                throw e;
+            }
+            LOG.warn(e.toString(), e);
+            ((JavascriptExecutor)driver).executeScript("arguments[0].click()", delegate);
+        }
     }
 }

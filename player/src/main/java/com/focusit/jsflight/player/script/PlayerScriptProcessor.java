@@ -10,6 +10,7 @@ import javax.annotation.Nullable;
 import org.json.JSONObject;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,6 +37,17 @@ public class PlayerScriptProcessor
     {
         engine = new ScriptEngine(scenario.getConfiguration().getCommonConfiguration().getScriptClassloader());
         this.scenario = scenario;
+    }
+
+    public boolean executeSelectDeterminerScript(String script, WebDriver wd, WebElement element)
+    {
+        Binding binding = getBasicBinding();
+        binding.setVariable("webdriver", wd);
+        binding.setVariable("element", element);
+
+        Script scr = engine.getThreadBindedScript(script);
+        scr.setBinding(binding);
+        return (boolean)scr.run();
     }
 
     /**
