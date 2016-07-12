@@ -119,7 +119,7 @@ jsflight.TrackXhrSend = function(data) {
             user : data.open.user,
             password : data.open.password,
             request : data.data,
-            xhrId : data.xhrId,
+            xhrId : data.open.xhrId,
             sended : data.data.length
         };
         senddata.type = "xhr";
