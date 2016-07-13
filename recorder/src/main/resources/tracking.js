@@ -92,6 +92,7 @@ jsflight.TrackXhrOpen = function(data) {
         data.url = window.location.href;
         data.timestamp = new Date().getTime();
         data.eventId = jsflight.eventId;
+        data.agent = navigator.userAgent;
 
         if (jsflight.options.propertyProvider) {
             jsflight.options.propertyProvider(data);
@@ -128,6 +129,7 @@ jsflight.TrackXhrSend = function(data) {
         senddata.url = window.location.href;
         senddata.timestamp = new Date().getTime();
         senddata.eventId = jsflight.eventId;
+        senddata.agent = navigator.userAgent;
 
         if (jsflight.options.propertyProvider) {
             jsflight.options.propertyProvider(senddata);
@@ -163,6 +165,7 @@ jsflight.TrackXhrStateLoad = function(xhr) {
         data.url = window.location.href;
         data.timestamp = new Date().getTime();
         data.eventId = jsflight.eventId;
+        data.agent = navigator.userAgent;
         
         if (jsflight.options.propertyProvider) {
             jsflight.options.propertyProvider(data);
