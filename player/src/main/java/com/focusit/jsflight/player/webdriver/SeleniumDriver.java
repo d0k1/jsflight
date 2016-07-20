@@ -24,6 +24,7 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.focusit.jsflight.player.constants.EventConstants;
 import com.focusit.jsflight.player.constants.EventType;
 import com.focusit.jsflight.player.scenario.UserScenario;
 import com.focusit.jsflight.player.script.PlayerScriptProcessor;
@@ -47,6 +48,9 @@ public class SeleniumDriver
     private static final int DISPLAY_CAPACITY = 200;
 
     private static final String UI_NOT_SHOWED_UP_MSG = "UI didn't show up";
+
+    private static final int PROCESS_SIGNAL_STOP = -19;
+    private static final int PROCESS_SIGNAL_CONT = -18;
 
     static
     {
@@ -73,22 +77,16 @@ public class SeleniumDriver
     private List<String> emptySelections;
     private String selectXpath;
     private String selectDeterminerScript;
-    /**
-     * Interval in milliseconds between select clicks
-     */
-    private long intervalBetweenSelectClicksMs;
+    private String driverSignalScript;
     /**
      * Interval in seconds between awaiting UI attempts
      */
     private long intervalBetweenUiChecksMs;
     /**
-     * Number of performed clicks during ClickEventProcessing in selects
-     */
-    private int numberOfPerformedClicksInSelect;
-    /**
      * Timeout in seconds for UI to appear
      */
     private int uiShowTimeoutSeconds;
+    private String formDialogXpath;
 
     public SeleniumDriver(UserScenario scenario)
     {
@@ -105,6 +103,18 @@ public class SeleniumDriver
     public static RemoteWebElement getNoOpElement()
     {
         return NO_OP_ELEMENT;
+    }
+
+    public SeleniumDriver setFormDialogXpath(String formDialogXpath)
+    {
+        this.formDialogXpath = formDialogXpath;
+        return this;
+    }
+
+    public SeleniumDriver setDriverSignalScript(String driverSignalScript)
+    {
+        this.driverSignalScript = driverSignalScript;
+        return this;
     }
 
     public SeleniumDriver setSelectDeterminerScript(String selectDeterminerScript)
@@ -218,7 +228,7 @@ public class SeleniumDriver
             }
             if (useFirefox)
             {
-                FirefoxProfile profile = new FirefoxProfile();
+                FirefoxProfile profile = createProfile();
                 String ffPath = path;
                 FirefoxBinary binary = null;
                 if (ffPath != null && ffPath.trim().length() > 0)
@@ -265,6 +275,10 @@ public class SeleniumDriver
         {
             LOG.error(ex.toString(), ex);
             throw ex;
+        }
+        finally
+        {
+            prioritize(driver);
         }
     }
 
@@ -511,7 +525,7 @@ public class SeleniumDriver
         if (el.equals(NO_OP_ELEMENT))
         {
             LOG.warn("Non operational element returned. Aborting event {} processing. Target xpath {}",
-                    event.get("eventId"), event.getString("target2"));
+                    event.get(EventConstants.EVENT_ID), event.getString("target2"));
             return;
         }
         //Web lookup script MUST return //body element if scroll occurs not in a popup
@@ -555,23 +569,21 @@ public class SeleniumDriver
         throw new NoSuchElementException("Element was not found during scroll");
     }
 
-    public void releaseBrowser(WebDriver driver, String formOrDialogXpath, JSONObject event)
+    public void releaseBrowser(WebDriver driver, JSONObject event)
     {
-        if (!(null != formOrDialogXpath && !formOrDialogXpath.isEmpty()))
+        if (isOnForm(driver))
         {
-            LOG.debug("Form or dialog xpath is not specified. Aborting release process");
+            LOG.debug("Browser is on form, or form or dialog xpath is not specified");
             return;
         }
-        if (driver.findElements(By.xpath(formOrDialogXpath)).isEmpty())
-        {
-            String display = driverDisplay.get(driver.toString());
-            LOG.info("Display {} is available again", display);
-            availiableDisplays.add(display);
 
-            String tabUuid = event.getString("tabuuid");
-            drivers.remove(tabUuid);
-            driver.quit();
-        }
+        String display = driverDisplay.get(driver.toString());
+        LOG.info("Display {} is available again", display);
+        availiableDisplays.add(display);
+
+        String tabUuid = event.getString("tabuuid");
+        drivers.remove(tabUuid);
+        driver.quit();
 
     }
 
@@ -592,24 +604,28 @@ public class SeleniumDriver
 
     public void waitPageReadyWithRefresh(WebDriver wd, JSONObject event)
     {
-        String formDialogXpath = scenario.getConfiguration().getCommonConfiguration().getFormOrDialogXpath();
         try
         {
             waitPageReady(wd, event);
         }
         catch (IllegalStateException e)
         {
-            if (formDialogXpath != null && !formDialogXpath.isEmpty()
-                    && wd.findElements(By.xpath(formDialogXpath)).isEmpty())
+            if (isOnForm(wd))
+            {
+                throw e;
+            }
+            else
             {
                 wd.navigate().refresh();
                 waitPageReady(wd, event);
             }
-            else
-            {
-                throw e;
-            }
         }
+    }
+
+    private boolean isOnForm(WebDriver wd)
+    {
+        return formDialogXpath != null && !formDialogXpath.isEmpty()
+                && !wd.findElements(By.xpath(formDialogXpath)).isEmpty();
     }
 
     public void waitPageReady(WebDriver wd, JSONObject event)
@@ -758,16 +774,40 @@ public class SeleniumDriver
         }
     }
 
-    public SeleniumDriver setNumberOfPerformedClicksInSelect(int numberOfPerformedClicksInSelect)
+    private void prioritize(WebDriver wd)
     {
-        this.numberOfPerformedClicksInSelect = numberOfPerformedClicksInSelect;
-        return this;
+        PlayerScriptProcessor processor = new PlayerScriptProcessor(scenario);
+        processor.executeDriverSignalScript(driverSignalScript, wd, PROCESS_SIGNAL_CONT);
+        HashMap<String, WebDriver> copy = new HashMap(drivers);
+        copy.values().remove(wd);
+        copy.values().forEach(toSuspend -> {
+            processor.executeDriverSignalScript(driverSignalScript, toSuspend, PROCESS_SIGNAL_STOP);
+        });
     }
 
-    public SeleniumDriver setIntervalBetweenSelectClicksMs(long intervalBetweenSelectClicksMs)
+    private FirefoxProfile createProfile()
     {
-        this.intervalBetweenSelectClicksMs = intervalBetweenSelectClicksMs;
-        return this;
+        FirefoxProfile firefoxProfile = new FirefoxProfile();
+        firefoxProfile.setPreference("nglayout.initialpaint.delay", "0");
+        firefoxProfile.setPreference("network.http.pipelining", true);
+        firefoxProfile.setPreference("image.animation_mode", "none");
+        firefoxProfile.setPreference("layers.acceleration.force-enabled", true);
+        firefoxProfile.setPreference("layers.offmainthreadcomposition.enabled", true);
+        firefoxProfile.setPreference("browser.sessionstore.interval", 3600000);
+        firefoxProfile.setPreference("privacy.trackingprotection.enabled", true);
+        firefoxProfile.setPreference("content.notify.interval", 849999);
+        firefoxProfile.setPreference("content.notify.backoffcount", 5);
+        firefoxProfile.setPreference("network.http.max-connections", 50);
+        firefoxProfile.setPreference("network.http.max-connections-per-server", 150);
+        firefoxProfile.setPreference("network.http.pipelining.aggressive", false);
+        firefoxProfile.setPreference("browser.tabs.animate", false);
+        firefoxProfile.setPreference("browser.display.show_image_placeholders", false);
+        firefoxProfile.setPreference("browser.cache.use_new_backend", 1);
+        firefoxProfile.setPreference("ui.submenuDelay", 0);
+        firefoxProfile.setPreference("browser.cache.disk.enable", false);
+        firefoxProfile.setPreference("browser.cache.memory.enable", true);
+        firefoxProfile.setPreference("browser.cache.memory.capacity", 128000);
+        return firefoxProfile;
     }
 
     public SeleniumDriver setIntervalBetweenUiChecksMs(long intervalBetweenUiChecksMs)

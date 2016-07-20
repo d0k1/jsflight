@@ -7,12 +7,11 @@ import java.nio.file.Paths;
 
 import org.json.JSONObject;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.focusit.jsflight.player.config.CommonConfiguration;
-import com.focusit.jsflight.player.config.WebConfiguration;
+import com.focusit.jsflight.player.constants.EventConstants;
 import com.focusit.jsflight.player.constants.EventType;
 import com.focusit.jsflight.player.script.PlayerScriptProcessor;
 import com.focusit.jsflight.player.webdriver.SeleniumDriver;
@@ -36,25 +35,6 @@ public class ScenarioProcessor
         WebDriver theWebDriver = seleniumDriver.getDriverForEvent(event, firefox, path, display, proxyHost, proxyPort);
 
         return theWebDriver;
-    }
-
-    /**
-     * Check if browser has error dialog displayed with text contains {@link WebConfiguration#errorTextToSkipStep}.
-     * if so - current step must be skipped, otherwise - error should be dealt with later
-     * @param scenario
-     * @param wd
-     * @return true - step must be skipped, false - continue processing
-     */
-    private boolean stepShouldBeSkippedDueToError(UserScenario scenario, WebDriver wd)
-    {
-        final WebConfiguration webConfiguration = scenario.getConfiguration().getWebConfiguration();
-        Object result = new PlayerScriptProcessor(scenario)
-                .executeWebLookupScript(webConfiguration.getFindBrowserErrorScript(), wd, null, null);
-        if (result instanceof WebElement)
-        {
-            return ((WebElement)result).getText().contains(webConfiguration.getErrorTextToSkipStep());
-        }
-        return false;
     }
 
     /**
@@ -139,6 +119,15 @@ public class ScenarioProcessor
         new PlayerScriptProcessor(scenario).runStepPrePostScript(event, position, true);
         event = new PlayerScriptProcessor(scenario).runStepTemplating(scenario, event);
 
+        String eventUrl = event.getString(EventConstants.URL);
+        //if template processing fails for URL we cannot process this step, so we skip
+        if (eventUrl.matches(".*(\\$\\{.*\\}).*"))
+        {
+            LOG.warn("Event at position {} cannot be processed due to url contains unprocessed templates\n"
+                    + "EventId: {}\n" + "URL: {}", position, event.get(EventConstants.EVENT_ID), eventUrl);
+            return;
+        }
+
         WebDriver theWebDriver = null;
         boolean error = false;
         CommonConfiguration commonConfiguration = scenario.getConfiguration().getCommonConfiguration();
@@ -150,15 +139,13 @@ public class ScenarioProcessor
                 LOG.warn("Event duplicates prev");
                 return;
             }
-            String eventType = event.getString("type");
+            String type = event.getString(EventConstants.TYPE);
 
-            if (scenario.isEventIgnored(eventType) || scenario.isEventBad(event))
+            if (scenario.isEventIgnored(type) || scenario.isEventBad(event))
             {
                 LOG.warn("Event is ignored or bad");
                 return;
             }
-
-            String type = event.getString("type");
 
             if (type.equalsIgnoreCase(EventType.SCRIPT))
             {
@@ -166,8 +153,6 @@ public class ScenarioProcessor
                         scenario.getConfiguration().getScriptEventConfiguration().getScript(), event);
                 return;
             }
-
-            theWebDriver = getWebDriver(scenario, seleniumDriver, event);
 
             //Configure webdriver for this event, setting params here so we can change parameters while playback is
             //paused
@@ -178,30 +163,23 @@ public class ScenarioProcessor
                     .setLookupScript(scenario.getConfiguration().getWebConfiguration().getLookupScript())
                     .setUiShownScript(commonConfiguration.getUiShownScript())
                     .setUseRandomChars(commonConfiguration.isUseRandomChars())
-                    .setIntervalBetweenSelectClicksMs(commonConfiguration.getIntervalBetweenSelectClicksMs())
-                    .setNumberOfPerformedClicksInSelect(commonConfiguration.getNumberOfPerformedClicksIntoSelect())
                     .setIntervalBetweenUiChecksMs(commonConfiguration.getIntervalBetweenUiChecksMs())
                     .setUiShowTimeoutSeconds(commonConfiguration.getUiShowTimeoutSeconds())
                     .setEmptySelections(scenario.getConfiguration().getWebConfiguration().getEmptySelections())
                     .setSelectXpath(scenario.getConfiguration().getWebConfiguration().getSelectXpath())
                     .setSelectDeterminerScript(
-                            scenario.getConfiguration().getWebConfiguration().getSelectDeterminerScript());
-            seleniumDriver.openEventUrl(theWebDriver, event);
+                            scenario.getConfiguration().getWebConfiguration().getSelectDeterminerScript())
+                    .setDriverSignalScript(commonConfiguration.getDriverSignalScript())
+                    .setFormDialogXpath(commonConfiguration.getFormOrDialogXpath());
 
-            if (stepShouldBeSkippedDueToError(scenario, theWebDriver))
-            {
-                LOG.warn(
-                        "Step at {} position is skipped due to page has error which text contains message configured in webConfiguration.\n"
-                                + "Configured text message: {}. Please check screenshot of this step.",
-                        position, scenario.getConfiguration().getWebConfiguration().getErrorTextToSkipStep());
-                makeAShot(scenario, seleniumDriver, theWebDriver, position, false);
-                return;
-            }
+            theWebDriver = getWebDriver(scenario, seleniumDriver, event);
+            seleniumDriver.openEventUrl(theWebDriver, event);
 
             String target = scenario.getTargetForEvent(event);
 
             LOG.info("Event type: {}", type);
             LOG.info("Event {}, Display {}", position, seleniumDriver.getDriverDisplay(theWebDriver));
+
             seleniumDriver.waitPageReadyWithRefresh(theWebDriver, event);
 
             try
@@ -262,7 +240,7 @@ public class ScenarioProcessor
                     throw e;
                 }
 
-                seleniumDriver.releaseBrowser(theWebDriver, commonConfiguration.getFormOrDialogXpath(), event);
+                seleniumDriver.releaseBrowser(theWebDriver, event);
             }
         }
     }
