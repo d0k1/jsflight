@@ -1,4 +1,4 @@
-package com.focusit.jsflight.recorder.httprequest;
+package com.focusit.jsflight.recorder.internalevent.httprequest;
 
 import java.io.IOException;
 
