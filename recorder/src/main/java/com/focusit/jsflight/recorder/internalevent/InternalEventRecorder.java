@@ -37,7 +37,7 @@ public class InternalEventRecorder
     {
         public long id;
         public long timestampNs;
-        public String tag;
+        public char tag[] = new char[64];
         public long bytes;
         public byte[] data;
     }
