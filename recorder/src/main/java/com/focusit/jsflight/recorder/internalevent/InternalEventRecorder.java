@@ -27,7 +27,6 @@ public class InternalEventRecorder
         public long id;
         public long timestampNs;
         public char tag[] = new char[64];
-        public long bytes;
         public byte[] data;
     }
 
@@ -113,8 +112,8 @@ public class InternalEventRecorder
     }
 
     private ArrayBlockingQueue<InternalEventRecord> records = new ArrayBlockingQueue<>(4096);
-    private AtomicLong lastId = new AtomicLong(-1);
 
+    private AtomicLong lastId = new AtomicLong(-1);
     private AtomicLong timestampNs = new AtomicLong(0);
 
     private AtomicBoolean recording = new AtomicBoolean(false);
@@ -131,6 +130,11 @@ public class InternalEventRecorder
         storageThread.start();
     }
 
+    public long getWallTime()
+    {
+        return timestampNs.get();
+    }
+
     public void push(String tag, byte[] data) throws UnsupportedEncodingException, InterruptedException
     {
         if (!recording.get())
@@ -143,7 +147,6 @@ public class InternalEventRecorder
         byte tagBytes[] = tag.getBytes("UTF-8");
         System.arraycopy(tagBytes, 0, record.tag, 0, 64);
 
-        record.bytes = data.length;
         System.arraycopy(data, 0, record.data, 0, data.length);
 
         records.put(record);

@@ -4,7 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.servlet.ServletRequest;
+import javax.servlet.http.HttpServletRequest;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.FastOutput;
@@ -14,7 +14,8 @@ public class HttpRecorderHelper
 {
     private static ThreadLocal<Kryo> threadKryo = new ThreadLocal<>();
 
-    public static byte[] serializeRequest(ServletRequest request, HashMap<String, String> params)
+    public static RecordableHttpServletRequest prepareRequestToRecord(HttpServletRequest orignal,
+            HttpRecordInformation info)
     {
         // buffer is 1kb at least
         ByteArrayOutputStream stream = new ByteArrayOutputStream(1024 * 1024);
@@ -28,8 +29,10 @@ public class HttpRecorderHelper
             kryo.register(ConcurrentHashMap.class, new MapSerializer());
             threadKryo.set(kryo);
         }
-        kryo.writeObject(out, params);
-        kryo.writeObject(out, request);
+        kryo.writeObject(out, request.getParameterMap());
+        kryo.writeObject(out, request.getContentLengthLong());
+        kryo.writeObject(out, request.getContentType());
+        kryo.writeObject(out, request.getRequestURI());
 
         return stream.toByteArray();
     }
