@@ -14,7 +14,7 @@ public class HttpRecorderHelper
 {
     private static ThreadLocal<Kryo> threadKryo = new ThreadLocal<>();
 
-    public static RecordableHttpServletRequest prepareRequestToRecord(HttpServletRequest orignal,
+    public static RecordableHttpServletRequest prepareRequestToRecord(HttpServletRequest original,
             HttpRecordInformation info)
     {
         // buffer is 1kb at least
@@ -29,11 +29,12 @@ public class HttpRecorderHelper
             kryo.register(ConcurrentHashMap.class, new MapSerializer());
             threadKryo.set(kryo);
         }
-        kryo.writeObject(out, request.getParameterMap());
-        kryo.writeObject(out, request.getContentLengthLong());
-        kryo.writeObject(out, request.getContentType());
-        kryo.writeObject(out, request.getRequestURI());
+        kryo.writeObject(out, original.getParameterMap());
+        kryo.writeObject(out, original.getContentLengthLong());
+        kryo.writeObject(out, original.getContentType());
+        kryo.writeObject(out, original.getRequestURI());
 
-        return stream.toByteArray();
+        info.params = stream.toByteArray();
+        return new RecordableHttpServletRequest(original);
     }
 }

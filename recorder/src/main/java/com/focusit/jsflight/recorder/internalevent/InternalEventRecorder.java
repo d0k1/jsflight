@@ -19,6 +19,64 @@ import com.esotericsoftware.kryo.io.FastOutput;
  */
 public class InternalEventRecorder
 {
+    private static final InternalEventRecorder instance = new InternalEventRecorder();
+    private ArrayBlockingQueue<InternalEventRecord> records = new ArrayBlockingQueue<>(4096);
+    private AtomicLong lastId = new AtomicLong(-1);
+    private AtomicLong timestampNs = new AtomicLong(0);
+    private AtomicBoolean recording = new AtomicBoolean(false);
+    private StorageThread storageThread = new StorageThread();
+    private AtomicBoolean shuttingDown = new AtomicBoolean(false);
+    private WallClock wallClock = new WallClock();
+
+    private InternalEventRecorder()
+    {
+        wallClock.start();
+        storageThread.start();
+    }
+
+    public static InternalEventRecorder getInstance()
+    {
+        return instance;
+    }
+
+    public long getWallTime()
+    {
+        return timestampNs.get();
+    }
+
+    public void push(String tag, byte[] data) throws UnsupportedEncodingException, InterruptedException
+    {
+        if (!recording.get())
+        {
+            return;
+        }
+
+        InternalEventRecord record = new InternalEventRecord();
+        record.id = lastId.incrementAndGet();
+        byte tagBytes[] = tag.getBytes("UTF-8");
+        System.arraycopy(tagBytes, 0, record.tag, 0, 64);
+
+        System.arraycopy(data, 0, record.data, 0, data.length);
+
+        record.timestampNs = timestampNs.get();
+        records.put(record);
+    }
+
+    public void shutdown()
+    {
+        shuttingDown.set(true);
+    }
+
+    public void startRecording()
+    {
+        recording.set(true);
+    }
+
+    public void stopRecording()
+    {
+        recording.set(false);
+    }
+
     /**
      * Internal event representation
      */
@@ -102,68 +160,5 @@ public class InternalEventRecorder
                 }
             }
         }
-    }
-
-    private static final InternalEventRecorder instance = new InternalEventRecorder();
-
-    public static InternalEventRecorder getInstance()
-    {
-        return instance;
-    }
-
-    private ArrayBlockingQueue<InternalEventRecord> records = new ArrayBlockingQueue<>(4096);
-
-    private AtomicLong lastId = new AtomicLong(-1);
-    private AtomicLong timestampNs = new AtomicLong(0);
-
-    private AtomicBoolean recording = new AtomicBoolean(false);
-
-    private StorageThread storageThread = new StorageThread();
-
-    private AtomicBoolean shuttingDown = new AtomicBoolean(false);
-
-    private WallClock wallClock = new WallClock();
-
-    private InternalEventRecorder()
-    {
-        wallClock.start();
-        storageThread.start();
-    }
-
-    public long getWallTime()
-    {
-        return timestampNs.get();
-    }
-
-    public void push(String tag, byte[] data) throws UnsupportedEncodingException, InterruptedException
-    {
-        if (!recording.get())
-        {
-            return;
-        }
-
-        InternalEventRecord record = new InternalEventRecord();
-        record.id = lastId.incrementAndGet();
-        byte tagBytes[] = tag.getBytes("UTF-8");
-        System.arraycopy(tagBytes, 0, record.tag, 0, 64);
-
-        System.arraycopy(data, 0, record.data, 0, data.length);
-
-        records.put(record);
-    }
-
-    public void shutdown()
-    {
-        shuttingDown.set(true);
-    }
-
-    public void startRecording()
-    {
-        recording.set(true);
-    }
-
-    public void stopRecording()
-    {
-        recording.set(false);
     }
 }
