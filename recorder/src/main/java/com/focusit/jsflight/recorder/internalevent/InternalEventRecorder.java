@@ -1,5 +1,6 @@
 package com.focusit.jsflight.recorder.internalevent;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -19,64 +20,6 @@ import com.esotericsoftware.kryo.io.FastOutput;
  */
 public class InternalEventRecorder
 {
-    private static final InternalEventRecorder instance = new InternalEventRecorder();
-    private ArrayBlockingQueue<InternalEventRecord> records = new ArrayBlockingQueue<>(4096);
-    private AtomicLong lastId = new AtomicLong(-1);
-    private AtomicLong timestampNs = new AtomicLong(0);
-    private AtomicBoolean recording = new AtomicBoolean(false);
-    private StorageThread storageThread = new StorageThread();
-    private AtomicBoolean shuttingDown = new AtomicBoolean(false);
-    private WallClock wallClock = new WallClock();
-
-    private InternalEventRecorder()
-    {
-        wallClock.start();
-        storageThread.start();
-    }
-
-    public static InternalEventRecorder getInstance()
-    {
-        return instance;
-    }
-
-    public long getWallTime()
-    {
-        return timestampNs.get();
-    }
-
-    public void push(String tag, byte[] data) throws UnsupportedEncodingException, InterruptedException
-    {
-        if (!recording.get())
-        {
-            return;
-        }
-
-        InternalEventRecord record = new InternalEventRecord();
-        record.id = lastId.incrementAndGet();
-        byte tagBytes[] = tag.getBytes("UTF-8");
-        System.arraycopy(tagBytes, 0, record.tag, 0, 64);
-
-        System.arraycopy(data, 0, record.data, 0, data.length);
-
-        record.timestampNs = timestampNs.get();
-        records.put(record);
-    }
-
-    public void shutdown()
-    {
-        shuttingDown.set(true);
-    }
-
-    public void startRecording()
-    {
-        recording.set(true);
-    }
-
-    public void stopRecording()
-    {
-        recording.set(false);
-    }
-
     /**
      * Internal event representation
      */
@@ -85,16 +28,15 @@ public class InternalEventRecorder
         public long id;
         public long timestampNs;
         public char tag[] = new char[64];
-        public byte[] data;
+        public Object data;
     }
 
     class StorageThread extends Thread
     {
         private Kryo kryo;
         private FastOutput output;
-        // 32 mb buffer should be enough for everyone
-        private int size = 32 * 1024 * 1024;
-        private int fileNo = 0;
+        // 4 mb buffer should be enough for everyone
+        private int size = 4 * 1024 * 1024;
 
         public StorageThread()
         {
@@ -103,7 +45,9 @@ public class InternalEventRecorder
             {
                 setPriority(NORM_PRIORITY);
                 kryo = new Kryo();
-                output = new FastOutput(new FileOutputStream("internal.data"), size);
+                File dest = new File("internal.data");
+                System.out.println("Storing internal events to " + dest.getAbsolutePath());
+                output = new FastOutput(new FileOutputStream(dest), size);
             }
             catch (IOException e)
             {
@@ -111,9 +55,15 @@ public class InternalEventRecorder
             }
         }
 
+        public void flush()
+        {
+            output.flush();
+        }
+
         @Override
         public void run()
         {
+            boolean needFlush = false;
             while (isAlive() && !isInterrupted() && !shuttingDown.get())
             {
                 try
@@ -121,7 +71,21 @@ public class InternalEventRecorder
                     if (recording.get())
                     {
                         InternalEventRecord record = records.poll();
-                        kryo.writeObject(output, record);
+                        if (record != null)
+                        {
+                            kryo.writeObject(output, record);
+                            needFlush = true;
+                            yield();
+                        }
+                        else
+                        {
+                            if (needFlush)
+                            {
+                                output.flush();
+                                needFlush = false;
+                            }
+                            sleep(100);
+                        }
                     }
                     else
                     {
@@ -152,7 +116,7 @@ public class InternalEventRecorder
                 timestampNs.set(System.nanoTime());
                 try
                 {
-                    Thread.sleep(1);
+                    Thread.sleep(10);
                 }
                 catch (InterruptedException e)
                 {
@@ -160,5 +124,76 @@ public class InternalEventRecorder
                 }
             }
         }
+    }
+
+    private static final InternalEventRecorder instance = new InternalEventRecorder();
+
+    public static InternalEventRecorder getInstance()
+    {
+        return instance;
+    }
+
+    private ArrayBlockingQueue<InternalEventRecord> records = new ArrayBlockingQueue<>(4096);
+    private AtomicLong lastId = new AtomicLong(-1);
+    private AtomicLong timestampNs = new AtomicLong(0);
+
+    private AtomicBoolean recording = new AtomicBoolean(false);
+
+    private StorageThread storageThread = new StorageThread();
+
+    private AtomicBoolean shuttingDown = new AtomicBoolean(false);
+
+    private WallClock wallClock = new WallClock();
+
+    private InternalEventRecorder()
+    {
+        wallClock.start();
+        storageThread.start();
+    }
+
+    public long getWallTime()
+    {
+        return timestampNs.get();
+    }
+
+    public void push(String tag, Object data) throws UnsupportedEncodingException, InterruptedException
+    {
+        if (!recording.get())
+        {
+            return;
+        }
+
+        InternalEventRecord record = new InternalEventRecord();
+        record.id = lastId.incrementAndGet();
+
+        String tagValue = tag.trim();
+        if (!tagValue.isEmpty())
+        {
+            tagValue.getChars(0, tagValue.length() > 64 ? 64 : tagValue.length(), record.tag, 0);
+        }
+        if (data != null)
+        {
+            record.data = data;
+        }
+        record.timestampNs = timestampNs.get();
+        records.put(record);
+    }
+
+    public void shutdown() throws InterruptedException
+    {
+        shuttingDown.set(true);
+        storageThread.join(2000);
+        wallClock.join(2000);
+        storageThread.flush();
+    }
+
+    public void startRecording()
+    {
+        recording.set(true);
+    }
+
+    public void stopRecording()
+    {
+        recording.set(false);
     }
 }

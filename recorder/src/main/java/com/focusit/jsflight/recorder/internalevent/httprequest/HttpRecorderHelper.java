@@ -13,6 +13,7 @@ import com.esotericsoftware.kryo.serializers.MapSerializer;
 public class HttpRecorderHelper
 {
     private static ThreadLocal<Kryo> threadKryo = new ThreadLocal<>();
+    private static String NULL_OBJECT = "null_object";
 
     public static RecordableHttpServletRequest prepareRequestToRecord(HttpServletRequest original,
             HttpRecordInformation info)
@@ -29,10 +30,20 @@ public class HttpRecorderHelper
             kryo.register(ConcurrentHashMap.class, new MapSerializer());
             threadKryo.set(kryo);
         }
-        kryo.writeObject(out, original.getParameterMap());
-        kryo.writeObject(out, original.getContentLengthLong());
-        kryo.writeObject(out, original.getContentType());
-        kryo.writeObject(out, original.getRequestURI());
+        Object item = new HashMap<String, String[]>(original.getParameterMap());
+        kryo.writeObject(out, item == null ? NULL_OBJECT : item);
+
+        item = original.getContentLengthLong();
+        kryo.writeObject(out, item == null ? NULL_OBJECT : item);
+
+        item = original.getContentType();
+        kryo.writeObject(out, item == null ? NULL_OBJECT : item);
+
+        item = original.getRequestURI();
+        kryo.writeObject(out, item == null ? NULL_OBJECT : item);
+
+        item = original.getMethod();
+        kryo.writeObject(out, item == null ? NULL_OBJECT : item);
 
         info.params = stream.toByteArray();
         return new RecordableHttpServletRequest(original);
