@@ -20,10 +20,76 @@ import com.esotericsoftware.kryo.io.FastOutput;
  */
 public class InternalEventRecorder
 {
+    private static final InternalEventRecorder instance = new InternalEventRecorder();
+    private ArrayBlockingQueue<InternalEventRecord> records = new ArrayBlockingQueue<>(4096);
+    private AtomicLong lastId = new AtomicLong(-1);
+    private AtomicLong timestampNs = new AtomicLong(0);
+    private AtomicBoolean recording = new AtomicBoolean(false);
+    private StorageThread storageThread = new StorageThread();
+    private AtomicBoolean shuttingDown = new AtomicBoolean(false);
+    private WallClock wallClock = new WallClock();
+
+    private InternalEventRecorder()
+    {
+        wallClock.start();
+        storageThread.start();
+    }
+
+    public static InternalEventRecorder getInstance()
+    {
+        return instance;
+    }
+
+    public long getWallTime()
+    {
+        return timestampNs.get();
+    }
+
+    public void push(String tag, Object data) throws UnsupportedEncodingException, InterruptedException
+    {
+        if (!recording.get())
+        {
+            return;
+        }
+
+        InternalEventRecord record = new InternalEventRecord();
+        record.id = lastId.incrementAndGet();
+
+        String tagValue = tag.trim();
+        if (!tagValue.isEmpty())
+        {
+            tagValue.getChars(0, tagValue.length() > 64 ? 64 : tagValue.length(), record.tag, 0);
+        }
+        if (data != null)
+        {
+            record.data = data;
+        }
+        record.timestampNs = timestampNs.get();
+        records.put(record);
+    }
+
+    public void shutdown() throws InterruptedException
+    {
+        shuttingDown.set(true);
+        storageThread.join(2000);
+        wallClock.join(2000);
+        storageThread.flush();
+    }
+
+    public void startRecording()
+    {
+        recording.set(true);
+    }
+
+    public void stopRecording()
+    {
+        recording.set(false);
+    }
+
     /**
      * Internal event representation
      */
-    static class InternalEventRecord
+    public static class InternalEventRecord
     {
         public long id;
         public long timestampNs;
@@ -124,76 +190,5 @@ public class InternalEventRecorder
                 }
             }
         }
-    }
-
-    private static final InternalEventRecorder instance = new InternalEventRecorder();
-
-    public static InternalEventRecorder getInstance()
-    {
-        return instance;
-    }
-
-    private ArrayBlockingQueue<InternalEventRecord> records = new ArrayBlockingQueue<>(4096);
-    private AtomicLong lastId = new AtomicLong(-1);
-    private AtomicLong timestampNs = new AtomicLong(0);
-
-    private AtomicBoolean recording = new AtomicBoolean(false);
-
-    private StorageThread storageThread = new StorageThread();
-
-    private AtomicBoolean shuttingDown = new AtomicBoolean(false);
-
-    private WallClock wallClock = new WallClock();
-
-    private InternalEventRecorder()
-    {
-        wallClock.start();
-        storageThread.start();
-    }
-
-    public long getWallTime()
-    {
-        return timestampNs.get();
-    }
-
-    public void push(String tag, Object data) throws UnsupportedEncodingException, InterruptedException
-    {
-        if (!recording.get())
-        {
-            return;
-        }
-
-        InternalEventRecord record = new InternalEventRecord();
-        record.id = lastId.incrementAndGet();
-
-        String tagValue = tag.trim();
-        if (!tagValue.isEmpty())
-        {
-            tagValue.getChars(0, tagValue.length() > 64 ? 64 : tagValue.length(), record.tag, 0);
-        }
-        if (data != null)
-        {
-            record.data = data;
-        }
-        record.timestampNs = timestampNs.get();
-        records.put(record);
-    }
-
-    public void shutdown() throws InterruptedException
-    {
-        shuttingDown.set(true);
-        storageThread.join(2000);
-        wallClock.join(2000);
-        storageThread.flush();
-    }
-
-    public void startRecording()
-    {
-        recording.set(true);
-    }
-
-    public void stopRecording()
-    {
-        recording.set(false);
     }
 }

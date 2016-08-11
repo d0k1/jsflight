@@ -148,6 +148,11 @@
             <artifactId>spring-data-commons</artifactId>
             <version>1.9.4.RELEASE</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.ivy</groupId>
+            <artifactId>ivy</artifactId>
+            <version>2.1.0</version>
+        </dependency>
     </dependencies>
 
     <repositories>
