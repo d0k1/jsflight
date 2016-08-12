@@ -1,6 +1,7 @@
 package com.focusit.jsflight.recorder.internalevent.httprequest;
 
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
@@ -9,8 +10,15 @@ import com.focusit.jsflight.recorder.internalevent.InternalEventRecorder;
 
 public abstract class HttpRecorderFilterBase implements Filter
 {
+	private static final AtomicBoolean enabled = new AtomicBoolean(false); 
+
+    public final static void setEnabled(boolean enabled){
+    	HttpRecorderFilterBase.enabled.set(enabled);
+    }
 
     protected abstract void logException(Exception e);
+
+    protected abstract boolean doNotRecordRequest(ServletRequest request, ServletResponse response);
 
     @Override
     public final void init(FilterConfig filterConfig) throws ServletException
@@ -23,11 +31,19 @@ public abstract class HttpRecorderFilterBase implements Filter
 
     public abstract void updateHttpRecordInfo(HttpRecordInformation info, ServletRequest request,
             ServletResponse response);
-
+    
     @Override
     public final void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException
     {
+    	if(!HttpRecorderFilterBase.enabled.get()){
+    		chain.doFilter(request, response);
+    	}
+    	
+    	if(doNotRecordRequest(request, response)){
+    		chain.doFilter(request, response);
+    	}
+    	
         HttpRecordInformation info = new HttpRecordInformation();
         RecordableHttpServletRequest requestForRecord = null;
         try

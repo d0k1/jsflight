@@ -26,4 +26,9 @@ public class HttpRecorderFilter extends HttpRecorderFilterBase
     public void updateHttpRecordInfo(HttpRecordInformation info, ServletRequest request, ServletResponse response)
     {
     }
+
+	@Override
+	protected boolean doNotRecordRequest(ServletRequest request, ServletResponse response) {
+		return false;
+	}
 }
