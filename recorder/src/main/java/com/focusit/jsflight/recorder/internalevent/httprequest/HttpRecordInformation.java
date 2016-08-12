@@ -6,5 +6,5 @@ public class HttpRecordInformation
 {
     public byte[] params;
     public byte[] payload;
-    public HashMap<String, String> additional;
+    public HashMap<String, String> additional = new HashMap<>();
 }

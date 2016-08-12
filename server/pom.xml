@@ -14,7 +14,7 @@
     <parent>
         <artifactId>jsflight</artifactId>
         <groupId>com.github.d0k1</groupId>
-        <version>3.8</version>
+        <version>4.0</version>
     </parent>
 
     <scm>
