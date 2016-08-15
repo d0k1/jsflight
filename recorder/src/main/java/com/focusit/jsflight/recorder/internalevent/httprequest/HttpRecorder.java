@@ -16,9 +16,9 @@ import com.focusit.jsflight.recorder.internalevent.InternalEventRecorder;
 public class HttpRecorder
 {
     private static final String HTTP_RECORDER_TAG = "HTTPREQUEST";
-	private static ThreadLocal<Kryo> threadKryo = new ThreadLocal<>();
+    private static ThreadLocal<Kryo> threadKryo = new ThreadLocal<>();
 
-	public static RecordableHttpServletRequest prepareRequestToRecord(HttpServletRequest original,
+    public static RecordableHttpServletRequest prepareRequestToRecord(HttpServletRequest original,
             HttpRecordInformation info)
     {
         // buffer is 1kb at least
@@ -34,37 +34,51 @@ public class HttpRecorder
             threadKryo.set(kryo);
         }
         HashMap<String, String[]> item = new HashMap<>();
-        if(original.getParameterMap()!=null){
-        	item.putAll(original.getParameterMap());
+        if (original.getParameterMap() != null)
+        {
+            item.putAll(original.getParameterMap());
         }
-        kryo.writeObject(out, item);
+        try
+        {
+            kryo.writeObject(out, item);
 
-        kryo.writeObjectOrNull(out, original.getContentLengthLong(), Long.class);
+            kryo.writeObjectOrNull(out, original.getContentLength(), Integer.class);
 
-        kryo.writeObjectOrNull(out, original.getContentType(), String.class);
+            kryo.writeObjectOrNull(out, original.getContentType(), String.class);
 
-        kryo.writeObjectOrNull(out, original.getRequestURI(), String.class);
+            kryo.writeObjectOrNull(out, original.getRequestURI(), String.class);
 
-        kryo.writeObjectOrNull(out, original.getMethod(), String.class);
-        kryo.writeObjectOrNull(out, original.getServletContext().getContextPath(), String.class);
+            kryo.writeObjectOrNull(out, original.getMethod(), String.class);
+            kryo.writeObjectOrNull(out, original.getServletContext().getContextPath(), String.class);
 
-        HashMap<String, String> cookies = new HashMap<>();
-        if(original.getCookies()!=null && original.getCookies().length>0){
-        	for(Cookie cookie:original.getCookies()){
-        		cookies.put(cookie.getName(), cookie.getValue());
-        	}
+            HashMap<String, String> cookies = new HashMap<>();
+            if (original.getCookies() != null && original.getCookies().length > 0)
+            {
+                for (Cookie cookie : original.getCookies())
+                {
+                    cookies.put(cookie.getName(), cookie.getValue());
+                }
+            }
+
+            kryo.writeObject(out, cookies);
+            out.flush();
+            out.close();
+
         }
-        
-        kryo.writeObject(out, cookies);
-        out.flush();
-        out.close();
-        
+        catch (Exception e)
+        {
+            e.printStackTrace(System.err);
+            throw e;
+        }
+
         info.params = stream.toByteArray();
         return new RecordableHttpServletRequest(original);
     }
-    
-    public static void recordRequest(RecordableHttpServletRequest requestForRecord, HttpRecordInformation info) throws UnsupportedEncodingException, InterruptedException{
-    	info.payload = requestForRecord.getPayloadBytes();
+
+    public static void recordRequest(RecordableHttpServletRequest requestForRecord, HttpRecordInformation info)
+            throws UnsupportedEncodingException, InterruptedException
+    {
+        info.payload = requestForRecord.getPayloadBytes();
         InternalEventRecorder.getInstance().push(HTTP_RECORDER_TAG, info);
     }
 }

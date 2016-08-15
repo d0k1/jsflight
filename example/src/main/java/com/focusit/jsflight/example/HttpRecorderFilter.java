@@ -3,6 +3,8 @@ package com.focusit.jsflight.example;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.annotation.WebFilter;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import com.focusit.jsflight.recorder.internalevent.httprequest.HttpRecordInformation;
 import com.focusit.jsflight.recorder.internalevent.httprequest.HttpRecorderFilterBase;
@@ -27,8 +29,9 @@ public class HttpRecorderFilter extends HttpRecorderFilterBase
     {
     }
 
-	@Override
-	protected boolean doNotRecordRequest(ServletRequest request, ServletResponse response) {
-		return false;
-	}
+    @Override
+    protected boolean doNotRecordRequest(HttpServletRequest request, HttpServletResponse response)
+    {
+        return false;
+    }
 }
