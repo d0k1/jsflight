@@ -37,7 +37,7 @@ jsflight.getEventInfo = function(event) {
 
     var result = {};
 
-    result.caretPosition = getCaretPosition(event.target);
+    result.caretPosition = jsflight.getCaretPosition(event.target);
     try {
         result.clipboardData = (event.clipboardData || window.clipboardData).getData('Text');
     } catch(e) {}
