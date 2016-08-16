@@ -31,7 +31,7 @@
         <dependency>
             <groupId>com.github.d0k1.jsflight</groupId>
             <artifactId>player</artifactId>
-            <version>3.8</version>
+            <version>4.0</version>
             <exclusions>
                 <exclusion>
                     <artifactId>servlet-api</artifactId>
