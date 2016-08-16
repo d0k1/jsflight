@@ -20,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.focusit.model.Experiment;
 import com.focusit.model.Recording;
+import com.focusit.os.OperatingSystemScreenshooter;
 import com.focusit.player.BackgroundWebPlayer;
 import com.focusit.service.RecordingsService;
 
@@ -291,5 +292,25 @@ public class PlayerController
     public void configure(@RequestParam("experimentId") String experimentId, HttpServletRequest request)
     {
 
+    }
+
+    /**
+     * Get screenshot from specified Xvfb display
+     * 
+     * curl "http://127.0.0.1:8080/player/xvfb?display=10"
+     * curl "http://127.0.0.1:8080/player/xvfb?display=:10"
+     *
+     * @param displayNumber display number
+     * @param response
+     * @throws Exception
+     */
+    @RequestMapping(value = "/xvfb", method = RequestMethod.GET)
+    public void takeNativeScreenshot(@RequestParam("display") String displayNumber, HttpServletResponse response)
+            throws Exception
+    {
+        OperatingSystemScreenshooter.takeXvfbScreenshot(displayNumber, response.getOutputStream());
+        response.setContentType("image/png");
+        response.setHeader("Content-Disposition", String.format("attachment; filename=\"%s.png\"", displayNumber));
+        response.flushBuffer();
     }
 }
