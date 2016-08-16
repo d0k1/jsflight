@@ -82,7 +82,7 @@ public class MainFrame
 
     /**
      * Create the application.
-     * 
+     *
      * @throws IOException
      */
     public MainFrame() throws Exception
@@ -101,8 +101,8 @@ public class MainFrame
 
             private static final long serialVersionUID = 1L;
 
-            private String[] columns = { "*", "#", "eventId", "url", "type", "key", "target", "timestamp", "tag", "Pre",
-                    "Post", "comment" };
+            private String[] columns = { "*", "#", "eventId", "url", "type", "key", "target", "timestamp", "tag",
+                    "Pre", "Post", "comment" };
 
             @Override
             public int getColumnCount()
@@ -169,8 +169,8 @@ public class MainFrame
                     int code = event.getInt("charCode");
                     char[] key = new char[1];
                     key[0] = (char)code;
-                    return String.format("%d(%s)/%s", code, new String(key),
-                            event.has("button") ? event.get("button") : "null");
+                    return String.format("%d(%s)/%s", code, new String(key), event.has("button") ? event.get("button")
+                            : "null");
                 }
                 case 6:
                     return scenario.getTargetForEvent(event);
@@ -591,11 +591,11 @@ public class MainFrame
             public void mouseClicked(MouseEvent e)
             {
                 new ScenarioProcessor().applyStep(scenario, seleniumDriver, scenario.getPosition());
-                scenario.next();
+                scenario.moveToNextStep();
                 model.fireTableDataChanged();
             }
         });
-        btnPrev.addActionListener(e -> scenario.prev());
+        btnPrev.addActionListener(e -> scenario.moveToPreviousStep());
         btnRewind.addMouseListener(new MouseAdapter()
         {
             @Override
@@ -632,8 +632,8 @@ public class MainFrame
                     scenario.parseNextLine(InputFileConfigHolder.getInstance().getFilename());
                     scenario.setPostProcessScenarioScript(scriptArea.getText());
                     long secs = scenario.postProcessScenario();
-                    statisticsLabel.setText(
-                            String.format("Events %d, duration %f sec", scenario.getStepsCount(), secs / 1000.0));
+                    statisticsLabel.setText(String.format("Events %d, duration %f sec", scenario.getStepsCount(),
+                            secs / 1000.0));
                     model = createEventTableModel();
                     table.setModel(model);
                     model.fireTableDataChanged();
@@ -891,11 +891,9 @@ public class MainFrame
 
         JPanel optionsPanel = new JPanel();
         tabbedPane.addTab("Options", null, optionsPanel, null);
-        optionsPanel.setLayout(new FormLayout(
-                new ColumnSpec[] { FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"), },
-                new RowSpec[] { FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+        optionsPanel.setLayout(new FormLayout(new ColumnSpec[] { FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC, FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"), },
+                new RowSpec[] { FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC,
@@ -903,7 +901,8 @@ public class MainFrame
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC, }));
+                        FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, }));
 
         JLabel lblFirefoxProxyHost = new JLabel("Proxy host");
         optionsPanel.add(lblFirefoxProxyHost, "2, 2, right, default");
@@ -1010,15 +1009,14 @@ public class MainFrame
         optionsPanel.add(formDialogXpathField, "4, 26, fill, default");
         jmeterPanel = new JPanel();
         tabbedPane.addTab("JMeter", null, jmeterPanel, null);
-        jmeterPanel.setLayout(new FormLayout(
-                new ColumnSpec[] { FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"), },
-                new RowSpec[] { FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC, RowSpec.decode("default:grow"),
-                        FormSpecs.RELATED_GAP_ROWSPEC, RowSpec.decode("default:grow"), FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+        jmeterPanel.setLayout(new FormLayout(new ColumnSpec[] { FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC, FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"), },
+                new RowSpec[] { FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC, }));
+                        RowSpec.decode("default:grow"), FormSpecs.RELATED_GAP_ROWSPEC, RowSpec.decode("default:grow"),
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, }));
 
         JLabel lblJmeterRecorder_1 = new JLabel("JMeter recorder");
         jmeterPanel.add(lblJmeterRecorder_1, "2, 2, right, default");
@@ -1260,8 +1258,8 @@ public class MainFrame
             {
                 try
                 {
-                    scriptEventHandlerScriptArea
-                            .setText(FileInput.getContentInString(scriptEventHandlerFilePath.getText()));
+                    scriptEventHandlerScriptArea.setText(FileInput.getContentInString(scriptEventHandlerFilePath
+                            .getText()));
                 }
                 catch (IOException e1)
                 {
@@ -1337,8 +1335,8 @@ public class MainFrame
     {
         CommonFileConfigHolder.getInstance().setConfiguration(scenario.getConfiguration().getCommonConfiguration());
         JMeterFileConfigHolder.getInstance().setConfiguration(scenario.getConfiguration().getjMeterConfiguration());
-        ScriptEventExectutionController.getInstance()
-                .setConfiguration(scenario.getConfiguration().getScriptEventConfiguration());
+        ScriptEventExectutionController.getInstance().setConfiguration(
+                scenario.getConfiguration().getScriptEventConfiguration());
         WebLookupFileConfigHolder.getInstance().setConfiguration(scenario.getConfiguration().getWebConfiguration());
         DuplicationFileConfigHolder.getInstance().setConfiguration(scenario.getConfiguration().getWebConfiguration());
         try
@@ -1390,8 +1388,7 @@ public class MainFrame
     }
 
     /**
-     * @throws IOException 
-     * 
+     * @throws IOException
      */
     private void loadScenario() throws IOException
     {
@@ -1442,10 +1439,10 @@ public class MainFrame
 
     private void updateJMeterController()
     {
-        scenario.getConfiguration().getjMeterConfiguration().setStepProcessorScript(jmeter,
-                stepProcessScript.getText());
-        scenario.getConfiguration().getjMeterConfiguration().setScenarioProcessorScript(jmeter,
-                scenarioProcessScript.getText());
+        scenario.getConfiguration().getjMeterConfiguration()
+                .setStepProcessorScript(jmeter, stepProcessScript.getText());
+        scenario.getConfiguration().getjMeterConfiguration()
+                .setScenarioProcessorScript(jmeter, scenarioProcessScript.getText());
     }
 
     private void updateOptionsController()

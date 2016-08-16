@@ -7,9 +7,8 @@ import javax.servlet.http.HttpServletResponse;
 
 /**
  * Interface to define custom logic to serve tracked data from a browser
- * 
- * @author Denis V. Kirpichenkov
  *
+ * @author Denis V. Kirpichenkov
  */
 public interface RecordingProcessor
 {

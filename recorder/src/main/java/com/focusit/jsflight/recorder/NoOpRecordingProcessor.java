@@ -7,9 +7,8 @@ import javax.servlet.http.HttpServletResponse;
 
 /**
  * Do nothing recording processor
- * 
- * @author Denis V. Kirpichenkov
  *
+ * @author Denis V. Kirpichenkov
  */
 public class NoOpRecordingProcessor implements RecordingProcessor
 {

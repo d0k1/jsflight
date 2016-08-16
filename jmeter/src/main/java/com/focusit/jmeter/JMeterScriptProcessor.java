@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import com.focusit.script.ScriptEngine;
 import com.focusit.script.ScriptsClassLoader;
+import com.focusit.script.constants.ScriptBindingConstants;
 
 import groovy.lang.Binding;
 import groovy.lang.Script;
@@ -19,7 +20,7 @@ import groovy.lang.Script;
  */
 public class JMeterScriptProcessor
 {
-    private static final Logger log = LoggerFactory.getLogger(JMeterScriptProcessor.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JMeterScriptProcessor.class);
     // script called at recording phase. Can skip sample
     private String recordingScript;
     // script callled at storing phase. Can skip sample
@@ -31,6 +32,7 @@ public class JMeterScriptProcessor
     public JMeterScriptProcessor(JMeterRecorder recorder, ScriptsClassLoader classLoader)
     {
         this.classLoader = classLoader;
+        LOG.info(classLoader == null ? "Classloader is null" : classLoader.toString());
         engine = new ScriptEngine(classLoader);
         this.recorder = recorder;
     }
@@ -65,24 +67,24 @@ public class JMeterScriptProcessor
     public boolean processSampleDuringRecord(HTTPSamplerBase sampler, SampleResult result)
     {
         Binding binding = new Binding();
-        binding.setVariable("logger", log);
-        binding.setVariable("request", sampler);
-        binding.setVariable("response", result);
-        binding.setVariable("ctx", recorder.getContext());
-        binding.setVariable("jsflight", recorder.getBridge());
-        binding.setVariable("classloader", classLoader);
+        binding.setVariable(ScriptBindingConstants.LOGGER, LOG);
+        binding.setVariable(ScriptBindingConstants.REQUEST, sampler);
+        binding.setVariable(ScriptBindingConstants.RESPONSE, result);
+        binding.setVariable(ScriptBindingConstants.CONTEXT, recorder.getContext());
+        binding.setVariable(ScriptBindingConstants.JSFLIGHT, recorder.getBridge());
+        binding.setVariable(ScriptBindingConstants.CLASSLOADER, classLoader);
 
         boolean isOk = true;
 
         Script s = engine.getThreadBindedScript(recordingScript);
         if (s == null)
         {
-            log.error(Thread.currentThread().getName() + ":" + "Sample " + sampler.getName()
+            LOG.warn(Thread.currentThread().getName() + ":Sample " + sampler.getName()
                     + "No script found. default result " + isOk);
             return isOk;
         }
         s.setBinding(binding);
-        log.info(Thread.currentThread().getName() + ":" + "running " + sampler.getName() + " compiled script");
+        LOG.info(Thread.currentThread().getName() + ":running " + sampler.getName() + " compiled script");
         Object scriptResult = s.run();
 
         if (scriptResult != null && scriptResult instanceof Boolean)
@@ -91,29 +93,30 @@ public class JMeterScriptProcessor
         }
         else
         {
-            log.error(Thread.currentThread().getName() + ":" + "Sample " + sampler.getName()
+            LOG.warn(Thread.currentThread().getName() + ":Sample " + sampler.getName()
                     + " script result UNDEFINED shifted to" + isOk);
         }
 
-        log.error(Thread.currentThread().getName() + ":" + "Sample " + sampler.getName() + " script result " + isOk);
+        LOG.info(Thread.currentThread().getName() + ":" + "Sample " + sampler.getName() + " script result " + isOk);
         return isOk;
     }
 
     /**
      * Post process every stored request just before it get saved to disk
-     * @param sample  recorded http-request (sample)
-     * @param tree HashTree (XML like data structure) that represents exact recorded sample
+     *
+     * @param sample recorded http-request (sample)
+     * @param tree   HashTree (XML like data structure) that represents exact recorded sample
      */
     public void processScenario(HTTPSamplerBase sample, HashTree tree, Arguments userVariables)
     {
         Binding binding = new Binding();
-        binding.setVariable("logger", log);
-        binding.setVariable("sample", sample);
-        binding.setVariable("tree", tree);
-        binding.setVariable("ctx", recorder.getContext());
-        binding.setVariable("jsflight", recorder.getBridge());
-        binding.setVariable("vars", userVariables);
-        binding.setVariable("classloader", classLoader);
+        binding.setVariable(ScriptBindingConstants.LOGGER, LOG);
+        binding.setVariable(ScriptBindingConstants.SAMPLE, sample);
+        binding.setVariable(ScriptBindingConstants.TREE, tree);
+        binding.setVariable(ScriptBindingConstants.CONTEXT, recorder.getContext());
+        binding.setVariable(ScriptBindingConstants.JSFLIGHT, recorder.getBridge());
+        binding.setVariable(ScriptBindingConstants.USER_VARIABLES, userVariables);
+        binding.setVariable(ScriptBindingConstants.CLASSLOADER, classLoader);
 
         Script compiledProcessScript = engine.getThreadBindedScript(processScript);
         if (compiledProcessScript == null)

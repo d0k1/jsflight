@@ -1,18 +1,24 @@
 package com.focusit.jsflight.player.config;
 
-import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.annotation.Transient;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.focusit.script.ScriptsClassLoader;
+import com.focusit.script.constants.ScriptBindingConstants;
 
 /**
  * Common configuration i.e. everything about player. browser settings, timeout settings
@@ -23,6 +29,7 @@ public class CommonConfiguration
     private static final Logger LOG = LoggerFactory.getLogger(CommonConfiguration.class);
     private static final String CHECK_PAGE_JS_DEFAULT = "return (document.getElementById('state.dispatch')==null || document.getElementById('state.dispatch').getAttribute('value')==0) &&  (document.getElementById('state.context')==null ||  document.getElementById('state.context').getAttribute('value')=='ready');";
     @Transient
+    @JsonIgnore
     private ReentrantLock scriptClassloaderLock;
     private String proxyPort;
     private String proxyHost;
@@ -44,7 +51,11 @@ public class CommonConfiguration
     private int pageShownTimeout;
     private Map<String, Object> customProperties = new ConcurrentHashMap<>();
     private String extraClasspath = null;
-    private String driverSignalScript = "\"kill ${signal} ${webDriver.binary.process.process.executeWatchdog.getPID()}\".execute()";
+    private String processSignalScript = String.format("\"kill ${%s} ${%s}\".execute()", ScriptBindingConstants.SIGNAL,
+            ScriptBindingConstants.PID);
+    private String getFirefoxPidScript = String.format(
+            "\"echo ${%s.binary.process.process.executeWatchdog.getPID()}\".execute().text",
+            ScriptBindingConstants.WEB_DRIVER);
     /**
      * Timeout in seconds for UI to appear
      */
@@ -54,8 +65,10 @@ public class CommonConfiguration
      */
     private long intervalBetweenUiChecksMs = 2000;
     @Transient
+    @JsonIgnore
     transient private ArrayList<URL> urls = new ArrayList<>();
     @Transient
+    @JsonIgnore
     transient private ScriptsClassLoader scriptClassloader = null;
 
     public CommonConfiguration()
@@ -64,14 +77,27 @@ public class CommonConfiguration
         scriptClassloaderLock = new ReentrantLock();
     }
 
-    public String getDriverSignalScript()
+    private static URL toUrl(Path file)
     {
-        return driverSignalScript;
+        try
+        {
+            return file.toUri().toURL();
+        }
+        catch (MalformedURLException e)
+        {
+            LOG.error(e.toString(), e);
+            return null;
+        }
     }
 
-    public void setDriverSignalScript(String driverSignalScript)
+    public String getProcessSignalScript()
     {
-        this.driverSignalScript = driverSignalScript;
+        return processSignalScript;
+    }
+
+    public void setProcessSignalScript(String processSignalScript)
+    {
+        this.processSignalScript = processSignalScript;
     }
 
     public long getIntervalBetweenUiChecksMs()
@@ -96,30 +122,14 @@ public class CommonConfiguration
 
     private void findClasspathForScripts(String path)
     {
-        if (path == null)
+        try
         {
-            return;
+            urls.addAll(Files.walk(Paths.get(path)).filter(Files::isRegularFile).map(CommonConfiguration::toUrl)
+                    .filter(Objects::nonNull).collect(Collectors.toList()));
         }
-
-        if (path.isEmpty())
+        catch (Exception e)
         {
-            return;
-        }
-
-        File f = new File(path);
-        if (f != null)
-        {
-            try
-            {
-                for (File file : f.listFiles())
-                {
-                    urls.add(file.toURI().toURL());
-                }
-            }
-            catch (MalformedURLException e)
-            {
-                LOG.error(e.toString(), e);
-            }
+            LOG.error(e.toString(), e);
         }
     }
 
@@ -155,7 +165,7 @@ public class CommonConfiguration
 
     public boolean getMakeShots()
     {
-        return Boolean.valueOf(makeShots);
+        return makeShots;
     }
 
     public void setMakeShots(boolean makeShots)
@@ -301,21 +311,34 @@ public class CommonConfiguration
         }
         if (getMaxElementGroovy() == null)
         {
-            setMaxElementGroovy(
-                    "def list = webdriver.findElements(org.openqa.selenium.By.xpath(\"//div[@id='gwt-debug-PopupListSelect']//div[@__idx]\"));\n"
-                            + "\n" + "def maxEl = null;\n" + "Integer val = null;\n" + "\n" + "def tempEl = null;\n"
-                            + "def tempVal = 0;\n" + "\n" + "for(int i=0;i<list.size();i++)\n" + "{\n"
-                            + "\ttempEl = list.get(i);\n"
-                            + "\ttempVal = Integer.parseInt(tempEl.getAttribute(\"__idx\"));\n" + "\n"
-                            + "\tif(maxEl==null)\n" + "\t{\n" + "\t\tmaxEl = tempEl;\n" + "\t\tval = tempVal;\n"
-                            + "\t\tcontinue;\n" + "\t}\n" + "\n" + "\tif(val<tempVal){\n" + "\t\tmaxEl = tempEl;\n"
-                            + "\t\tval = tempVal;\n" + "\t}\n" + "}\n" + "\n" + "return maxEl;\n");
+            setMaxElementGroovy("def list = webdriver.findElements(org.openqa.selenium.By.xpath(\"//div[@id='gwt-debug-PopupListSelect']//div[@__idx]\"));\n"
+                    + "\n"
+                    + "def maxEl = null;\n"
+                    + "Integer val = null;\n"
+                    + "\n"
+                    + "def tempEl = null;\n"
+                    + "def tempVal = 0;\n"
+                    + "\n"
+                    + "for(int i=0;i<list.size();i++)\n"
+                    + "{\n"
+                    + "\ttempEl = list.get(i);\n"
+                    + "\ttempVal = Integer.parseInt(tempEl.getAttribute(\"__idx\"));\n"
+                    + "\n"
+                    + "\tif(maxEl==null)\n"
+                    + "\t{\n"
+                    + "\t\tmaxEl = tempEl;\n"
+                    + "\t\tval = tempVal;\n"
+                    + "\t\tcontinue;\n"
+                    + "\t}\n"
+                    + "\n"
+                    + "\tif(val<tempVal){\n"
+                    + "\t\tmaxEl = tempEl;\n"
+                    + "\t\tval = tempVal;\n" + "\t}\n" + "}\n" + "\n" + "return maxEl;\n");
         }
 
         if (getUiShownScript() == null)
         {
-            setUiShownScript(
-                    "return webdriver.findElement(org.openqa.selenium.By.xpath(\"//*[@id='gwt-debug-editProfile']\"));");
+            setUiShownScript("return webdriver.findElement(org.openqa.selenium.By.xpath(\"//*[@id='gwt-debug-editProfile']\"));");
         }
 
         if (getFormOrDialogXpath() == null)
@@ -344,8 +367,8 @@ public class CommonConfiguration
                 urls.clear();
                 findClasspathForScripts(System.getProperty("cp"));
                 findClasspathForScripts(getExtraClasspath());
-                scriptClassloader = new ScriptsClassLoader(this.getClass().getClassLoader(),
-                        urls.toArray(new URL[urls.size()]));
+                scriptClassloader = new ScriptsClassLoader(this.getClass().getClassLoader(), urls.toArray(new URL[urls
+                        .size()]));
             }
             return scriptClassloader;
         }
@@ -391,5 +414,10 @@ public class CommonConfiguration
     public void deleteCustomProperty(String property)
     {
         customProperties.remove(property);
+    }
+
+    public String getGetFirefoxPidScript()
+    {
+        return getFirefoxPidScript;
     }
 }

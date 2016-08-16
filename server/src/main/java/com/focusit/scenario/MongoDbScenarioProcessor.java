@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory;
 
 import com.focusit.jsflight.player.scenario.ScenarioProcessor;
 import com.focusit.jsflight.player.scenario.UserScenario;
-import com.focusit.jsflight.player.script.PlayerScriptProcessor;
 import com.focusit.jsflight.player.webdriver.SeleniumDriver;
 import com.focusit.player.ErrorInBrowserPlaybackException;
 import com.focusit.service.MongoDbStorageService;
@@ -38,16 +37,12 @@ public class MongoDbScenarioProcessor extends ScenarioProcessor
     {
         try
         {
-            String script = scenario.getConfiguration().getWebConfiguration().getFindBrowserErrorScript();
-            Object result = new PlayerScriptProcessor(scenario).executeWebLookupScript(script, wd, null, null);
-            if (null != result.toString())
-            {
-                throw new ErrorInBrowserPlaybackException("Browser contains some error after step processing");
-            }
+            super.hasBrowserAnError(scenario, wd);
         }
-        catch (Exception e)
+        catch (IllegalStateException e)
         {
-            LOG.debug(e.toString(), e);
+            LOG.error(e.toString(), e);
+            throw new ErrorInBrowserPlaybackException(e.getMessage());
         }
     }
 
@@ -66,8 +61,8 @@ public class MongoDbScenarioProcessor extends ScenarioProcessor
     }
 
     @Override
-    protected void makeAShot(UserScenario scenario, SeleniumDriver seleniumDriver, WebDriver theWebDriver, int position,
-            boolean isError)
+    protected void makeAShot(UserScenario scenario, SeleniumDriver seleniumDriver, WebDriver theWebDriver,
+            int position, boolean isError)
     {
         MongoDbScenario mongoDbScenario = (MongoDbScenario)scenario;
 

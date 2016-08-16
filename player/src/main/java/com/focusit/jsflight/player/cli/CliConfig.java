@@ -63,8 +63,7 @@ public class CliConfig
     @Parameter(names = { "-seh", "--scripteventhandler" }, description = "Path to script that handles script events")
     private String scriptEventHandlerScriptPath = "scripts/scriptEventHandler.groovy";
 
-    @Parameter(names = { "-urc",
-            "--userandomchars" }, description = "Use random chars for keypress events instead of recorded ones")
+    @Parameter(names = { "-urc", "--userandomchars" }, description = "Use random chars for keypress events instead of recorded ones")
     private boolean useRandomChars = false;
 
     @Parameter(names = { "-h", "--help" }, description = "Show this help")
@@ -73,12 +72,10 @@ public class CliConfig
     @Parameter(names = { "-js1", "--jmeterpreprocesstep" }, description = "Script to preprocess jmeter's sample")
     private String jmeterStepPreprocess;
 
-    @Parameter(names = { "-js2",
-            "--jmeterpreprocesscenario" }, description = "Script to preprocess whole jmeter's scenario item just before saving to disk")
+    @Parameter(names = { "-js2", "--jmeterpreprocesscenario" }, description = "Script to preprocess whole jmeter's scenario item just before saving to disk")
     private String jmeterScenarioPreprocess;
 
-    @Parameter(names = { "-fdxp",
-            "--formdialogxpath" }, description = "Xpath to detect if window has open form or dialog. If specified unused browser windows will be closed")
+    @Parameter(names = { "-fdxp", "--formdialogxpath" }, description = "Xpath to detect if window has open form or dialog. If specified unused browser windows will be closed")
     private String formDialogXpath = "";
 
     public String getDuplicateHandlerScriptPath()
@@ -94,6 +91,11 @@ public class CliConfig
     public String getFinishStep()
     {
         return finishStep;
+    }
+
+    public void setFinishStep(String finishStep)
+    {
+        this.finishStep = finishStep;
     }
 
     public String getFormDialogXpath()
@@ -199,11 +201,6 @@ public class CliConfig
     public boolean isUseRandomChars()
     {
         return useRandomChars;
-    }
-
-    public void setFinishStep(String finishStep)
-    {
-        this.finishStep = finishStep;
     }
 
     public boolean showHelp()

@@ -1,10 +1,11 @@
 package com.focusit.jsflight.player.ui;
 
-import com.focusit.jsflight.player.scenario.UserScenario;
+import java.awt.*;
 
 import javax.swing.*;
 import javax.swing.table.TableCellEditor;
-import java.awt.*;
+
+import com.focusit.jsflight.player.scenario.UserScenario;
 
 public class StepScriptEditorDialog extends DefaultCellEditor implements TableCellEditor
 {
@@ -70,8 +71,8 @@ public class StepScriptEditorDialog extends DefaultCellEditor implements TableCe
     @Override
     public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column)
     {
-        oldValue = scenario.getStepAt(row).has(stepProperty)
-                ? oldValue = scenario.getStepAt(row).getString(stepProperty) : "";
+        oldValue = scenario.getStepAt(row).has(stepProperty) ? oldValue = scenario.getStepAt(row).getString(
+                stepProperty) : "";
 
         newInput = oldValue;
 

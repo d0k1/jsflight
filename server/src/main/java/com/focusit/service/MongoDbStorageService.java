@@ -58,8 +58,7 @@ public class MongoDbStorageService
 
     public InputStream getErrorScreenShot(String recordingName, String experimentId, int step)
     {
-        String fname = new String(
-                recordingName + "_" + experimentId + "_error_" + String.format("%05d", step) + ".png");
+        String fname = new String(recordingName + "_" + experimentId + "_error_" + String.format("%05d", step) + ".png");
         return getStreamByFilename(fname);
     }
 

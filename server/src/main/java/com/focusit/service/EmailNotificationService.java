@@ -97,38 +97,34 @@ public class EmailNotificationService
         }
     }
 
-    public void notifyScenarioPaused(MongoDbScenario scenario, Throwable ex)
+    public void notifySubscribers(MongoDbScenario scenario, Throwable ex, String message)
     {
         SimpleMailMessage mailMessage = getMessageTemplate(scenario, ex);
-        mailMessage.setSubject("[" + scenario.getScenarioFilename() + "] Scenario paused");
+        mailMessage.setSubject("[" + scenario.getScenarioFilename() + "] Scenario " + message);
         sendMail(mailMessage);
     }
 
-    public void notifyScenarioTerminated(MongoDbScenario scenario, Throwable ex)
+    public void notifySubscribers(MongoDbScenario scenario, Throwable ex, EventType eventType)
     {
-        SimpleMailMessage mailMessage = getMessageTemplate(scenario, ex);
-        mailMessage.setSubject("[" + scenario.getScenarioFilename() + "] Scenario terminated");
-        sendMail(mailMessage);
+        notifySubscribers(scenario, ex, eventType.toString());
     }
 
-    public void notifyScenarioDone(MongoDbScenario scenario, Throwable ex)
+    public enum EventType
     {
-        SimpleMailMessage mailMessage = getMessageTemplate(scenario, ex);
-        mailMessage.setSubject("[" + scenario.getScenarioFilename() + "] Scenario done!!");
-        sendMail(mailMessage);
-    }
+        PUASED("paused"), TERMINATED("terminated"), DONE("done"), ERROR_IN_BROWSER("error in browser"), UNKNOWN_ERROR(
+                "unknown exception");
 
-    public void notifyErrorInBrowserOccured(MongoDbScenario scenario, Throwable ex)
-    {
-        SimpleMailMessage mailMessage = getMessageTemplate(scenario, ex);
-        mailMessage.setSubject("[" + scenario.getScenarioFilename() + "] Scenario error in browser");
-        sendMail(mailMessage);
-    }
+        private String text;
 
-    public void notifyUnknownException(MongoDbScenario scenario, Throwable ex)
-    {
-        SimpleMailMessage mailMessage = getMessageTemplate(scenario, ex);
-        mailMessage.setSubject("[" + scenario.getScenarioFilename() + "] Scenario unknown exception");
-        sendMail(mailMessage);
+        EventType(String text)
+        {
+            this.text = text;
+        }
+
+        @Override
+        public String toString()
+        {
+            return text;
+        }
     }
 }

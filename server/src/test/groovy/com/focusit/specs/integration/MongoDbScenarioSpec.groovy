@@ -130,12 +130,12 @@ public class MongoDbScenarioSpec extends Specification {
 
         MongoDbScenario scenario = new MongoDbScenario(experiment, eventRepositoryCustom, experimentRepository);
         when:
-        scenario.next();
+        scenario.moveToNextStep();
         then:
         experimentRepository.findOne(experiment.getId()).position == position + 1;
     }
 
-    def "next zeroes position in experiment and persists it when no more steps left in the experiment"() {
+    def "next doesn't change the position tin experiment after last step has passed"() {
         given:
         String recordingId1 = new ObjectId();
         int position = 10;
@@ -147,8 +147,8 @@ public class MongoDbScenarioSpec extends Specification {
 
         MongoDbScenario scenario = new MongoDbScenario(experiment, eventRepositoryCustom, experimentRepository);
         when:
-        scenario.next();
+        scenario.moveToNextStep();
         then:
-        experimentRepository.findOne(experiment.getId()).position == 0;
+        experimentRepository.findOne(new ObjectId(experiment.getId())).position == position;
     }
 }

@@ -7,9 +7,8 @@ import javax.servlet.http.HttpServletResponse;
 
 /**
  * A custom logic example to serve tracked data
- * 
- * @author Denis V. Kirpichenkov
  *
+ * @author Denis V. Kirpichenkov
  */
 public class ExampleRecordingProcessor implements RecordingProcessor
 {

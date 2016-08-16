@@ -1,36 +1,33 @@
 package com.focusit.jsflight.player.script;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.regex.Matcher;
-
-import javax.annotation.Nullable;
-
+import com.focusit.jsflight.player.constants.EventConstants;
+import com.focusit.jsflight.player.scenario.UserScenario;
+import com.focusit.script.ScriptEngine;
+import com.focusit.script.constants.ScriptBindingConstants;
+import groovy.lang.Binding;
+import groovy.lang.Script;
+import groovy.text.SimpleTemplateEngine;
 import org.json.JSONObject;
-import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.focusit.jsflight.player.scenario.UserScenario;
-import com.focusit.jsflight.player.webdriver.WebDriverWrapper;
-import com.focusit.script.ScriptEngine;
-
-import groovy.lang.Binding;
-import groovy.lang.Script;
-import groovy.text.SimpleTemplateEngine;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
 
 /**
  * PlayerScriptProcessor that runs groovy scripts or GString templates
- * 
- * @author Denis V. Kirpichenkov
  *
+ * @author Denis V. Kirpichenkov
  */
 public class PlayerScriptProcessor
 {
-    private static final Logger log = LoggerFactory.getLogger(PlayerScriptProcessor.class);
+    private static final Logger LOG = LoggerFactory.getLogger(PlayerScriptProcessor.class);
     private ScriptEngine engine;
     private UserScenario scenario;
 
@@ -40,19 +37,21 @@ public class PlayerScriptProcessor
         this.scenario = scenario;
     }
 
+    public static Map<String, Object> getEmptyBindingsMap()
+    {
+        return new HashMap<>();
+    }
+
     public boolean executeSelectDeterminerScript(String script, WebDriver wd, WebElement element)
     {
-        Binding binding = getBasicBinding();
-        binding.setVariable("webdriver", wd);
-        binding.setVariable("element", element);
+        Map<String, Object> binding = getEmptyBindingsMap();
+        binding.put(ScriptBindingConstants.WEB_DRIVER, wd);
+        binding.put(ScriptBindingConstants.ELEMENT, element);
 
-        Script scr = engine.getThreadBindedScript(script);
-        scr.setBinding(binding);
-        return (boolean)scr.run();
+        return executeGroovyScript(script, binding, Boolean.class);
     }
 
     /**
-     *
      * @param script
      * @param currentEvent
      * @param prevEvent
@@ -60,103 +59,79 @@ public class PlayerScriptProcessor
      */
     public boolean executeDuplicateHandlerScript(String script, JSONObject currentEvent, JSONObject prevEvent)
     {
-        Binding binding = getBasicBinding();
-        binding.setVariable("current", currentEvent);
-        binding.setVariable("previous", prevEvent);
-        Script scr = engine.getThreadBindedScript(script);
+        Map<String, Object> binding = getEmptyBindingsMap();
+        binding.put(ScriptBindingConstants.CURRENT, currentEvent);
+        binding.put(ScriptBindingConstants.PREVIOUS, prevEvent);
 
-        if (scr == null)
+        try
         {
+            return executeGroovyScript(script, binding, Boolean.class);
+        }
+        catch (Throwable e)
+        {
+            LOG.warn("Failed to create duplicateHandler script. Default value is false", e);
             return false;
         }
-
-        scr.setBinding(binding);
-        return (boolean)scr.run();
     }
 
     public void executeScriptEvent(String script, JSONObject event)
     {
-        Binding binging = getBasicBinding();
-        binging.setVariable("event", event);
+        Map<String, Object> binding = getEmptyBindingsMap();
+        binding.put(ScriptBindingConstants.EVENT, event);
 
-        Script scr = engine.getThreadBindedScript(script);
-        scr.setBinding(binging);
-        scr.run();
-    }
-
-    /**
-     * @return found element for further processing or null
-     */
-    @Nullable
-    public Object executeWebLookupScript(String script, WebDriver wd, String target, JSONObject event)
-    {
-        Binding binding = getBasicBinding();
-        binding.setVariable("webdriver", wd);
-        binding.setVariable("target", target);
-        binding.setVariable("event", event);
-        Script scr = engine.getThreadBindedScript(script);
-
-        if (scr == null)
-        {
-            throw new NoSuchElementException("no web lookup script provided");
-        }
-
-        scr.setBinding(binding);
-        return scr.run();
+        executeGroovyScript(script, binding);
     }
 
     /**
      * Modifies existing array of events.
      * Modification defined by script
+     *
      * @param events
      */
     public void postProcessScenario(String script, List<JSONObject> events)
     {
-        Binding binding = getBasicBinding();
-        //binding.setVariable("context", context);
-        binding.setVariable("events", events);
-        Script s = engine.getThreadBindedScript(script);
+        Map<String, Object> binding = getEmptyBindingsMap();
+        binding.put(ScriptBindingConstants.EVENTS, events);
 
-        if (s == null)
+        try
         {
-            return;
+            executeGroovyScript(script, binding);
         }
-
-        s.setBinding(binding);
-        s.run();
+        catch (Throwable ignored)
+        {
+        }
     }
 
     public void runStepPrePostScript(JSONObject event, int step, boolean pre)
     {
-        String script = "";
+        String script;
         if (pre)
         {
-            script = event.has("pre") ? event.getString("pre") : "";
+            script = event.has(EventConstants.PRE) ? event.getString(EventConstants.PRE) : "";
         }
         else
         {
-            script = event.has("post") ? event.getString("post") : "";
+            script = event.has(EventConstants.POST) ? event.getString(EventConstants.POST) : "";
         }
 
-        if (script.trim().length() == 0)
+        if (script.trim().isEmpty())
         {
             return;
         }
 
-        Binding binding = getBasicBinding();
-        binding.setVariable("scenario", scenario);
-        binding.setVariable("step", step);
-        binding.setVariable("pre", pre);
-        binding.setVariable("post", !pre);
-        Script s = engine.getThreadBindedScript(script);
+        Map<String, Object> binding = getEmptyBindingsMap();
+        binding.put(ScriptBindingConstants.SCENARIO, scenario);
+        binding.put(ScriptBindingConstants.STEP, step);
+        binding.put(ScriptBindingConstants.PRE, pre);
+        binding.put(ScriptBindingConstants.POST, !pre);
 
-        if (s == null)
+        try
         {
-            return;
+            executeGroovyScript(script, binding);
         }
-
-        s.setBinding(binding);
-        s.run();
+        catch (Throwable ignored)
+        {
+        }
     }
 
     public JSONObject runStepTemplating(UserScenario scenario, JSONObject step)
@@ -178,7 +153,7 @@ public class PlayerScriptProcessor
                 }
                 catch (Exception e)
                 {
-                    log.error(e.toString(), e);
+                    LOG.error(e.toString(), e);
                 }
             }
         });
@@ -188,40 +163,62 @@ public class PlayerScriptProcessor
     /**
      * Test of events modification script.
      * Doesn't modify real loaded events. just use it's clone, modify and println every event to stdout
+     *
      * @param events
      */
     public void testPostProcess(String script, List<JSONObject> events)
     {
-        Binding binding = getBasicBinding();
-        binding.setVariable("ctx", new ConcurrentHashMap<>());
-        binding.setVariable("events", new ArrayList<>(events));
+        Map<String, Object> binding = getEmptyBindingsMap();
+        binding.put(ScriptBindingConstants.CONTEXT, new ConcurrentHashMap<>());
+        binding.put(ScriptBindingConstants.EVENTS, new ArrayList<>(events));
 
-        Script s = engine.getThreadBindedScript(script);
-        s.setBinding(binding);
-        s.run();
+        executeGroovyScript(script, binding);
     }
 
-    public void executeDriverSignalScript(String script, WebDriver wd, int signal)
+    public void executeProcessSignalScript(String script, int signal, String pid)
     {
-        Binding binding = getBasicBinding();
-        binding.setVariable("signal", signal);
-        WebDriver d = wd instanceof WebDriverWrapper ? ((WebDriverWrapper)wd).getWrappedDriver() : wd;
-        binding.setVariable("webdriver", d);
+        Map<String, Object> binding = getEmptyBindingsMap();
+        binding.put(ScriptBindingConstants.SIGNAL, signal);
+        binding.put(ScriptBindingConstants.PID, pid);
 
-        Script scr = engine.getThreadBindedScript(script);
-        scr.setBinding(binding);
-        scr.run();
+        executeGroovyScript(script, binding);
     }
 
-    private Binding getBasicBinding()
+    public Object executeGroovyScript(String script, Map<String, Object> bindings)
     {
-
-        Binding basicBinding = new Binding();
-        basicBinding.setVariable("logger", log);
-        basicBinding.setVariable("classloader", engine.getClassLoader());
-        basicBinding.setVariable("playerContext", scenario.getContext());
-
-        return basicBinding;
+        return executeGroovyScript(script, bindings, Object.class);
     }
 
+    public <T> T executeGroovyScript(String scriptBody, Map<String, Object> bindings, Class<T> clazz)
+    {
+        LOG.debug("Executing script:\n", scriptBody);
+        Binding binding = new Binding(bindings);
+        addBasicBindings(binding);
+
+        Script script = engine.getThreadBindedScript(scriptBody);
+
+        if (script == null)
+        {
+            LOG.error("Failed to create script");
+            throw new RuntimeException("Failed to create script:" + scriptBody);
+        }
+
+        script.setBinding(binding);
+        try
+        {
+            return clazz.cast(script.run());
+        }
+        catch (ClassCastException ex)
+        {
+            LOG.warn(ex.getMessage(), ex);
+            return null;
+        }
+    }
+
+    private void addBasicBindings(Binding binding)
+    {
+        binding.setVariable(ScriptBindingConstants.LOGGER, LOG);
+        binding.setVariable(ScriptBindingConstants.CLASSLOADER, engine.getClassLoader());
+        binding.setVariable(ScriptBindingConstants.PLAYER_CONTEXT, scenario.getContext());
+    }
 }

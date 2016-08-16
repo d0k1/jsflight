@@ -28,8 +28,8 @@ import com.focusit.script.jmeter.JMeterRecorderContext;
 
 /**
  * Interface to control jmeter proxy recorder
- * @author Denis V. Kirpichenkov
  *
+ * @author Denis V. Kirpichenkov
  */
 public class JMeterRecorder
 {

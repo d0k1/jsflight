@@ -1,10 +1,5 @@
 package com.focusit.jsflight.player.input;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.LineIterator;
-import org.json.JSONArray;
-import org.json.JSONObject;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -12,11 +7,15 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.LineIterator;
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 /**
  * File read / write
- * 
- * @author Denis V. Kirpichenkov
  *
+ * @author Denis V. Kirpichenkov
  */
 public class FileInput
 {
@@ -30,11 +29,13 @@ public class FileInput
     public static String getLineContent(String file) throws IOException
     {
 
-        if(fileLineIterator==null){
+        if (fileLineIterator == null)
+        {
             fileLineIterator = FileUtils.lineIterator(new File(file), "UTF-8");
         }
 
-        if(fileLineIterator.hasNext()) {
+        if (fileLineIterator.hasNext())
+        {
             return fileLineIterator.nextLine();
         }
 

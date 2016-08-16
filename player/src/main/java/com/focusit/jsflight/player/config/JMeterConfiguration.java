@@ -1,13 +1,15 @@
 package com.focusit.jsflight.player.config;
 
-import com.focusit.jmeter.JMeterRecorder;
+import java.io.IOException;
+import java.io.InputStream;
+
+import javax.annotation.Nullable;
+
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
-import java.io.IOException;
-import java.io.InputStream;
+import com.focusit.jmeter.JMeterRecorder;
 
 /**
  * Created by dkirpichenkov on 06.05.16.
@@ -60,29 +62,42 @@ public class JMeterConfiguration
         }
     }
 
-    private void loadDefaultStepProcessorScript(){
-        try {
-            InputStream script = this.getClass().getClassLoader().getResourceAsStream("example-scripts/jmeter/step/example02.groovy");
-            if(script!=null) {
+    private void loadDefaultStepProcessorScript()
+    {
+        try
+        {
+            InputStream script = this.getClass().getClassLoader()
+                    .getResourceAsStream("example-scripts/jmeter/step/example02.groovy");
+            if (script != null)
+            {
                 stepProcessorScript = IOUtils.toString(script, "UTF-8");
             }
-        } catch (IOException e) {
+        }
+        catch (IOException e)
+        {
             LOG.error(e.toString(), e);
         }
     }
 
-    private void loadDefaultScenarioProcessorScript(){
-        try {
-            InputStream script = this.getClass().getClassLoader().getResourceAsStream("example-scripts/jmeter/scenario/example03.groovy");
-            if(script!=null) {
+    private void loadDefaultScenarioProcessorScript()
+    {
+        try
+        {
+            InputStream script = this.getClass().getClassLoader()
+                    .getResourceAsStream("example-scripts/jmeter/scenario/example03.groovy");
+            if (script != null)
+            {
                 scenarioProcessorScript = IOUtils.toString(script, "UTF-8");
             }
-        } catch (IOException e) {
+        }
+        catch (IOException e)
+        {
             LOG.error(e.toString(), e);
         }
     }
 
-    public void loadDefaults(){
+    public void loadDefaults()
+    {
         loadDefaultStepProcessorScript();
         loadDefaultScenarioProcessorScript();
     }

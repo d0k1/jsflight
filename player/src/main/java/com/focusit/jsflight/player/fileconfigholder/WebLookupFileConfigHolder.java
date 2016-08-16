@@ -1,9 +1,9 @@
 package com.focusit.jsflight.player.fileconfigholder;
 
-import com.focusit.jsflight.player.config.WebConfiguration;
-
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+
+import com.focusit.jsflight.player.config.WebConfiguration;
 
 public class WebLookupFileConfigHolder extends UIFileConfigHolder
 {

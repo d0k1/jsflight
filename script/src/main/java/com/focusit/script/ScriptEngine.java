@@ -5,6 +5,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.Nullable;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
 import groovy.lang.Script;
@@ -19,7 +22,8 @@ public class ScriptEngine
 {
     // Storage to hold compiled script(s) in thread's bounds. Thread safe!
     // One script for one thread. No way to manipulate script's bindings outside calling thread
-    private static final ThreadLocal<HashMap<String, Script>> threadBindedScripts = new ThreadLocal();
+    private static final ThreadLocal<HashMap<String, Script>> threadBindedScripts = new ThreadLocal<>();
+    private static final Logger LOG = LoggerFactory.getLogger(ScriptEngine.class);
     // General purpose script storage.
     // Not Thread Safe, because compiled script has writable bindings. So one thread can easily change other one's bindings
     private final ConcurrentHashMap<String, Script> generalScripts = new ConcurrentHashMap<>();
@@ -32,11 +36,12 @@ public class ScriptEngine
         }
     };
     private volatile ClassLoader loader;
-    private final GroovyShell shell = new GroovyShell(loader);
+    private GroovyShell shell;
 
     public ScriptEngine(ClassLoader classLoader)
     {
         this.loader = classLoader;
+        shell = new GroovyShell(loader);
     }
 
     public ClassLoader getClassLoader()
@@ -85,6 +90,7 @@ public class ScriptEngine
 
         if (script == null)
         {
+
             return null;
         }
 

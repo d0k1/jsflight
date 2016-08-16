@@ -1,8 +1,8 @@
 package com.focusit.script.jmeter;
 
-import org.json.JSONObject;
-
 import java.util.concurrent.ConcurrentHashMap;
+
+import org.json.JSONObject;
 
 /**
  * Class holds references to user scenario step and associated http samples.
@@ -11,7 +11,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public class JMeterJSFlightBridge
 {
     public final JSONObject NO_SCENARIO_STEP;
-    public static String TAG_FIELD = "uuid";
     private final ConcurrentHashMap<Object, JSONObject> samplersEvents = new ConcurrentHashMap<>();
     private JSONObject currentScenarioStep;
 
@@ -27,7 +26,8 @@ public class JMeterJSFlightBridge
         samplersEvents.put(sampler, getCurrentScenarioStep());
     }
 
-    public boolean isCurrentStepEmpty(){
+    public boolean isCurrentStepEmpty()
+    {
         return currentScenarioStep.equals(NO_SCENARIO_STEP);
     }
 
@@ -43,8 +43,6 @@ public class JMeterJSFlightBridge
 
     public JSONObject getSourceEvent(Object sampler)
     {
-    	JSONObject result = samplersEvents.get(sampler);
-
-    	return result;
+        return samplersEvents.get(sampler);
     }
 }

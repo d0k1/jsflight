@@ -27,7 +27,8 @@ public class SettingsService
     private volatile Settings settings;
 
     @Inject
-    public SettingsService(SettingsRepository repository) {
+    public SettingsService(SettingsRepository repository)
+    {
         this.repository = repository;
     }
 

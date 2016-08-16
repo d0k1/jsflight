@@ -14,9 +14,8 @@ import org.apache.commons.io.IOUtils;
 /**
  * Servlet to process tracked data from a browser.
  * It's logic can be overrided by {@link RecorderProcessor}
- * 
- * @author Denis V. Kirpichenkov
  *
+ * @author Denis V. Kirpichenkov
  */
 @WebServlet(urlPatterns = { "/jsflight/recorder/storage" })
 public class RecorderStorageServlet extends HttpServlet

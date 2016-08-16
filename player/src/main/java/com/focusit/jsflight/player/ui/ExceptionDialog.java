@@ -1,12 +1,13 @@
 package com.focusit.jsflight.player.ui;
 
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 
 public class ExceptionDialog extends JDialog
 {

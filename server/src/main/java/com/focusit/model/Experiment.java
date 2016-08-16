@@ -13,7 +13,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * Playing process state
- *
+ * <p>
  * Created by dkirpichenkov on 29.04.16.
  */
 @Document
