@@ -1,29 +1,28 @@
 package com.focusit.jsflight.player.scenario;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
-
 import com.focusit.jsflight.player.config.Configuration;
+import com.focusit.jsflight.player.constants.EventConstants;
 import com.focusit.jsflight.player.constants.EventType;
 import com.focusit.jsflight.player.input.Events;
 import com.focusit.jsflight.player.input.FileInput;
 import com.focusit.jsflight.player.script.PlayerScriptProcessor;
-import com.focusit.script.jmeter.JMeterJSFlightBridge;
 import com.focusit.script.player.PlayerContext;
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.util.*;
 
 /**
  * Recorded scenario encapsulation: parses file, plays the scenario by step, modifies the scenario, saves to a disk.
  *
  * @author Denis V. Kirpichenkov
- *
  */
 public class UserScenario
 {
+    private static final Set<String> ALLOWED_EVENT_TYPES = new HashSet<>(Arrays.asList(EventType.CLICK,
+            EventType.KEY_PRESS, EventType.KEY_UP, EventType.KEY_DOWN, EventType.SCROLL_EMULATION,
+            EventType.MOUSEWHEEL, EventType.MOUSEDOWN, EventType.SCRIPT));
     // TODO add classpath for scripts
     private static HashMap<String, JSONObject> lastEvents = new HashMap<>();
     private volatile int position = 0;
@@ -97,76 +96,60 @@ public class UserScenario
 
     public String getTagForEvent(JSONObject event)
     {
-        String tag = "null";
-        if (event.has(JMeterJSFlightBridge.TAG_FIELD))
-        {
-            tag = event.getString(JMeterJSFlightBridge.TAG_FIELD);
-        }
-
-        return tag;
+        return event.has(EventConstants.TAG) ? event.getString(EventConstants.TAG) : "null";
     }
 
     public String getTargetForEvent(JSONObject event)
     {
-        if (event.has("target2"))
+        if (event.has(EventConstants.SECOND_TARGET))
         {
-            return event.getString("target2");
+            return event.getString(EventConstants.SECOND_TARGET);
         }
-        if (!event.has("target1"))
+        if (!event.has(EventConstants.FIRST_TARGET))
         {
             return "";
         }
-        JSONArray array = event.getJSONArray("target1");
+        JSONArray array = event.getJSONArray(EventConstants.FIRST_TARGET);
         if (array.isNull(0))
         {
             return "";
         }
 
-        String target = array.getJSONObject(0).getString("getxp");
-        return target;
+        return array.getJSONObject(0).getString("getxp");
     }
 
     public boolean isEventBad(JSONObject event)
     {
-        return event.getString("type").equals(EventType.SCRIPT) ? false
-                : !event.has("target") || event.get("target") == null || event.get("target") == JSONObject.NULL;
+        return !isEventOfType(event, EventType.SCRIPT) && isFieldOfEventIsNull(event, EventConstants.TARGET);
     }
 
-    public boolean isEventIgnored(String eventType)
+    private boolean isFieldOfEventIsNull(JSONObject event, String filedName)
     {
-        return eventType.equalsIgnoreCase(EventType.XHR) || eventType.equalsIgnoreCase(EventType.HASH_CHANGE)
-                || (!eventType.equalsIgnoreCase(EventType.CLICK) && !eventType.equalsIgnoreCase(EventType.KEY_PRESS)
-                        && !eventType.equalsIgnoreCase(EventType.KEY_UP)
-                        && !eventType.equalsIgnoreCase(EventType.KEY_DOWN)
-                        && !eventType.equalsIgnoreCase(EventType.SCROLL_EMULATION)
-                        && !eventType.equalsIgnoreCase(EventType.MOUSEWHEEL)
-                        && !eventType.equalsIgnoreCase(EventType.MOUSEDOWN) && !eventType.equals(EventType.SCRIPT));
+        return !event.has(filedName) || event.get(filedName) == null || event.get(filedName) == JSONObject.NULL;
+    }
+
+    private boolean isEventOfType(JSONObject event, String type)
+    {
+        return event.getString(EventConstants.TYPE).equalsIgnoreCase(type);
+    }
+
+    public boolean isEventIgnored(JSONObject event)
+    {
+        return !ALLOWED_EVENT_TYPES.contains(event.getString(EventConstants.TYPE));
     }
 
     public boolean isStepDuplicates(String script, JSONObject event)
     {
         JSONObject prev = getPrevEvent(event);
 
-        if (prev != null)
-        {
-            return new PlayerScriptProcessor(this).executeDuplicateHandlerScript(script, event, prev);
-        }
+        return prev != null && new PlayerScriptProcessor(this).executeDuplicateHandlerScript(script, event, prev);
 
-        return false;
     }
 
-    public void next()
+    public void moveToNextStep()
     {
-        checks.set(position, true);
-        setPosition(getPosition() + 1);
-        if (getPosition() == getStepsCount())
-        {
-            for (int i = 0; i < getPosition(); i++)
-            {
-                checks.set(i, false);
-            }
-            position = 0;
-        }
+        checks.set(getPosition(), true);
+        setPosition(Math.min(getPosition() + 1, getStepsCount()));
     }
 
     public void parse(String filename) throws IOException
@@ -195,33 +178,21 @@ public class UserScenario
         checks = new ArrayList<>(getStepsCount());
         for (int i = 0; i < getStepsCount(); i++)
         {
-            checks.add(new Boolean(false));
+            checks.add(Boolean.FALSE);
         }
 
-        long secs = 0;
-
-        if (getStepsCount() > 0)
-        {
-            secs = getStepAt(getStepsCount() - 1).getBigDecimal("timestamp").longValue()
-                    - getStepAt(0).getBigDecimal("timestamp").longValue();
-        }
-
-        return secs;
+        return getStepAt(Math.max(0, getStepsCount() - 1)).getBigDecimal(EventConstants.TIMESTAMP).longValue()
+                - getStepAt(0).getBigDecimal(EventConstants.TIMESTAMP).longValue();
     }
 
-    public void prev()
+    public void moveToPreviousStep()
     {
-        if (getPosition() > 0)
-        {
-            setPosition(getPosition() - 1);
-        }
+        setPosition(Math.max(0, getPosition() - 1));
     }
 
     public void rewind()
     {
-        checks.stream().forEach(it -> {
-            it = Boolean.FALSE;
-        });
+        checks.replaceAll(previousValue -> false);
         context.reset();
         setPosition(0);
     }
@@ -247,7 +218,7 @@ public class UserScenario
         setPosition(getPosition() + 1);
     }
 
-    public void updatePrevEvent(JSONObject event)
+    public void updateEvent(JSONObject event)
     {
         lastEvents.put(getTagForEvent(event), event);
     }

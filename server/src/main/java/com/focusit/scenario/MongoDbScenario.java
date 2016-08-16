@@ -12,7 +12,7 @@ import com.focusit.repository.ExperimentRepository;
 
 /**
  * This class wraps an experiment in user scenario.
- *
+ * <p>
  * Created by doki on 12.05.16.
  */
 public class MongoDbScenario extends UserScenario
@@ -62,18 +62,13 @@ public class MongoDbScenario extends UserScenario
         {
             throw new IllegalArgumentException("No event found at position " + position);
         }
-        JSONObject object = new JSONObject(event);
-        return object;
+        return new JSONObject(event);
     }
 
     @Override
-    public void next()
+    public void moveToNextStep()
     {
-        setPosition(getPosition() + 1);
-        if (getPosition() >= getStepsCount())
-        {
-            setPosition(0);
-        }
+        setPosition(Math.min(getPosition() + 1, getStepsCount()));
     }
 
     @Override

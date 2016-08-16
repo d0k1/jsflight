@@ -27,10 +27,11 @@ import com.focusit.service.EmailNotificationService;
 import com.focusit.service.ExperimentFactory;
 import com.focusit.service.JMeterRecorderService;
 import com.focusit.service.MongoDbStorageService;
+import com.focusit.service.EmailNotificationService.EventType;
 
 /**
  * Component that plays a scenario in background
- *
+ * <p>
  * Created by dkirpichenkov on 05.05.16.
  */
 @Service
@@ -81,7 +82,7 @@ public class BackgroundWebPlayer
 
         experimentRepository.save(experiment);
 
-        if (!Boolean.TRUE.equals(paused))
+        if (!paused)
         {
             resume(experiment.getId());
         }
@@ -119,78 +120,94 @@ public class BackgroundWebPlayer
         startJMeter(scenario);
         experimentRepository.save(experiment);
 
-        Map lastUrls = experimentLastUrls.getOrDefault(experimentId, new ConcurrentHashMap<>());
+        Map<String, String> lastUrls = experimentLastUrls.getOrDefault(experimentId, new ConcurrentHashMap<>());
         experimentLastUrls.put(experimentId, lastUrls);
 
-        Map finalLastUrls = lastUrls;
-
-        SeleniumDriver driver = experimentDriver.getOrDefault(experimentId, new SeleniumDriver(scenario))
-                .setLastUrls(finalLastUrls);
+        SeleniumDriver driver = experimentDriver.getOrDefault(experimentId, new SeleniumDriver(scenario)).setLastUrls(
+                lastUrls);
         experimentDriver.put(experimentId, driver);
 
-        playingFutures.put(experimentId,
-                CompletableFuture
-                        .runAsync(
-                                () -> processor.play(scenario, driver, scenario.getFirstStep(), scenario.getMaxStep()))
-                        .whenCompleteAsync((aVoid, throwable) -> {
-                            playingFutures.remove(experimentId);
+        playingFutures
+                .put(experimentId,
+                        CompletableFuture
+                                .runAsync(
+                                        () -> processor.play(scenario, driver, scenario.getFirstStep(),
+                                                scenario.getMaxStep()))
+                                .whenCompleteAsync(
+                                        (aVoid, throwable) -> {
+                                            playingFutures.remove(experimentId);
 
-                            if (throwable == null)
-                            {
-                                experiment.setPlaying(false);
-                                experiment.setFinished(true);
-                                experimentRepository.save(experiment);
-                                experimentLastUrls.remove(experimentId);
-                                experimentDriver.remove(experimentId);
-                                notificationService.notifyScenarioDone(scenario, throwable);
-                            }
-                            else
-                            {
-                                LOG.error(throwable.toString(), throwable);
-                                if (throwable instanceof PausePlaybackException)
-                                {
-                                    experiment.setPlaying(false);
-                                    experimentRepository.save(experiment);
-                                    notificationService.notifyScenarioPaused(scenario, null);
-                                    return;
-                                }
-                                else if (throwable instanceof ErrorInBrowserPlaybackException)
-                                {
-                                    experiment.setPlaying(false);
-                                    experimentRepository.save(experiment);
-                                    notificationService.notifyErrorInBrowserOccured(scenario, throwable);
-                                    return;
-                                }
-                                else if (throwable instanceof TerminatePlaybackException)
-                                {
-                                    experiment.setPlaying(false);
-                                    experiment.setFinished(true);
-                                    experimentRepository.save(experiment);
-                                    experimentLastUrls.remove(experimentId);
-                                    experimentDriver.remove(experimentId);
-                                    notificationService.notifyScenarioTerminated(scenario, throwable);
-                                }
-                                else
-                                {
-                                    experiment.setPlaying(false);
-                                    experiment.setFinished(false);
-                                    experiment.setError(true);
-                                    experiment.setErrorMessage(throwable.toString());
-                                    experimentRepository.save(experiment);
-                                    notificationService.notifyUnknownException(scenario, throwable);
-                                    return;
-                                }
-                            }
-                            try
-                            {
-                                stopJMeter(scenario);
-                                experimentRepository.save(experiment);
-                            }
-                            catch (Exception e)
-                            {
-                                LOG.error(e.toString(), e);
-                            }
-                        }));
+                                            boolean finished = true;
+                                            boolean error = false;
+
+                                            EventType eventType;
+                                            if (throwable == null)
+                                            {
+                                                experimentLastUrls.remove(experimentId);
+                                                experimentDriver.remove(experimentId);
+
+                                                eventType = EventType.DONE;
+                                            }
+                                            else
+                                            {
+                                                LOG.error(throwable.getMessage(), throwable);
+                                                finished = false;
+
+                                                if (throwable instanceof PausePlaybackException)
+                                                {
+                                                    eventType = EventType.PUASED;
+                                                }
+                                                else if (throwable instanceof ErrorInBrowserPlaybackException)
+                                                {
+                                                    eventType = EventType.ERROR_IN_BROWSER;
+                                                }
+                                                else if (throwable instanceof TerminatePlaybackException)
+                                                {
+                                                    experimentLastUrls.remove(experimentId);
+                                                    experimentDriver.remove(experimentId);
+
+                                                    finished = true;
+                                                    eventType = EventType.TERMINATED;
+                                                }
+                                                else
+                                                {
+                                                    experiment.setErrorMessage(throwable.toString());
+
+                                                    error = true;
+                                                    eventType = EventType.UNKNOWN_ERROR;
+                                                }
+                                            }
+                                            try
+                                            {
+                                                stopJMeter(scenario);
+                                            }
+                                            catch (Exception e)
+                                            {
+                                                LOG.error(e.toString(), e);
+                                            }
+                                            experiment.setPlaying(false);
+                                            experiment.setFinished(finished);
+                                            experiment.setError(error);
+                                            experimentRepository.save(experiment);
+
+                                            if (finished)
+                                            {
+                                                LOG.info("Playing experiment with ID: '{}' finished", experimentId);
+                                            }
+                                            else if (error)
+                                            {
+                                                LOG.info("While playing experiment with ID: '{}' an error occurred",
+                                                        experimentId);
+                                            }
+                                            else
+                                            {
+                                                LOG.info(
+                                                        "Playing experiment with ID: '{}' paused, ot error in browser occurred",
+                                                        experimentId);
+                                            }
+
+                                            notificationService.notifySubscribers(scenario, throwable, eventType);
+                                        }));
     }
 
     public void pause(String experimentId)

@@ -1,12 +1,11 @@
 package com.focusit.jsflight.player.webdriver;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
-
+import com.focusit.jsflight.player.constants.EventConstants;
+import com.focusit.jsflight.player.constants.EventType;
+import com.focusit.jsflight.player.scenario.UserScenario;
+import com.focusit.jsflight.player.script.PlayerScriptProcessor;
+import com.focusit.script.constants.ScriptBindingConstants;
+import com.google.common.base.Predicate;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.json.JSONObject;
 import org.openqa.selenium.*;
@@ -24,11 +23,12 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.focusit.jsflight.player.constants.EventConstants;
-import com.focusit.jsflight.player.constants.EventType;
-import com.focusit.jsflight.player.scenario.UserScenario;
-import com.focusit.jsflight.player.script.PlayerScriptProcessor;
-import com.google.common.base.Predicate;
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 
 /**
  * Selenium webdriver proxy: runs a browser, sends events, make screenshots
@@ -51,6 +51,7 @@ public class SeleniumDriver
 
     private static final int PROCESS_SIGNAL_STOP = -19;
     private static final int PROCESS_SIGNAL_CONT = -18;
+    private static final int PROCESS_SIGNAL_FORCE_KILL = -9;
 
     static
     {
@@ -59,9 +60,9 @@ public class SeleniumDriver
     }
 
     /**
-     * As we close unsued browsers, 100 number of displays is more than enough
+     * As we close unsued browsers, 200 number of displays is more than enough
      */
-    private ArrayList<String> availiableDisplays = new ArrayList<>(DISPLAY_CAPACITY);
+    private List<String> availiableDisplays = new ArrayList<>(DISPLAY_CAPACITY);
     private HashMap<String, String> driverDisplay = new HashMap<>();
     private HashMap<String, WebDriver> drivers = new HashMap<>();
 
@@ -77,7 +78,8 @@ public class SeleniumDriver
     private List<String> emptySelections;
     private String selectXpath;
     private String selectDeterminerScript;
-    private String driverSignalScript;
+    private String processSignalScript;
+    private String getFirefoxPidScript;
     /**
      * Interval in seconds between awaiting UI attempts
      */
@@ -105,15 +107,41 @@ public class SeleniumDriver
         return NO_OP_ELEMENT;
     }
 
+    private static boolean isNullOrWhiteSpace(String path)
+    {
+        return path == null || isWhiteSpace(path);
+    }
+
+    private static boolean isWhiteSpace(String str)
+    {
+
+        int length = str.length();
+        if (length == 0)
+        {
+            return true;
+        }
+        int middle = length / 2;
+        if (!Character.isWhitespace(str.charAt(middle)))
+        {
+            return false;
+        }
+        for (int i = 0; i < middle; i++)
+        {
+            if (!Character.isWhitespace(str.charAt(i)) || !Character.isWhitespace(str.charAt(length - 1 - i)))
+                return false;
+        }
+        return true;
+    }
+
     public SeleniumDriver setFormDialogXpath(String formDialogXpath)
     {
         this.formDialogXpath = formDialogXpath;
         return this;
     }
 
-    public SeleniumDriver setDriverSignalScript(String driverSignalScript)
+    public SeleniumDriver setProcessSignalScript(String processSignalScript)
     {
-        this.driverSignalScript = driverSignalScript;
+        this.processSignalScript = processSignalScript;
         return this;
     }
 
@@ -164,6 +192,12 @@ public class SeleniumDriver
         return this;
     }
 
+    public SeleniumDriver setGetFirefoxPidScript(String getFirefoxPidScript)
+    {
+        this.getFirefoxPidScript = getFirefoxPidScript;
+        return this;
+    }
+
     public SeleniumDriver setCheckPageJs(String checkPageJs)
     {
         this.checkPageJs = checkPageJs;
@@ -190,19 +224,28 @@ public class SeleniumDriver
 
     public void closeWebDrivers()
     {
-        drivers.values().forEach(WebDriver::close);
+        PlayerScriptProcessor processor = new PlayerScriptProcessor(scenario);
+        drivers.values().forEach(driver -> {
+            processor.executeProcessSignalScript(processSignalScript, PROCESS_SIGNAL_CONT, getFirefoxPid(driver));
+            driver.close();
+        });
     }
 
     public WebElement findTargetWebElement(WebDriver wd, JSONObject event, String target)
     {
         waitPageReadyWithRefresh(wd, event);
-        return (WebElement)new PlayerScriptProcessor(scenario).executeWebLookupScript(lookupScript, wd, target, event);
+
+        Map<String, Object> binding = PlayerScriptProcessor.getEmptyBindingsMap();
+        binding.put(ScriptBindingConstants.WEB_DRIVER, wd);
+        binding.put(ScriptBindingConstants.TARGET, target);
+        binding.put(ScriptBindingConstants.EVENT, event);
+        return new PlayerScriptProcessor(scenario).executeGroovyScript(lookupScript, binding, WebElement.class);
     }
 
-    public WebDriver getDriverForEvent(JSONObject event, boolean firefox, String path, String display, String proxyHost,
-            String proxyPort)
+    public WebDriver getDriverForEvent(JSONObject event, boolean firefox, String path, String display,
+            String proxyHost, String proxyPort)
     {
-        String tabUuid = event.getString("tabuuid");
+        String tabUuid = event.getString(EventConstants.TAB_UUID);
         WebDriver driver = drivers.get(tabUuid);
 
         try
@@ -212,13 +255,11 @@ public class SeleniumDriver
                 return driver;
             }
 
-            boolean useFirefox = firefox;
-            boolean usePhantomJs = !firefox;
             DesiredCapabilities cap = new DesiredCapabilities();
-            if (proxyHost.trim().length() > 0)
+            if (!isNullOrWhiteSpace(proxyHost))
             {
                 String host = proxyHost;
-                if (proxyPort.trim().length() > 0)
+                if (!isNullOrWhiteSpace(proxyPort))
                 {
                     host += ":" + proxyPort;
                 }
@@ -226,34 +267,33 @@ public class SeleniumDriver
                 proxy.setHttpProxy(host).setFtpProxy(host).setSslProxy(host);
                 cap.setCapability(CapabilityType.PROXY, proxy);
             }
-            if (useFirefox)
+            if (firefox)
             {
                 FirefoxProfile profile = createProfile();
-                String ffPath = path;
-                FirefoxBinary binary = null;
-                if (ffPath != null && ffPath.trim().length() > 0)
+                FirefoxBinary binary;
+                if (!isNullOrWhiteSpace(path))
                 {
-                    binary = new FirefoxBinary(new File(ffPath));
+                    binary = new FirefoxBinary(new File(path));
                 }
                 else
                 {
                     binary = new FirefoxBinary();
                 }
-                if (display != null && !display.trim().isEmpty())
+                if (!isNullOrWhiteSpace(display))
                 {
-                    display = availiableDisplays.get(0);
-                    availiableDisplays.remove(display);
+                    display = availiableDisplays.remove(0);
                     LOG.info("Binding to {} display", display);
                     binary.setEnvironmentProperty("DISPLAY", display);
                 }
-                driver = new FirefoxDriver(binary, profile, cap);
+                LOG.info("Firefox path is: {}", path);
+
+                driver = createFirefoxDriver(cap, profile, binary);
             }
-            else if (usePhantomJs)
+            else
             {
-                String pjsPath = path;
-                if (pjsPath != null && pjsPath.trim().length() > 0)
+                if (!isNullOrWhiteSpace(path))
                 {
-                    cap.setCapability("phantomjs.binary.path", pjsPath);
+                    cap.setCapability("phantomjs.binary.path", path);
 
                     driver = new PhantomJSDriver(cap);
                 }
@@ -282,6 +322,20 @@ public class SeleniumDriver
         }
     }
 
+    private FirefoxDriver createFirefoxDriver(DesiredCapabilities cap, FirefoxProfile profile, FirefoxBinary binary)
+    {
+        try
+        {
+            return new FirefoxDriver(binary, profile, cap);
+        }
+        catch (WebDriverException ex)
+        {
+            LOG.warn(ex.getMessage());
+            awakenAllDrivers();
+            return createFirefoxDriver(cap, profile, binary);
+        }
+    }
+
     public String getDriverDisplay(WebDriver webdriver)
     {
         return driverDisplay.getOrDefault(webdriver.toString(), "No display");
@@ -300,10 +354,6 @@ public class SeleniumDriver
         return result;
     }
 
-    public void makeAShot(WebDriver wd, String screenDir)
-    {
-    }
-
     public void makeAShot(WebDriver wd, OutputStream outputStream) throws IOException
     {
         TakesScreenshot shooter = (TakesScreenshot)wd;
@@ -313,15 +363,15 @@ public class SeleniumDriver
 
     public void openEventUrl(WebDriver wd, JSONObject event)
     {
-        String event_url = event.getString("url");
+        String eventUrl = event.getString(EventConstants.URL);
 
         resizeForEvent(wd, event);
-        if (wd.getCurrentUrl().equals("about:blank") || !getLastUrl(event).equals(event_url))
+        if (wd.getCurrentUrl().equals("about:blank") || !getLastUrl(event).equals(eventUrl))
         {
-            wd.get(event_url);
+            wd.get(eventUrl);
 
             waitUi(wd);
-            updateLastUrl(event, event_url);
+            updateLastUrl(event, eventUrl);
         }
     }
 
@@ -329,7 +379,7 @@ public class SeleniumDriver
     {
         try
         {
-            return new WebDriverWait(wd, 20l, 500).until(new ExpectedCondition<WebElement>()
+            return new WebDriverWait(wd, 20L, 500).until(new ExpectedCondition<WebElement>()
             {
                 @Override
                 public WebElement apply(WebDriver input)
@@ -357,10 +407,10 @@ public class SeleniumDriver
         if (element.equals(NO_OP_ELEMENT))
         {
             LOG.warn("Non operational element returned. Aborting event {} processing. Target xpath {}",
-                    event.get("eventId"), event.getString("target2"));
+                    event.get(EventConstants.EVENT_ID), event.getString(EventConstants.SECOND_TARGET));
             return;
         }
-        ensureStringGeneratorInitialized(useRandomChars);
+        initializeStringGenerator(useRandomChars);
 
         //TODO remove this when recording of cursor in text box is implemented
         if (skipKeyboardForElement(element))
@@ -375,11 +425,11 @@ public class SeleniumDriver
         //Selenium uses dark magic to deal with it
         wd.switchTo().window(wd.getWindowHandle());
 
-        if (event.getString("type").equalsIgnoreCase(EventType.KEY_PRESS))
+        if (event.getString(EventConstants.TYPE).equalsIgnoreCase(EventType.KEY_PRESS))
         {
-            if (event.has("charCode"))
+            if (event.has(EventConstants.CHAR_CODE))
             {
-                char ch = (char)event.getBigInteger(("charCode")).intValue();
+                char ch = (char)event.getBigInteger(EventConstants.CHAR_CODE).intValue();
                 String keys = stringGen.getAsString(ch);
                 if (!element.getTagName().contains("iframe"))
                 {
@@ -403,20 +453,20 @@ public class SeleniumDriver
             }
         }
 
-        if (event.getString("type").equalsIgnoreCase(EventType.KEY_UP)
-                || event.getString("type").equalsIgnoreCase(EventType.KEY_DOWN))
+        if (event.getString(EventConstants.TYPE).equalsIgnoreCase(EventType.KEY_UP)
+                || event.getString(EventConstants.TYPE).equalsIgnoreCase(EventType.KEY_DOWN))
         {
-            if (event.has("charCode"))
+            if (event.has(EventConstants.CHAR_CODE))
             {
-                int code = event.getBigInteger(("charCode")).intValue();
+                int code = event.getBigInteger(EventConstants.CHAR_CODE).intValue();
                 if (code == 0)
                 {
-                    code = event.getInt("keyCode");
+                    code = event.getInt(EventConstants.KEY_CODE);
                 }
-                if (event.getBoolean("ctrlKey"))
+                if (event.getBoolean(EventConstants.CTRL_KEY))
                 {
-                    element.sendKeys(
-                            Keys.chord(Keys.CONTROL, new String(new byte[] { (byte)code }, StandardCharsets.UTF_8)));
+                    element.sendKeys(Keys.chord(Keys.CONTROL, new String(new byte[] { (byte)code },
+                            StandardCharsets.UTF_8)));
                 }
                 else
                 {
@@ -460,12 +510,12 @@ public class SeleniumDriver
         if (element.equals(NO_OP_ELEMENT))
         {
             LOG.warn("Non operational element returned. Aborting event {} processing. Target xpath {}",
-                    event.get("eventId"), event.getString("target2"));
+                    event.get(EventConstants.EVENT_ID), event.getString(EventConstants.SECOND_TARGET));
             return;
         }
         ensureElementInWindow(wd, element);
-        boolean isSelect = new PlayerScriptProcessor(scenario).executeSelectDeterminerScript(selectDeterminerScript, wd,
-                element);
+        boolean isSelect = new PlayerScriptProcessor(scenario).executeSelectDeterminerScript(selectDeterminerScript,
+                wd, element);
         click(wd, event, element);
         if (isSelect)
         {
@@ -480,7 +530,7 @@ public class SeleniumDriver
         if (element.isDisplayed())
         {
 
-            if (event.getInt("button") == 2)
+            if (event.getInt(EventConstants.BUTTON) == 2)
             {
                 try
                 {
@@ -515,34 +565,38 @@ public class SeleniumDriver
 
     public void processMouseWheel(WebDriver wd, JSONObject event, String target)
     {
-        if (!event.has("deltaY"))
+        if (!event.has(EventConstants.DELTA_Y))
         {
             LOG.error("event has no deltaY - cant process scroll", new Exception());
             return;
         }
-        WebElement el = (WebElement)new PlayerScriptProcessor(scenario).executeWebLookupScript(lookupScript, wd, target,
-                event);
-        if (el.equals(NO_OP_ELEMENT))
+        WebElement el = findTargetWebElement(wd, event, target);
+        if (el == null)
+        {
+            throw new RuntimeException("Weblookup script returned null");
+        }
+        if (NO_OP_ELEMENT.equals(el))
         {
             LOG.warn("Non operational element returned. Aborting event {} processing. Target xpath {}",
-                    event.get(EventConstants.EVENT_ID), event.getString("target2"));
+                    event.get(EventConstants.EVENT_ID), event.getString(EventConstants.SECOND_TARGET));
             return;
         }
         //Web lookup script MUST return //body element if scroll occurs not in a popup
         if (!el.getTagName().equalsIgnoreCase("html"))
         {
-            ((JavascriptExecutor)wd).executeScript("arguments[0].scrollTop = arguments[0].scrollTop + arguments[1]", el,
-                    event.getInt("deltaY"));
+            ((JavascriptExecutor)wd).executeScript("arguments[0].scrollTop = arguments[0].scrollTop + arguments[1]",
+                    el, event.getInt(EventConstants.DELTA_Y));
         }
         else
         {
-            ((JavascriptExecutor)wd).executeScript("window.scrollBy(0, arguments[0])", event.getInt("deltaY"));
+            ((JavascriptExecutor)wd).executeScript("window.scrollBy(0, arguments[0])",
+                    event.getInt(EventConstants.DELTA_Y));
         }
     }
 
     public void processScroll(WebDriver wd, JSONObject event, String target)
     {
-        long timeout = System.currentTimeMillis() + 20000l;
+        long timeout = System.currentTimeMillis() + 20000L;
         if (checkElementPresent(wd, target))
         {
             return;
@@ -581,10 +635,33 @@ public class SeleniumDriver
         LOG.info("Display {} is available again", display);
         availiableDisplays.add(display);
 
-        String tabUuid = event.getString("tabuuid");
+        String tabUuid = event.getString(EventConstants.TAB_UUID);
         drivers.remove(tabUuid);
         driver.quit();
+        try
+        {
+            PlayerScriptProcessor processor = new PlayerScriptProcessor(scenario);
+            String firefoxPid = getFirefoxPid(driver);
+            LOG.info("Trying to kill Firefox. PID: {}", firefoxPid);
+            processor.executeProcessSignalScript(processSignalScript, PROCESS_SIGNAL_FORCE_KILL, firefoxPid);
+        }
+        catch (Throwable ex)
+        {
+            LOG.error(ex.getMessage(), ex);
+        }
+    }
 
+    private String getFirefoxPid(WebDriver driver)
+    {
+        PlayerScriptProcessor processor = new PlayerScriptProcessor(scenario);
+        Map<String, Object> binding = PlayerScriptProcessor.getEmptyBindingsMap();
+        binding.put(ScriptBindingConstants.WEB_DRIVER, getSeleniumDriver(driver));
+        return processor.executeGroovyScript(getFirefoxPidScript, binding, String.class);
+    }
+
+    private WebDriver getSeleniumDriver(WebDriver driver)
+    {
+        return driver instanceof WebDriverWrapper ? ((WebDriverWrapper)driver).getWrappedDriver() : driver;
     }
 
     public void resetLastUrls()
@@ -630,11 +707,12 @@ public class SeleniumDriver
 
     public void waitPageReady(WebDriver wd, JSONObject event)
     {
-        String type = event.getString("type");
+        String type = event.getString(EventConstants.TYPE);
         if (type.equalsIgnoreCase(EventType.XHR) || type.equalsIgnoreCase(EventType.SCRIPT))
         {
             return;
         }
+        LOG.info("Waiting page readiness for {} seconds", pageTimeoutMs);
         try
         {
             new WebDriverWait(wd, pageTimeoutMs, 500).until(new Predicate<WebDriver>()
@@ -645,6 +723,7 @@ public class SeleniumDriver
                     try
                     {
                         Object result = ((JavascriptExecutor)wd).executeScript(checkPageJs);
+                        LOG.info("Page readiness checking: {}", result);
                         return result != null && Boolean.parseBoolean(result.toString().toLowerCase());
                     }
                     catch (WebDriverException e)
@@ -656,7 +735,8 @@ public class SeleniumDriver
         }
         catch (TimeoutException e)
         {
-            throw new IllegalStateException("Page was not ready within specified timeout");
+            throw new IllegalStateException(String.format("Page was not ready within specified timeout: %s",
+                    event.getString(EventConstants.URL)));
         }
     }
 
@@ -686,7 +766,7 @@ public class SeleniumDriver
         }
     }
 
-    private void ensureStringGeneratorInitialized(boolean useRandomChars)
+    private void initializeStringGenerator(boolean useRandomChars)
     {
         if (stringGen == null)
         {
@@ -710,36 +790,23 @@ public class SeleniumDriver
 
     private WebElement getMax(WebDriver wd, String script)
     {
-        return (WebElement)new PlayerScriptProcessor(scenario).executeWebLookupScript(script, wd, null, null);
+        Map<String, Object> binding = PlayerScriptProcessor.getEmptyBindingsMap();
+        binding.put(ScriptBindingConstants.WEB_DRIVER, wd);
+        return new PlayerScriptProcessor(scenario).executeGroovyScript(script, binding, WebElement.class);
     }
 
     private void resizeForEvent(WebDriver wd, JSONObject event)
     {
-        int w = 0;
-        int h = 0;
-        if (event.has("window.width"))
-        {
-            w = event.getInt("window.width");
-            h = event.getInt("window.height");
-        }
-        else
-        {
-            JSONObject window = event.getJSONObject("window");
-            w = window.getInt("width");
-            h = window.getInt("height");
-        }
+        boolean hasProperty = event.has("window.width");
+        JSONObject target = hasProperty ? event : event.getJSONObject("window");
+        int width = target.getInt(hasProperty ? "window.width" : "width");
+        int height = target.getInt(hasProperty ? "window.height" : "height");
 
-        if (w == 0)
-        {
-            w = 1000;
-        }
+        width = width > 0 ? width : 1000;
+        height = height > 0 ? height : 1000;
 
-        if (h == 0)
-        {
-            h = 1000;
-        }
-
-        wd.manage().window().setSize(new Dimension(w, h));
+        LOG.info("Resizing to {}x{}", width, height);
+        wd.manage().window().setSize(new Dimension(width, height));
     }
 
     private void scroll(JavascriptExecutor js, WebElement element)
@@ -754,12 +821,13 @@ public class SeleniumDriver
             new WebDriverWait(wd, uiShowTimeoutSeconds, intervalBetweenUiChecksMs).until(new Predicate<WebDriver>()
             {
                 @Override
-                public boolean apply(WebDriver input)
+                public boolean apply(WebDriver driver)
                 {
                     try
                     {
-                        return new PlayerScriptProcessor(scenario).executeWebLookupScript(uiShownScript, input, null,
-                                null) != null;
+                        Map<String, Object> binding = PlayerScriptProcessor.getEmptyBindingsMap();
+                        binding.put(ScriptBindingConstants.WEB_DRIVER, driver);
+                        return new PlayerScriptProcessor(scenario).executeGroovyScript(uiShownScript, binding) != null;
                     }
                     catch (WebDriverException e)
                     {
@@ -774,15 +842,30 @@ public class SeleniumDriver
         }
     }
 
-    private void prioritize(WebDriver wd)
+    private void awakenAllDrivers()
     {
         PlayerScriptProcessor processor = new PlayerScriptProcessor(scenario);
-        processor.executeDriverSignalScript(driverSignalScript, wd, PROCESS_SIGNAL_CONT);
-        HashMap<String, WebDriver> copy = new HashMap(drivers);
-        copy.values().remove(wd);
-        copy.values().forEach(toSuspend -> {
-            processor.executeDriverSignalScript(driverSignalScript, toSuspend, PROCESS_SIGNAL_STOP);
-        });
+        drivers.values().forEach(
+                driver -> processor.executeProcessSignalScript(processSignalScript, PROCESS_SIGNAL_CONT,
+                        getFirefoxPid(driver)));
+    }
+
+    private void prioritize(WebDriver wd)
+    {
+        if (drivers.size() == 1)
+        {
+            return;
+        }
+        PlayerScriptProcessor processor = new PlayerScriptProcessor(scenario);
+        String firefoxPid = getFirefoxPid(wd);
+        processor.executeProcessSignalScript(processSignalScript, PROCESS_SIGNAL_CONT, firefoxPid);
+        LOG.info("Prioritizing driver with pid: {}", firefoxPid);
+        drivers.values()
+                .stream()
+                .filter(driver -> !driver.equals(wd))
+                .forEach(
+                        driver -> processor.executeProcessSignalScript(processSignalScript, PROCESS_SIGNAL_STOP,
+                                getFirefoxPid(driver)));
     }
 
     private FirefoxProfile createProfile()

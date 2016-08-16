@@ -3,6 +3,7 @@ package com.focusit.controllers;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.Optional;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -43,7 +44,6 @@ public class PlayerController
     /**
      * Get list of uploaded scenarios
      *
-     *
      * @return
      */
     @RequestMapping(value = "/list", method = RequestMethod.GET)
@@ -55,8 +55,9 @@ public class PlayerController
     /**
      * Uploading scenario.
      * Parses uploaded file line by line and inserting events to mongodb
-     *
+     * <p>
      * $ curl -F "name=test.json" -F "file=@./test.json" 127.0.0.1:8080/player/upload
+     *
      * @param name
      * @param file
      * @param request
@@ -75,7 +76,7 @@ public class PlayerController
 
     /**
      * Get list of current runnable experiments
-     *
+     * <p>
      * $ curl 127.0.0.1:8080/player/experiments
      */
     @RequestMapping(value = "/experiments", method = RequestMethod.GET)
@@ -86,19 +87,54 @@ public class PlayerController
 
     /**
      * Play a scenario
-     *
+     * <p>
      * $ curl "127.0.0.1:8080/player/start?recordingId=572b01abc92e6b697f9d9ab2"
      * $ curl "127.0.0.1:8080/player/start?recordingId=572b01abc92e6b697f9d9ab2&withScreenshots=true&paused=false"
      * $ curl "127.0.0.1:8080/player/start?recordingId=572b01abc92e6b697f9d9ab2&paused=true"
+     *
      * @param recordingId id of existing recording
      * @return
      */
-    @RequestMapping(value = "/start", method = RequestMethod.GET)
+    @RequestMapping(value = "/startById", method = RequestMethod.GET)
     public Experiment start(@RequestParam("recordingId") String recordingId,
             @RequestParam(value = "withScreenshots", defaultValue = "false") Boolean withScreenshots,
             @RequestParam(value = "paused", defaultValue = "true") Boolean paused) throws Exception
     {
         return player.start(recordingId, withScreenshots, paused);
+    }
+
+    /**
+     * Play a scenario
+     * <p>
+     * $ curl "127.0.0.1:8080/player/start?recordingName=dvic"
+     * $ curl "127.0.0.1:8080/player/start?recordingName=farmaimpex&withScreenshots=true&paused=false"
+     * $ curl "127.0.0.1:8080/player/start?recordingName=dvic&paused=true"
+     *
+     * @param recordingName name of existing recording
+     * @return Experiment object
+     */
+    @RequestMapping(value = "/startByName", method = RequestMethod.GET)
+    public Experiment start(@RequestParam("recordingName") String recordingName,
+            @RequestParam(value = "withScreenshots", defaultValue = "false") Boolean withScreenshots,
+            @RequestParam(value = "paused", defaultValue = "true") Boolean paused, HttpServletRequest request,
+            HttpServletResponse response) throws Exception
+    {
+        Optional<Recording> maybeRecording = recordingsService.getAllRecordings().stream()
+                .filter(r -> r.getName().equals(recordingName)).findAny();
+        for (Recording r : recordingsService.getAllRecordings())
+        {
+            LOG.debug(r.getName());
+        }
+        Recording recording = null;
+        if (maybeRecording.isPresent())
+            recording = maybeRecording.get();
+        if (recording == null)
+        {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND,
+                    String.format("Recording with name '%s' was not found", recordingName));
+            return null;
+        }
+        return start(recording.getId(), withScreenshots, paused);
     }
 
     /**
@@ -114,8 +150,8 @@ public class PlayerController
 
     /**
      * Get screenshot after some step in experiment
-     *
-     *  $ curl "127.0.0.1:8080/player/screenshot?experimentId=573b3169c92e9527bc805cc6&step=0"
+     * <p>
+     * $ curl "127.0.0.1:8080/player/screenshot?experimentId=573b3169c92e9527bc805cc6&step=0"
      *
      * @param experimentId
      * @param step
@@ -140,6 +176,7 @@ public class PlayerController
 
     /**
      * Get screenshot of error which occured during a step of the experiment
+     *
      * @param experimentId
      * @param step
      * @throws IOException
@@ -156,15 +193,17 @@ public class PlayerController
         }
 
         response.setContentType("image/png");
-        response.setHeader("Content-Disposition", String.format("attachment; filename=\"%s\"",
-                experimentId + "_error_" + String.format("_%05d.png", step)));
+        response.setHeader(
+                "Content-Disposition",
+                String.format("attachment; filename=\"%s\"",
+                        experimentId + "_error_" + String.format("_%05d.png", step)));
         IOUtils.copy(stream, response.getOutputStream());
         response.flushBuffer();
     }
 
     /**
      * Download recorded JMeter scenario
-     *
+     * <p>
      * $ curl "127.0.0.1:8080/player/jmx?experimentId=573b3169c92e9527bc805cc6"
      *
      * @param experimentId
@@ -191,7 +230,7 @@ public class PlayerController
 
     /**
      * Skip some steps or go backward in experiment
-     *
+     * <p>
      * $ curl "127.0.0.1:8080/player/move?experimentId=573b3169c92e9527bc805cc6&step=0"
      *
      * @param experimentId
@@ -227,6 +266,7 @@ public class PlayerController
 
     /**
      * Stop playing scenario at all
+     *
      * @param experimentId
      */
     @RequestMapping(value = "/cancel", method = RequestMethod.GET)
@@ -238,6 +278,7 @@ public class PlayerController
     /**
      * Check if the App can be terminated without any troubles.
      * Checks all opened browsers and determine if them can be freely closed
+     *
      * @param experimentId
      */
     @RequestMapping(value = "/terminable", method = RequestMethod.GET)

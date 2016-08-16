@@ -119,8 +119,8 @@ public class RecordingsService
         }
 
         final boolean[] result = { true };
-        CompletableFuture.allOf(operations.toArray(new CompletableFuture[operations.size()]))
-                .whenComplete((aVoid, throwable) -> {
+        CompletableFuture.allOf(operations.toArray(new CompletableFuture[operations.size()])).whenComplete(
+                (aVoid, throwable) -> {
                     if (throwable != null)
                     {
                         result[0] = false;

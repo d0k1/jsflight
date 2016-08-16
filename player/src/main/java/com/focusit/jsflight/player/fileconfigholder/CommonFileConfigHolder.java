@@ -10,16 +10,15 @@ public class CommonFileConfigHolder extends UIFileConfigHolder
     private static final long serialVersionUID = 1L;
 
     private final static CommonFileConfigHolder instance = new CommonFileConfigHolder();
-
-    public static CommonFileConfigHolder getInstance()
-    {
-        return instance;
-    }
-
     private CommonConfiguration configuration;
 
     private CommonFileConfigHolder()
     {
+    }
+
+    public static CommonFileConfigHolder getInstance()
+    {
+        return instance;
     }
 
     @Override
