@@ -137,6 +137,11 @@ public abstract class HttpRecorderFilterBase implements Filter
 
     protected abstract void logException(Exception e);
 
+    protected final void openFileForWriting(String filename)
+    {
+        InternalEventRecorder.getInstance().openFileForWriting(filename);
+    }
+
     protected boolean shouldNotFilterAsyncDispatch()
     {
         return false;

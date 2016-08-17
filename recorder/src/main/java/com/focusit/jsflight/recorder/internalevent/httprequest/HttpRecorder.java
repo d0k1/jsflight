@@ -15,7 +15,7 @@ import com.focusit.jsflight.recorder.internalevent.InternalEventRecorder;
 
 public class HttpRecorder
 {
-    private static final String HTTP_RECORDER_TAG = "HTTPREQUEST";
+    public static final String HTTP_RECORDER_TAG = "HTTPREQUEST";
     private static ThreadLocal<Kryo> threadKryo = new ThreadLocal<>();
 
     public static RecordableHttpServletRequest prepareRequestToRecord(HttpServletRequest original,

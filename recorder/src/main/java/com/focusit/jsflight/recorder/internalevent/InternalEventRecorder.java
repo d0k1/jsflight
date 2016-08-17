@@ -20,72 +20,6 @@ import com.esotericsoftware.kryo.io.FastOutput;
  */
 public class InternalEventRecorder
 {
-    private static final InternalEventRecorder instance = new InternalEventRecorder();
-    private ArrayBlockingQueue<InternalEventRecord> records = new ArrayBlockingQueue<>(4096);
-    private AtomicLong lastId = new AtomicLong(-1);
-    private AtomicLong timestampNs = new AtomicLong(0);
-    private AtomicBoolean recording = new AtomicBoolean(false);
-    private StorageThread storageThread = new StorageThread();
-    private AtomicBoolean shuttingDown = new AtomicBoolean(false);
-    private WallClock wallClock = new WallClock();
-
-    private InternalEventRecorder()
-    {
-        wallClock.start();
-        storageThread.start();
-    }
-
-    public static InternalEventRecorder getInstance()
-    {
-        return instance;
-    }
-
-    public long getWallTime()
-    {
-        return timestampNs.get();
-    }
-
-    public void push(String tag, Object data) throws UnsupportedEncodingException, InterruptedException
-    {
-        if (!recording.get())
-        {
-            return;
-        }
-
-        InternalEventRecord record = new InternalEventRecord();
-        record.id = lastId.incrementAndGet();
-
-        String tagValue = tag.trim();
-        if (!tagValue.isEmpty())
-        {
-            tagValue.getChars(0, tagValue.length() > 64 ? 64 : tagValue.length(), record.tag, 0);
-        }
-        if (data != null)
-        {
-            record.data = data;
-        }
-        record.timestampNs = timestampNs.get();
-        records.put(record);
-    }
-
-    public void shutdown() throws InterruptedException
-    {
-        shuttingDown.set(true);
-        storageThread.join(2000);
-        wallClock.join(2000);
-        storageThread.flush();
-    }
-
-    public void startRecording()
-    {
-        recording.set(true);
-    }
-
-    public void stopRecording()
-    {
-        recording.set(false);
-    }
-
     /**
      * Internal event representation
      */
@@ -101,17 +35,27 @@ public class InternalEventRecorder
     {
         private Kryo kryo;
         private FastOutput output;
+
         // 4 mb buffer should be enough for everyone
         private int size = 4 * 1024 * 1024;
 
         public StorageThread()
         {
             super("internal-event-storage");
+            setPriority(NORM_PRIORITY);
+        }
+
+        public void flush()
+        {
+            output.flush();
+        }
+
+        public void openFileForWriting()
+        {
             try
             {
-                setPriority(NORM_PRIORITY);
                 kryo = new Kryo();
-                File dest = new File("internal.data");
+                File dest = new File(eventsFilename);
                 System.out.println("Storing internal events to " + dest.getAbsolutePath());
                 output = new FastOutput(new FileOutputStream(dest), size);
             }
@@ -119,11 +63,7 @@ public class InternalEventRecorder
             {
                 // do nothing if kryo initialization failed
             }
-        }
 
-        public void flush()
-        {
-            output.flush();
         }
 
         @Override
@@ -190,5 +130,84 @@ public class InternalEventRecorder
                 }
             }
         }
+    }
+
+    private static final InternalEventRecorder instance = new InternalEventRecorder();
+
+    public static InternalEventRecorder getInstance()
+    {
+        return instance;
+    }
+
+    private String eventsFilename = "internal.data";
+
+    private ArrayBlockingQueue<InternalEventRecord> records = new ArrayBlockingQueue<>(4096);
+    private AtomicLong lastId = new AtomicLong(-1);
+    private AtomicLong timestampNs = new AtomicLong(0);
+
+    private AtomicBoolean recording = new AtomicBoolean(false);
+
+    private StorageThread storageThread = new StorageThread();
+
+    private AtomicBoolean shuttingDown = new AtomicBoolean(false);
+
+    private WallClock wallClock = new WallClock();
+
+    private InternalEventRecorder()
+    {
+        wallClock.start();
+        storageThread.start();
+    }
+
+    public long getWallTime()
+    {
+        return timestampNs.get();
+    }
+
+    public void openFileForWriting(String filename)
+    {
+        this.eventsFilename = filename;
+        storageThread.openFileForWriting();
+    }
+
+    public void push(String tag, Object data) throws UnsupportedEncodingException, InterruptedException
+    {
+        if (!recording.get())
+        {
+            return;
+        }
+
+        InternalEventRecord record = new InternalEventRecord();
+        record.id = lastId.incrementAndGet();
+
+        String tagValue = tag.trim();
+        if (!tagValue.isEmpty())
+        {
+            tagValue.getChars(0, tagValue.length() > 64 ? 64 : tagValue.length(), record.tag, 0);
+        }
+        if (data != null)
+        {
+            record.data = data;
+        }
+        record.timestampNs = timestampNs.get();
+        records.put(record);
+    }
+
+    public void shutdown() throws InterruptedException
+    {
+        shuttingDown.set(true);
+        storageThread.join(2000);
+        wallClock.join(2000);
+        storageThread.flush();
+    }
+
+    public void startRecording()
+    {
+        recording.set(true);
+    }
+
+    public void stopRecording()
+    {
+        recording.set(false);
     }
 }

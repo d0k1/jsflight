@@ -13,10 +13,9 @@ import com.focusit.jsflight.recorder.internalevent.httprequest.HttpRecorderFilte
 public class HttpRecorderFilter extends HttpRecorderFilterBase
 {
 
-    @Override
-    protected void logException(Exception e)
+    public HttpRecorderFilter()
     {
-        e.printStackTrace(System.err);
+        openFileForWriting("internalData");
     }
 
     @Override
@@ -33,5 +32,11 @@ public class HttpRecorderFilter extends HttpRecorderFilterBase
     protected boolean doNotRecordRequest(HttpServletRequest request, HttpServletResponse response)
     {
         return false;
+    }
+
+    @Override
+    protected void logException(Exception e)
+    {
+        e.printStackTrace(System.err);
     }
 }
