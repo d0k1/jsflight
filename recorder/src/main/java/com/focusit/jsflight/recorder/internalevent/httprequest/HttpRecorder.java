@@ -2,6 +2,7 @@ package com.focusit.jsflight.recorder.internalevent.httprequest;
 
 import java.io.ByteArrayOutputStream;
 import java.io.UnsupportedEncodingException;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -38,9 +39,19 @@ public class HttpRecorder
         {
             item.putAll(original.getParameterMap());
         }
+
+        HashMap<String, String> headers = new HashMap<>();
+        Enumeration<String> names = original.getHeaderNames();
+        while (names.hasMoreElements())
+        {
+            String header = names.nextElement();
+            headers.put(header, original.getHeader(header));
+        }
         try
         {
             kryo.writeObject(out, item);
+
+            kryo.writeObject(out, headers);
 
             kryo.writeObjectOrNull(out, original.getContentLength(), Integer.class);
 
