@@ -635,13 +635,15 @@ public class SeleniumDriver
         LOG.info("Display {} is available again", display);
         availiableDisplays.add(display);
 
+        PlayerScriptProcessor processor = new PlayerScriptProcessor(scenario);
+        String firefoxPid = getFirefoxPid(driver);
+        processor.executeProcessSignalScript(processSignalScript, PROCESS_SIGNAL_CONT, firefoxPid);
+
         String tabUuid = event.getString(EventConstants.TAB_UUID);
         drivers.remove(tabUuid);
         driver.quit();
         try
         {
-            PlayerScriptProcessor processor = new PlayerScriptProcessor(scenario);
-            String firefoxPid = getFirefoxPid(driver);
             LOG.info("Trying to kill Firefox. PID: {}", firefoxPid);
             processor.executeProcessSignalScript(processSignalScript, PROCESS_SIGNAL_FORCE_KILL, firefoxPid);
         }
@@ -852,10 +854,6 @@ public class SeleniumDriver
 
     private void prioritize(WebDriver wd)
     {
-        if (drivers.size() == 1)
-        {
-            return;
-        }
         PlayerScriptProcessor processor = new PlayerScriptProcessor(scenario);
         String firefoxPid = getFirefoxPid(wd);
         processor.executeProcessSignalScript(processSignalScript, PROCESS_SIGNAL_CONT, firefoxPid);
