@@ -23,6 +23,7 @@ import org.apache.jorphan.collections.HashTreeTraverser;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.FastInput;
 import com.esotericsoftware.kryo.serializers.MapSerializer;
+import com.focusit.jsflight.recorder.internalevent.IdRecordInfo;
 import com.focusit.jsflight.recorder.internalevent.InternalEventRecorder;
 import com.focusit.jsflight.recorder.internalevent.httprequest.HttpRecordInformation;
 
@@ -34,29 +35,99 @@ public class Http2JMeter
 {
     private static final String GUEST_USER = "GUEST";
 
-    static class RestoredRequest
+    public static void main(String[] args) throws IOException
     {
-        long timestampNs;
+        Http2JMeter converter = new Http2JMeter();
+        List<RestoredRequest> requests = converter.getRequests(args[0]);
+        Map<String, List<RestoredRequest>> byUuid = converter.getRequestsByUsers(requests);
 
-        Map<String, String[]> parameters;
-        Integer contentLength;
-        String contentType;
-        String uri;
-        String method;
-        String contextPath;
-        HashMap<String, String> cookies;
-        HashMap<String, String> headers;
-        String payload;
-        HashMap additional;
+        System.out.println(byUuid.size());
+        String pathToTemplate = args[1];
 
-        @Override
-        public String toString()
+        HashTree hashTree;
+        JMeterUtils.setJMeterHome(new File("").getAbsolutePath());
+        JMeterUtils.loadJMeterProperties(new File("jmeter.properties").getAbsolutePath());
+        JMeterUtils.setProperty("saveservice_properties", File.separator + "saveservice.properties");
+        JMeterUtils.setProperty("user_properties", File.separator + "user.properties");
+        JMeterUtils.setProperty("upgrade_properties", File.separator + "upgrade.properties");
+        JMeterUtils.setProperty("system_properties", File.separator + "system.properties");
+        JMeterUtils.setLocale(Locale.ENGLISH);
+
+        JMeterUtils.setProperty("proxy.cert.directory", new File("").getAbsolutePath());
+        hashTree = SaveService.loadTree(new File(pathToTemplate));
+
+        final TestPlan[] plan = { null };
+        final HashTree[] planTree = new HashTree[1];
+
+        long sampleCounter = 0;
+
+        hashTree.traverse(new HashTreeTraverser()
         {
-            return "RestoredRequest{" + "parameters=" + parameters + ", contentLength=" + contentLength
-                    + ", contentType='" + contentType + '\'' + ", uri='" + uri + '\'' + ", method='" + method + '\''
-                    + ", contextPath='" + contextPath + '\'' + ", cookies=" + cookies + ", payload=" + payload
-                    + ", additional=" + additional + '}';
+
+            @Override
+            public void addNode(Object node, HashTree subTree)
+            {
+                System.out.println("Node: " + node.toString());
+                if (node instanceof TestPlan)
+                {
+                    plan[0] = (TestPlan)node;
+                    planTree[0] = subTree;
+                }
+            }
+
+            @Override
+            public void processPath()
+            {
+            }
+
+            @Override
+            public void subtractNode()
+            {
+            }
+        });
+
+        long lastTimestampsNs = 0;
+
+        HashMap<String, HashTree> txControllers = new HashMap<>();
+
+        for (String key : byUuid.keySet())
+        {
+            ThreadGroup group = new ThreadGroup();
+            group.setProperty(TestElement.GUI_CLASS, "ThreadGroupGui");
+            group.setName("Group_" + key);
+            group.setNumThreads(1);
+            group.setRampUp(0);
+
+            LoopController ctrl = new LoopController();
+            ctrl.setLoops(1);
+            group.setSamplerController(ctrl);
+
+            HashTree groupTree = hashTree.add(group);
+            CookieManager mngr = null;
+            if (!key.equals(GUEST_USER))
+            {
+                mngr = new CookieManager();
+                mngr.setName("Cookies_" + key);
+                mngr.setProperty(TestElement.GUI_CLASS, "CookiePanel");
+                groupTree.add(mngr);
+            }
+
+            TransactionController txCtrl = new TransactionController();
+            txCtrl.setName("Tx_" + key);
+            txCtrl.setProperty(TestElement.GUI_CLASS, "TransactionControllerGui");
+            HashTree txTree = groupTree.add(txCtrl);
+            txControllers.put(key, txTree);
         }
+
+        for (RestoredRequest request : requests)
+        {
+            String uuid = converter.getUserUuidByRequest(request);
+            HashTree txTree = txControllers.get(uuid);
+            converter.addHttpSample(txTree, request, sampleCounter++, uuid, lastTimestampsNs);
+            lastTimestampsNs = request.timestampNs;
+        }
+
+        SaveService.saveTree(hashTree, new FileOutputStream(new File("result.jmx")));
     }
 
     public List<RestoredRequest> getRequests(String file) throws IOException
@@ -70,14 +141,13 @@ public class Http2JMeter
         {
             InternalEventRecorder.InternalEventRecord record = kryo.readObject(input,
                     InternalEventRecorder.InternalEventRecord.class);
-            HttpRecordInformation information = (HttpRecordInformation)record.data;
 
             String tag = new String(record.tag).trim();
 
             if (tag.equalsIgnoreCase(
                     com.focusit.jsflight.recorder.internalevent.httprequest.HttpRecorder.HTTP_RECORDER_TAG))
             {
-
+                HttpRecordInformation information = (HttpRecordInformation)record.data;
                 RestoredRequest request = new RestoredRequest();
 
                 if (information.params != null && information.params.length > 0)
@@ -107,6 +177,33 @@ public class Http2JMeter
             }
         }
         return requests;
+    }
+
+    /**
+     * Just to test IdGeneration Recording
+     * @param file
+     * @return
+     * @throws Exception
+     */
+    public List<IdRecordInfo> getIdRecords(String file) throws Exception
+    {
+        List<IdRecordInfo> infos = new ArrayList<>();
+        FastInput input = new FastInput(new FileInputStream(file));
+        Kryo kryo = new Kryo();
+        kryo.register(HashMap.class, new MapSerializer());
+
+        while (input.available() > 0)
+        {
+            InternalEventRecorder.InternalEventRecord record = kryo.readObject(input,
+                    InternalEventRecorder.InternalEventRecord.class);
+            String tag = new String(record.tag).trim();
+            if (tag.equalsIgnoreCase(IdRecordInfo.ID_RECORD_TAG))
+            {
+                infos.add((IdRecordInfo)record.data);
+            }
+        }
+
+        return infos;
     }
 
     public String getUserUuidByRequest(RestoredRequest request)
@@ -203,98 +300,28 @@ public class Http2JMeter
 
     }
 
-    public static void main(String[] args) throws IOException
+    static class RestoredRequest
     {
-        Http2JMeter converter = new Http2JMeter();
-        List<RestoredRequest> requests = converter.getRequests(args[0]);
-        Map<String, List<RestoredRequest>> byUuid = converter.getRequestsByUsers(requests);
+        long timestampNs;
 
-        System.out.println(byUuid.size());
-        String pathToTemplate = args[1];
+        Map<String, String[]> parameters;
+        Integer contentLength;
+        String contentType;
+        String uri;
+        String method;
+        String contextPath;
+        HashMap<String, String> cookies;
+        HashMap<String, String> headers;
+        String payload;
+        HashMap additional;
 
-        HashTree hashTree;
-        JMeterUtils.setJMeterHome(new File("").getAbsolutePath());
-        JMeterUtils.loadJMeterProperties(new File("jmeter.properties").getAbsolutePath());
-        JMeterUtils.setProperty("saveservice_properties", File.separator + "saveservice.properties");
-        JMeterUtils.setProperty("user_properties", File.separator + "user.properties");
-        JMeterUtils.setProperty("upgrade_properties", File.separator + "upgrade.properties");
-        JMeterUtils.setProperty("system_properties", File.separator + "system.properties");
-        JMeterUtils.setLocale(Locale.ENGLISH);
-
-        JMeterUtils.setProperty("proxy.cert.directory", new File("").getAbsolutePath());
-        hashTree = SaveService.loadTree(new File(pathToTemplate));
-
-        final TestPlan[] plan = { null };
-        final HashTree[] planTree = new HashTree[1];
-
-        long sampleCounter = 0;
-
-        hashTree.traverse(new HashTreeTraverser()
+        @Override
+        public String toString()
         {
-
-            @Override
-            public void addNode(Object node, HashTree subTree)
-            {
-                System.out.println("Node: " + node.toString());
-                if (node instanceof TestPlan)
-                {
-                    plan[0] = (TestPlan)node;
-                    planTree[0] = subTree;
-                }
-            }
-
-            @Override
-            public void processPath()
-            {
-            }
-
-            @Override
-            public void subtractNode()
-            {
-            }
-        });
-
-        long lastTimestampsNs = 0;
-
-        HashMap<String, HashTree> txControllers = new HashMap<>();
-
-        for (String key : byUuid.keySet())
-        {
-            ThreadGroup group = new ThreadGroup();
-            group.setProperty(TestElement.GUI_CLASS, "ThreadGroupGui");
-            group.setName("Group_" + key);
-            group.setNumThreads(1);
-            group.setRampUp(0);
-
-            LoopController ctrl = new LoopController();
-            ctrl.setLoops(1);
-            group.setSamplerController(ctrl);
-
-            HashTree groupTree = hashTree.add(group);
-            CookieManager mngr = null;
-            if (!key.equals(GUEST_USER))
-            {
-                mngr = new CookieManager();
-                mngr.setName("Cookies_" + key);
-                mngr.setProperty(TestElement.GUI_CLASS, "CookiePanel");
-                groupTree.add(mngr);
-            }
-
-            TransactionController txCtrl = new TransactionController();
-            txCtrl.setName("Tx_" + key);
-            txCtrl.setProperty(TestElement.GUI_CLASS, "TransactionControllerGui");
-            HashTree txTree = groupTree.add(txCtrl);
-            txControllers.put(key, txTree);
+            return "RestoredRequest{" + "parameters=" + parameters + ", contentLength=" + contentLength
+                    + ", contentType='" + contentType + '\'' + ", uri='" + uri + '\'' + ", method='" + method + '\''
+                    + ", contextPath='" + contextPath + '\'' + ", cookies=" + cookies + ", payload=" + payload
+                    + ", additional=" + additional + '}';
         }
-
-        for (RestoredRequest request : requests)
-        {
-            String uuid = converter.getUserUuidByRequest(request);
-            HashTree txTree = txControllers.get(uuid);
-            converter.addHttpSample(txTree, request, sampleCounter++, uuid, lastTimestampsNs);
-            lastTimestampsNs = request.timestampNs;
-        }
-
-        SaveService.saveTree(hashTree, new FileOutputStream(new File("result.jmx")));
     }
 }
