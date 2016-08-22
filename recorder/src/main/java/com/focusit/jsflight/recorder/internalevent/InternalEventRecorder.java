@@ -20,143 +20,27 @@ import com.esotericsoftware.kryo.io.FastOutput;
  */
 public class InternalEventRecorder
 {
-    /**
-     * Internal event representation
-     */
-    public static class InternalEventRecord
-    {
-        public long id;
-        public long timestampNs;
-        public char tag[] = new char[64];
-        public Object data;
-    }
-
-    class StorageThread extends Thread
-    {
-        private Kryo kryo;
-        private FastOutput output;
-
-        // 4 mb buffer should be enough for everyone
-        private int size = 4 * 1024 * 1024;
-
-        public StorageThread()
-        {
-            super("internal-event-storage");
-            setPriority(NORM_PRIORITY);
-        }
-
-        public void flush()
-        {
-            output.flush();
-        }
-
-        public void openFileForWriting()
-        {
-            try
-            {
-                kryo = new Kryo();
-                File dest = new File(eventsFilename);
-                System.out.println("Storing internal events to " + dest.getAbsolutePath());
-                output = new FastOutput(new FileOutputStream(dest), size);
-            }
-            catch (IOException e)
-            {
-                // do nothing if kryo initialization failed
-            }
-
-        }
-
-        @Override
-        public void run()
-        {
-            boolean needFlush = false;
-            while (isAlive() && !isInterrupted() && !shuttingDown.get())
-            {
-                try
-                {
-                    if (recording.get())
-                    {
-                        InternalEventRecord record = records.poll();
-                        if (record != null)
-                        {
-                            kryo.writeObject(output, record);
-                            needFlush = true;
-                            yield();
-                        }
-                        else
-                        {
-                            if (needFlush)
-                            {
-                                output.flush();
-                                needFlush = false;
-                            }
-                            sleep(100);
-                        }
-                    }
-                    else
-                    {
-                        sleep(1000);
-                    }
-                }
-                catch (Exception e)
-                {
-                    // no Exception could break this thread. only Error
-                }
-            }
-        }
-    }
-
-    class WallClock extends Thread
-    {
-        public WallClock()
-        {
-            super("internal-event-clock");
-            setPriority(MAX_PRIORITY);
-        }
-
-        @Override
-        public void run()
-        {
-            while (isAlive() && !isInterrupted() && !shuttingDown.get())
-            {
-                timestampNs.set(System.nanoTime());
-                try
-                {
-                    Thread.sleep(10);
-                }
-                catch (InterruptedException e)
-                {
-                    break;
-                }
-            }
-        }
-    }
-
     private static final InternalEventRecorder instance = new InternalEventRecorder();
-
-    public static InternalEventRecorder getInstance()
-    {
-        return instance;
-    }
-
-    private String eventsFilename = "internal.data";
 
     private ArrayBlockingQueue<InternalEventRecord> records = new ArrayBlockingQueue<>(4096);
     private AtomicLong lastId = new AtomicLong(-1);
     private AtomicLong timestampNs = new AtomicLong(0);
-
     private AtomicBoolean recording = new AtomicBoolean(false);
-
+    private volatile String eventsFilename = "internal.data";
     private StorageThread storageThread = new StorageThread();
-
     private AtomicBoolean shuttingDown = new AtomicBoolean(false);
-
+    private AtomicBoolean newFile = new AtomicBoolean(false);
     private WallClock wallClock = new WallClock();
 
     private InternalEventRecorder()
     {
         wallClock.start();
         storageThread.start();
+    }
+
+    public static InternalEventRecorder getInstance()
+    {
+        return instance;
     }
 
     public long getWallTime()
@@ -201,6 +85,11 @@ public class InternalEventRecorder
         storageThread.flush();
     }
 
+    public void recordToNewFile()
+    {
+        storageThread.toNewFile();
+    }
+
     public void startRecording()
     {
         recording.set(true);
@@ -209,5 +98,165 @@ public class InternalEventRecorder
     public void stopRecording()
     {
         recording.set(false);
+    }
+
+    public void setWallClockInterval(long interval)
+    {
+        this.wallClock.setNewInterval(interval);
+    }
+
+    /**
+     * Internal event representation
+     */
+    public static class InternalEventRecord
+    {
+        public long id;
+        public long timestampNs;
+        public char tag[] = new char[64];
+        public Object data;
+    }
+
+    class StorageThread extends Thread
+    {
+        private Kryo kryo;
+        private FastOutput output;
+
+        private int filesCounter = 1;
+
+        // 4 mb buffer should be enough for everyone
+        private int size = 4 * 1024 * 1024;
+
+        public StorageThread()
+        {
+            super("internal-event-storage");
+            setPriority(NORM_PRIORITY);
+            kryo = new Kryo();
+        }
+
+        public void flush()
+        {
+            output.flush();
+        }
+
+        public void openFileForWriting()
+        {
+            openFile(eventsFilename);
+        }
+
+        private void openFile(String fileName)
+        {
+            try
+            {
+                File destinationFile = new File(fileName);
+                System.out.println("Storing internal events to " + destinationFile.getAbsolutePath());
+                output = new FastOutput(new FileOutputStream(fileName));
+            }
+            catch (IOException e)
+            {
+                e.printStackTrace();
+            }
+        }
+
+        public void toNewFile()
+        {
+            newFile.set(true);
+        }
+
+        private void reOpenFile()
+        {
+            try
+            {
+                output.close();
+                openFile(eventsFilename + filesCounter++);
+            }
+            finally
+            {
+                newFile.set(false);
+            }
+        }
+
+        @Override
+        public void run()
+        {
+            boolean needFlush = false;
+            while (isAlive() && !isInterrupted() && !shuttingDown.get())
+            {
+                try
+                {
+                    if (recording.get())
+                    {
+                        InternalEventRecord record = records.poll();
+                        if (record != null)
+                        {
+                            kryo.writeObject(output, record);
+                            needFlush = true;
+                            yield();
+                        }
+                        else
+                        {
+                            if (needFlush)
+                            {
+                                output.flush();
+                                needFlush = false;
+                            }
+                            if (newFile.get())
+                            {
+                                reOpenFile();
+                            }
+                            sleep(100);
+                        }
+                    }
+                    else
+                    {
+                        sleep(1000);
+                    }
+                }
+                catch (Exception e)
+                {
+                    // no Exception could break this thread. only Error
+                }
+            }
+        }
+    }
+
+    class WallClock extends Thread
+    {
+        //defaults to 10 milliseconds
+        private long interval = 10;
+
+        public WallClock()
+        {
+            super("internal-event-clock");
+            setPriority(MAX_PRIORITY);
+        }
+
+        public void setNewInterval(long interval)
+        {
+            this.interval = interval;
+        }
+
+        @Override
+        public void run()
+        {
+            while (isAlive() && !isInterrupted() && !shuttingDown.get())
+            {
+                timestampNs.set(System.nanoTime());
+                try
+                {
+                    if (interval <= 0)
+                    {
+                        Thread.yield();
+                    }
+                    else
+                    {
+                        Thread.sleep(interval);
+                    }
+                }
+                catch (InterruptedException e)
+                {
+                    break;
+                }
+            }
+        }
     }
 }
