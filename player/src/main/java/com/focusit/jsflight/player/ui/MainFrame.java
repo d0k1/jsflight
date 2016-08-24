@@ -1,18 +1,16 @@
 package com.focusit.jsflight.player.ui;
 
-import java.awt.*;
-import java.awt.event.*;
-import java.io.File;
-import java.io.IOException;
-import java.util.Date;
-
-import javax.swing.*;
-import javax.swing.event.CellEditorListener;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
-import javax.swing.table.AbstractTableModel;
-
+import com.focusit.jmeter.JMeterRecorder;
+import com.focusit.jsflight.player.fileconfigholder.*;
+import com.focusit.jsflight.player.input.FileInput;
+import com.focusit.jsflight.player.scenario.ScenarioProcessor;
+import com.focusit.jsflight.player.scenario.UserScenario;
+import com.focusit.jsflight.player.webdriver.SeleniumDriver;
+import com.focusit.script.ScriptEngine;
+import com.jgoodies.forms.layout.ColumnSpec;
+import com.jgoodies.forms.layout.FormLayout;
+import com.jgoodies.forms.layout.FormSpecs;
+import com.jgoodies.forms.layout.RowSpec;
 import org.apache.commons.io.FileUtils;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
@@ -23,16 +21,17 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.focusit.jmeter.JMeterRecorder;
-import com.focusit.jsflight.player.fileconfigholder.*;
-import com.focusit.jsflight.player.input.FileInput;
-import com.focusit.jsflight.player.scenario.ScenarioProcessor;
-import com.focusit.jsflight.player.scenario.UserScenario;
-import com.focusit.jsflight.player.webdriver.SeleniumDriver;
-import com.jgoodies.forms.layout.ColumnSpec;
-import com.jgoodies.forms.layout.FormLayout;
-import com.jgoodies.forms.layout.FormSpecs;
-import com.jgoodies.forms.layout.RowSpec;
+import javax.swing.*;
+import javax.swing.event.CellEditorListener;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+import javax.swing.table.AbstractTableModel;
+import java.awt.*;
+import java.awt.event.*;
+import java.io.File;
+import java.io.IOException;
+import java.util.Date;
 
 public class MainFrame
 {
@@ -89,7 +88,8 @@ public class MainFrame
     {
         initialize();
 
-        jmeter = new JMeterRecorder(scenario.getConfiguration().getCommonConfiguration().getScriptClassloader());
+        ScriptEngine.init(scenario.getConfiguration().getCommonConfiguration().getScriptClassloader());
+        jmeter = new JMeterRecorder();
         jmeter.init();
         scenario.getContext().setJMeterBridge(jmeter.getBridge());
     }

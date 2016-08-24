@@ -1,5 +1,12 @@
 package com.focusit.jsflight.player.config;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.focusit.script.ScriptsClassLoader;
+import com.focusit.script.constants.ScriptBindingConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.annotation.Transient;
+
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
@@ -11,14 +18,6 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.data.annotation.Transient;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.focusit.script.ScriptsClassLoader;
-import com.focusit.script.constants.ScriptBindingConstants;
 
 /**
  * Common configuration i.e. everything about player. browser settings, timeout settings
@@ -70,6 +69,7 @@ public class CommonConfiguration
     @Transient
     @JsonIgnore
     transient private ScriptsClassLoader scriptClassloader = null;
+    private String skipKeyboardScript;
 
     public CommonConfiguration()
     {
@@ -419,5 +419,13 @@ public class CommonConfiguration
     public String getGetFirefoxPidScript()
     {
         return getFirefoxPidScript;
+    }
+
+    public String getSkipKeyboardScript() {
+        return skipKeyboardScript;
+    }
+
+    public void setSkipKeyboardScript(String skipKeayboardScript) {
+        this.skipKeyboardScript = skipKeayboardScript;
     }
 }

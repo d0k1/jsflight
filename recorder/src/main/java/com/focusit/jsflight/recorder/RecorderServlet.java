@@ -1,14 +1,14 @@
 package com.focusit.jsflight.recorder;
 
-import java.io.*;
+import com.focusit.jsflight.utils.StringUtils;
+import org.apache.commons.io.IOUtils;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import org.apache.commons.io.IOUtils;
+import java.io.*;
 
 /**
  * Servlet provides a js to track events in a browser
@@ -26,12 +26,7 @@ public class RecorderServlet extends HttpServlet
     {
         String filename = req.getParameter("int");
 
-        if (filename == null)
-        {
-            filename = "recorder.js";
-        }
-
-        if (filename.trim().length() == 0 || !filename.toLowerCase().trim().endsWith(".js"))
+        if (StringUtils.isNullOrEmptyOrWhiteSpace(filename) || !filename.toLowerCase().trim().endsWith(".js"))
         {
             filename = "recorder.js";
         }

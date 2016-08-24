@@ -1,17 +1,15 @@
 package com.focusit.jsflight.player;
 
-import java.awt.*;
-import java.lang.Thread.UncaughtExceptionHandler;
-
-import org.apache.jorphan.logging.LoggingManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.beust.jcommander.JCommander;
 import com.focusit.jsflight.player.cli.CliConfig;
 import com.focusit.jsflight.player.cli.CliPlayer;
 import com.focusit.jsflight.player.ui.ExceptionDialog;
 import com.focusit.jsflight.player.ui.MainFrame;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.awt.*;
+import java.lang.Thread.UncaughtExceptionHandler;
 
 public class Player
 {
@@ -27,9 +25,6 @@ public class Player
             jc.usage();
             System.exit(0);
         }
-
-        LoggingManager.setPriority(config.getJMeterLogLevel(), "jmeter");
-        LoggingManager.setPriority(config.getJMeterLogLevel(), "jorphan");
 
         if (config.isHeadLess())
         {

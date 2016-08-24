@@ -1,5 +1,13 @@
 package com.focusit.service;
 
+import com.focusit.jmeter.JMeterRecorder;
+import com.focusit.jsflight.player.config.JMeterConfiguration;
+import com.focusit.scenario.MongoDbScenario;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import javax.inject.Inject;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -9,16 +17,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
-
-import javax.inject.Inject;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
-
-import com.focusit.jmeter.JMeterRecorder;
-import com.focusit.jsflight.player.config.JMeterConfiguration;
-import com.focusit.scenario.MongoDbScenario;
 
 /**
  * Created by dkirpichenkov on 19.05.16.
@@ -50,24 +48,20 @@ public class JMeterRecorderService
         {
             return;
         }
-        if (jmeterStartStopLock.tryLock() || jmeterStartStopLock.tryLock(10, TimeUnit.SECONDS))
-        {
-            if (availablePorts.size() < 0)
-            {
-                throw new IllegalArgumentException("No ports left to start JMeter");
-            }
-        }
-        else
+        if (!jmeterStartStopLock.tryLock() && !jmeterStartStopLock.tryLock(10, TimeUnit.SECONDS))
         {
             LOG.error("Can't acquire a lock to start JMeter");
+            throw new IllegalStateException("Can't acquire a lock to start JMeter");
+        }
+        if (availablePorts.isEmpty())
+        {
+            throw new IllegalStateException("No ports left to start JMeter");
         }
         try
         {
-            int port = availablePorts.get(0);
-            availablePorts.remove(0);
+            int port = availablePorts.remove(0);
             scenario.getConfiguration().getCommonConfiguration().setProxyPort("" + port);
-            JMeterRecorder recorder = new JMeterRecorder(scenario.getConfiguration().getCommonConfiguration()
-                    .getScriptClassloader());
+            JMeterRecorder recorder = new JMeterRecorder();
             recorder.init();
             recorder.setProxyPort(port);
             JMeterConfiguration config = scenario.getConfiguration().getjMeterConfiguration();

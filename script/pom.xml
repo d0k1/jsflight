@@ -13,6 +13,11 @@
 
     <dependencies>
         <dependency>
+            <groupId>com.github.d0k1.jsflight</groupId>
+            <artifactId>utils</artifactId>
+            <version>4.0</version>
+        </dependency>
+        <dependency>
             <groupId>org.codehaus.groovy</groupId>
             <artifactId>groovy-all</artifactId>
             <version>2.4.5</version>

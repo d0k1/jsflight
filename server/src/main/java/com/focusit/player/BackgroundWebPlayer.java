@@ -1,20 +1,5 @@
 package com.focusit.player;
 
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-
-import javax.inject.Inject;
-
-import org.bson.types.ObjectId;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
-
 import com.focusit.jsflight.player.webdriver.SeleniumDriver;
 import com.focusit.model.Experiment;
 import com.focusit.model.Recording;
@@ -23,11 +8,25 @@ import com.focusit.repository.ExperimentRepository;
 import com.focusit.repository.RecordingRepository;
 import com.focusit.scenario.MongoDbScenario;
 import com.focusit.scenario.MongoDbScenarioProcessor;
+import com.focusit.script.ScriptEngine;
 import com.focusit.service.EmailNotificationService;
+import com.focusit.service.EmailNotificationService.EventType;
 import com.focusit.service.ExperimentFactory;
 import com.focusit.service.JMeterRecorderService;
 import com.focusit.service.MongoDbStorageService;
-import com.focusit.service.EmailNotificationService.EventType;
+import org.bson.types.ObjectId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import javax.inject.Inject;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Component that plays a scenario in background
@@ -117,6 +116,7 @@ public class BackgroundWebPlayer
         MongoDbScenario scenario = new MongoDbScenario(experiment, eventRepository, experimentRepository);
         MongoDbScenarioProcessor processor = new MongoDbScenarioProcessor(storageService);
 
+        ScriptEngine.init(scenario.getConfiguration().getCommonConfiguration().getScriptClassloader());
         startJMeter(scenario);
         experimentRepository.save(experiment);
 

@@ -18,15 +18,7 @@ package org.apache.jmeter.protocol.http.proxy;
  *
  */
 
-import java.io.*;
-import java.net.MalformedURLException;
-import java.security.GeneralSecurityException;
-import java.security.KeyStore;
-import java.security.UnrecoverableKeyException;
-import java.security.cert.X509Certificate;
-import java.util.*;
-import java.util.prefs.Preferences;
-
+import com.focusit.jmeter.JMeterRecorder;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.IOUtils;
@@ -58,14 +50,21 @@ import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.testelement.property.*;
 import org.apache.jmeter.util.JMeterUtils;
 import org.apache.jorphan.exec.KeyToolUtils;
-import org.apache.jorphan.logging.LoggingManager;
 import org.apache.jorphan.util.JOrphanUtils;
-import org.apache.log.Logger;
 import org.apache.oro.text.MalformedCachePatternException;
 import org.apache.oro.text.regex.Pattern;
 import org.apache.oro.text.regex.Perl5Compiler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.focusit.jmeter.JMeterRecorder;
+import java.io.*;
+import java.net.MalformedURLException;
+import java.security.GeneralSecurityException;
+import java.security.KeyStore;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.X509Certificate;
+import java.util.*;
+import java.util.prefs.Preferences;
 
 //For unit tests, @see TestProxyControl
 
@@ -78,7 +77,7 @@ public class JMeterProxyControl extends GenericController
     public static final int DEFAULT_PORT = 8080;
     // and as a string
     public static final String DEFAULT_PORT_S = Integer.toString(DEFAULT_PORT);// Used by GUI
-    private static final Logger log = LoggingManager.getLoggerForClass();
+    private static final Logger log = LoggerFactory.getLogger(JMeterProxyControl.class);
     private static final long serialVersionUID = 240L;
     private static final String ASSERTION_GUI = AssertionGui.class.getName();
     private static final String TRANSACTION_CONTROLLER_GUI = TransactionControllerGui.class.getName();
@@ -463,7 +462,7 @@ public class JMeterProxyControl extends GenericController
     {
         try
         {
-            initKeyStore(); // TODO display warning dialog as this can take some time
+            initKeyStore();
         }
         catch (GeneralSecurityException e)
         {

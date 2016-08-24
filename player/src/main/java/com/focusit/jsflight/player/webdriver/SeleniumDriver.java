@@ -4,6 +4,7 @@ import com.focusit.jsflight.player.constants.EventConstants;
 import com.focusit.jsflight.player.constants.EventType;
 import com.focusit.jsflight.player.scenario.UserScenario;
 import com.focusit.jsflight.player.script.PlayerScriptProcessor;
+import com.focusit.jsflight.utils.StringUtils;
 import com.focusit.script.constants.ScriptBindingConstants;
 import com.google.common.base.Predicate;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -89,6 +90,7 @@ public class SeleniumDriver
      */
     private int uiShowTimeoutSeconds;
     private String formDialogXpath;
+    private String skipKeyboardScript;
 
     public SeleniumDriver(UserScenario scenario)
     {
@@ -105,32 +107,6 @@ public class SeleniumDriver
     public static RemoteWebElement getNoOpElement()
     {
         return NO_OP_ELEMENT;
-    }
-
-    private static boolean isNullOrWhiteSpace(String path)
-    {
-        return path == null || isWhiteSpace(path);
-    }
-
-    private static boolean isWhiteSpace(String str)
-    {
-
-        int length = str.length();
-        if (length == 0)
-        {
-            return true;
-        }
-        int middle = length / 2;
-        if (!Character.isWhitespace(str.charAt(middle)))
-        {
-            return false;
-        }
-        for (int i = 0; i < middle; i++)
-        {
-            if (!Character.isWhitespace(str.charAt(i)) || !Character.isWhitespace(str.charAt(length - 1 - i)))
-                return false;
-        }
-        return true;
     }
 
     public SeleniumDriver setFormDialogXpath(String formDialogXpath)
@@ -225,10 +201,11 @@ public class SeleniumDriver
     public void closeWebDrivers()
     {
         PlayerScriptProcessor processor = new PlayerScriptProcessor(scenario);
-        drivers.values().forEach(driver -> {
-            processor.executeProcessSignalScript(processSignalScript, PROCESS_SIGNAL_CONT, getFirefoxPid(driver));
-            driver.close();
-        });
+        drivers.values().forEach(
+                driver -> {
+                    processor.executeProcessSignalScript(processSignalScript, PROCESS_SIGNAL_FORCE_KILL,
+                            getFirefoxPid(driver));
+                });
     }
 
     public WebElement findTargetWebElement(WebDriver wd, JSONObject event, String target)
@@ -239,7 +216,13 @@ public class SeleniumDriver
         binding.put(ScriptBindingConstants.WEB_DRIVER, wd);
         binding.put(ScriptBindingConstants.TARGET, target);
         binding.put(ScriptBindingConstants.EVENT, event);
-        return new PlayerScriptProcessor(scenario).executeGroovyScript(lookupScript, binding, WebElement.class);
+        WebElement webElement = new PlayerScriptProcessor(scenario).executeGroovyScript(lookupScript, binding,
+                WebElement.class);
+        if (webElement == null)
+        {
+            throw new IllegalStateException("Weblookup script returned null");
+        }
+        return webElement;
     }
 
     public WebDriver getDriverForEvent(JSONObject event, boolean firefox, String path, String display,
@@ -256,10 +239,10 @@ public class SeleniumDriver
             }
 
             DesiredCapabilities cap = new DesiredCapabilities();
-            if (!isNullOrWhiteSpace(proxyHost))
+            if (!StringUtils.isNullOrEmptyOrWhiteSpace(proxyHost))
             {
                 String host = proxyHost;
-                if (!isNullOrWhiteSpace(proxyPort))
+                if (!StringUtils.isNullOrEmptyOrWhiteSpace(proxyPort))
                 {
                     host += ":" + proxyPort;
                 }
@@ -271,7 +254,7 @@ public class SeleniumDriver
             {
                 FirefoxProfile profile = createProfile();
                 FirefoxBinary binary;
-                if (!isNullOrWhiteSpace(path))
+                if (!StringUtils.isNullOrEmptyOrWhiteSpace(path))
                 {
                     binary = new FirefoxBinary(new File(path));
                 }
@@ -279,7 +262,7 @@ public class SeleniumDriver
                 {
                     binary = new FirefoxBinary();
                 }
-                if (!isNullOrWhiteSpace(display))
+                if (!StringUtils.isNullOrEmptyOrWhiteSpace(display))
                 {
                     display = availiableDisplays.remove(0);
                     LOG.info("Binding to {} display", display);
@@ -291,7 +274,7 @@ public class SeleniumDriver
             }
             else
             {
-                if (!isNullOrWhiteSpace(path))
+                if (!StringUtils.isNullOrEmptyOrWhiteSpace(path))
                 {
                     cap.setCapability("phantomjs.binary.path", path);
 
@@ -571,10 +554,6 @@ public class SeleniumDriver
             return;
         }
         WebElement el = findTargetWebElement(wd, event, target);
-        if (el == null)
-        {
-            throw new RuntimeException("Weblookup script returned null");
-        }
         if (NO_OP_ELEMENT.equals(el))
         {
             LOG.warn("Non operational element returned. Aborting event {} processing. Target xpath {}",
@@ -604,7 +583,6 @@ public class SeleniumDriver
         do
         {
             waitPageReadyWithRefresh(wd, event);
-            // TODO WebLookup script must return the element
             try
             {
                 WebElement el = getMax(wd, maxElementGroovy);
@@ -759,12 +737,11 @@ public class SeleniumDriver
     {
         int windowHeight = wd.manage().window().getSize().getHeight();
         int elementYCoord = element.getLocation().getY();
-        if (elementYCoord > windowHeight)
-        {
+        if (elementYCoord > windowHeight) {
             //Using division of the Y coordinate by 2 ensures target element visibility in the browser view
             //anyway TODO think of not using hardcoded constants in scrolling
             String scrollScript = "window.scrollTo(0, " + elementYCoord / 2 + ");";
-            ((JavascriptExecutor)wd).executeScript(scrollScript);
+            ((JavascriptExecutor) wd).executeScript(scrollScript);
         }
     }
 
@@ -786,8 +763,9 @@ public class SeleniumDriver
     private boolean skipKeyboardForElement(WebElement element)
     {
         //TODO remove this when recording of cursor in text box is implemented
-        return !element.getAttribute("value").isEmpty()
-                && (element.getAttribute("class").contains("date") || element.getAttribute("id").contains("date"));
+        Map<String, Object> bindings = PlayerScriptProcessor.getEmptyBindingsMap();
+        bindings.put(ScriptBindingConstants.ELEMENT, element);
+        return new PlayerScriptProcessor(scenario).executeGroovyScript(skipKeyboardScript, bindings, Boolean.class);
     }
 
     private WebElement getMax(WebDriver wd, String script)
@@ -894,6 +872,11 @@ public class SeleniumDriver
     public SeleniumDriver setIntervalBetweenUiChecksMs(long intervalBetweenUiChecksMs)
     {
         this.intervalBetweenUiChecksMs = intervalBetweenUiChecksMs;
+        return this;
+    }
+
+    public SeleniumDriver setSkipKeyboardScript(String skipKeyboardScript) {
+        this.skipKeyboardScript = skipKeyboardScript;
         return this;
     }
 

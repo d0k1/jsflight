@@ -1,14 +1,7 @@
 package com.focusit.jmeter;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Locale;
-
+import com.focusit.script.jmeter.JMeterJSFlightBridge;
+import com.focusit.script.jmeter.JMeterRecorderContext;
 import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.protocol.http.control.HeaderManager;
 import org.apache.jmeter.protocol.http.control.RecordingController;
@@ -22,9 +15,14 @@ import org.apache.jmeter.util.JMeterUtils;
 import org.apache.jorphan.collections.HashTree;
 import org.apache.jorphan.collections.HashTreeTraverser;
 
-import com.focusit.script.ScriptsClassLoader;
-import com.focusit.script.jmeter.JMeterJSFlightBridge;
-import com.focusit.script.jmeter.JMeterRecorderContext;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
 
 /**
  * Interface to control jmeter proxy recorder
@@ -50,16 +48,10 @@ public class JMeterRecorder
 
     private JMeterScriptProcessor scriptProcessor;
 
-    public JMeterRecorder(ScriptsClassLoader classLoader)
+    public JMeterRecorder()
     {
         this.context = new JMeterRecorderContext();
-        this.scriptProcessor = new JMeterScriptProcessor(this, classLoader);
-    }
-
-    public JMeterRecorder(JMeterRecorderContext context, JMeterScriptProcessor scriptProcessor)
-    {
-        this.context = context;
-        this.scriptProcessor = scriptProcessor;
+        this.scriptProcessor = new JMeterScriptProcessor();
     }
 
     public JMeterScriptProcessor getScriptProcessor()
@@ -157,7 +149,7 @@ public class JMeterRecorder
         Collections.sort(samples, (o1, o2) -> {
             String num1 = o1.getName().split(" ")[0];
             String num2 = o2.getName().split(" ")[0];
-            return ((Integer)Integer.parseInt(num1)).compareTo((Integer)Integer.parseInt(num2));
+            return ((Integer)Integer.parseInt(num1)).compareTo(Integer.parseInt(num2));
         });
 
         for (TestElement sample : samples)
@@ -210,7 +202,7 @@ public class JMeterRecorder
             {
                 HTTPSamplerBase http = (HTTPSamplerBase)sample;
 
-                scriptProcessor.processScenario(http, parent, vars);
+                scriptProcessor.processScenario(http, parent, vars, this);
             }
         }
         SaveService.saveTree(hashTree, outStream);

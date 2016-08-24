@@ -1,18 +1,19 @@
 package com.focusit.jsflight.player.cli;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-
-import org.apache.commons.io.FileUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.focusit.jmeter.JMeterRecorder;
 import com.focusit.jsflight.player.scenario.ScenarioProcessor;
 import com.focusit.jsflight.player.scenario.UserScenario;
 import com.focusit.jsflight.player.webdriver.SeleniumDriver;
+import com.focusit.jsflight.utils.StringUtils;
+import com.focusit.script.ScriptEngine;
+import org.apache.commons.io.FileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 public class CliPlayer
 {
@@ -31,9 +32,10 @@ public class CliPlayer
 
     private void prepareJmeterIfNeeded(UserScenario scenario) throws Exception
     {
-        jmeter = new JMeterRecorder(scenario.getConfiguration().getCommonConfiguration().getScriptClassloader());
+        ScriptEngine.init(scenario.getConfiguration().getCommonConfiguration().getScriptClassloader());
+        jmeter = new JMeterRecorder();
         String templatePath = config.getJmxTemplatePath();
-        if (templatePath.trim().isEmpty())
+        if (StringUtils.isEmptyOrWhiteSpace(templatePath))
         {
             LOG.info("Initializing Jmeter with default jmx template: template.jmx");
             jmeter.init();
@@ -88,14 +90,13 @@ public class CliPlayer
 
     private void updateControllers(UserScenario scenario) throws IOException
     {
-        if (this.config.getJmeterStepPreprocess() != null && !this.config.getJmeterStepPreprocess().trim().isEmpty())
+        if (!StringUtils.isNullOrEmptyOrWhiteSpace(this.config.getJmeterStepPreprocess()))
         {
             jmeter.getScriptProcessor().setRecordingScript(
                     new String(Files.readAllBytes(Paths.get(config.getJmeterStepPreprocess().trim())), "UTF-8"));
         }
 
-        if (this.config.getJmeterScenarioPreprocess() != null
-                && !this.config.getJmeterScenarioPreprocess().trim().isEmpty())
+        if (!StringUtils.isNullOrEmptyOrWhiteSpace(this.config.getJmeterScenarioPreprocess()))
         {
             jmeter.getScriptProcessor().setProcessScript(
                     new String(Files.readAllBytes(Paths.get(config.getJmeterScenarioPreprocess().trim())), "UTF-8"));

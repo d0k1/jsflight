@@ -1,18 +1,15 @@
 package org.apache.jmeter.protocol.http.proxy;
 
+import org.apache.jmeter.gui.Stoppable;
+import org.apache.jorphan.util.JOrphanUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-
-import org.apache.jmeter.gui.Stoppable;
-import org.apache.jorphan.logging.LoggingManager;
-import org.apache.jorphan.util.JOrphanUtils;
-import org.apache.log.Logger;
 
 /**
  * Copy past of org.apache.jmeter.protocol.http.proxy.Daemon
@@ -23,7 +20,7 @@ import org.apache.log.Logger;
 public class JMeterDaemon extends Thread implements Stoppable
 {
 
-    private static final Logger log = LoggingManager.getLoggerForClass();
+    private static final Logger LOG = LoggerFactory.getLogger(JMeterProxyControl.class);;
 
     /**
      * The time (in milliseconds) to wait when accepting a client connection.
@@ -91,7 +88,7 @@ public class JMeterDaemon extends Thread implements Stoppable
         this.target = target;
         this.daemonPort = port;
         this.proxyClass = proxyClass;
-        log.info("Creating Daemon Socket on port: " + daemonPort);
+        LOG.info("Creating Daemon Socket on port: " + daemonPort);
         mainSocket = new ServerSocket(daemonPort);
         mainSocket.setSoTimeout(ACCEPT_TIMEOUT);
     }
@@ -104,12 +101,7 @@ public class JMeterDaemon extends Thread implements Stoppable
     public void run()
     {
         running = true;
-        log.info("Test Script Recorder up and running!");
-
-        // Maps to contain page and form encodings
-        // TODO - do these really need to be shared between all Proxy instances?
-        Map<String, String> pageEncodings = Collections.synchronizedMap(new HashMap<String, String>());
-        Map<String, String> formEncodings = Collections.synchronizedMap(new HashMap<String, String>());
+        LOG.info("Test Script Recorder up and running!");
 
         try
         {
@@ -123,7 +115,7 @@ public class JMeterDaemon extends Thread implements Stoppable
                     {
                         // Pass request to new proxy thread
                         JMeterProxy thd = proxyClass.newInstance();
-                        thd.configure(clientSocket, target, pageEncodings, formEncodings);
+                        thd.configure(clientSocket, target);
                         thd.setRecorder(target.getRecorder());
                         thd.start();
                     }
@@ -135,20 +127,16 @@ public class JMeterDaemon extends Thread implements Stoppable
                     // told to stop running.
                 }
             }
-            log.info("HTTP(S) Test Script Recorder stopped");
+            LOG.info("HTTP(S) Test Script Recorder stopped");
         }
         catch (Exception e)
         {
-            log.warn("HTTP(S) Test Script Recorder stopped", e);
+            LOG.warn("HTTP(S) Test Script Recorder stopped", e);
         }
         finally
         {
             JOrphanUtils.closeQuietly(mainSocket);
         }
-
-        // Clear maps
-        pageEncodings = null;
-        formEncodings = null;
     }
 
     /**
