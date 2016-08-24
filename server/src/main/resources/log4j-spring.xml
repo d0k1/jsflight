@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+    <Properties>
+        <Property name="pattern">%-5p | %d{yyyy-MM-dd HH:mm:ss} | [%t] %C{2} (%F:%L) - %m%n</Property>
+        <Property name="coloredPattern">%d %highlight{%-5p}{FATAL=bright red, ERROR=red, WARN=yellow, INFO=cyan, DEBUG=green, TRACE=bright blue} %style{[%t] %C{2} (%F:%L) -}{bright,black} %m%n</Property>
+        <Property name="fileName">${sys:logging.file}</Property>
+        <Property name="filePattern">${fileName}.%i</Property>
+    </Properties>
+    <Appenders>
+        <File name="FILE" fileName="${fileName}" append="true">
+            <PatternLayout pattern="${pattern}"/>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="100 MB"/>
+            </Policies>
+            <DefaultRolloverStrategy fileIndex="min" max="100"/>
+        </File>
+        <Console name="STDOUT" target="SYSTEM_OUT">
+            <PatternLayout pattern="%-5p | %d{yyyy-MM-dd HH:mm:ss} | [%t] %C{2} (%F:%L) - %m%n"/>
+        </Console>
+    </Appenders>
+
+    <Loggers>
+        <Logger name="com.focusit" level="debug"/>
+
+        <Root level="info">
+            <AppenderRef ref="STDOUT"/>
+            <AppenderRef ref="FILE"/>
+        </Root>
+    </Loggers>
+</Configuration>

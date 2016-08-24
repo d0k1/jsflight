@@ -1,22 +1,21 @@
 package com.focusit.jsflight.player.scenario;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.file.Paths;
-import java.util.Map;
-
-import org.json.JSONObject;
-import org.openqa.selenium.WebDriver;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.focusit.jsflight.player.config.CommonConfiguration;
 import com.focusit.jsflight.player.constants.EventConstants;
 import com.focusit.jsflight.player.constants.EventType;
 import com.focusit.jsflight.player.script.PlayerScriptProcessor;
 import com.focusit.jsflight.player.webdriver.SeleniumDriver;
 import com.focusit.script.constants.ScriptBindingConstants;
+import org.json.JSONObject;
+import org.openqa.selenium.WebDriver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.file.Paths;
+import java.util.Map;
 
 /**
  * Class that really replays an event in given scenario and given selenium driver
@@ -170,6 +169,7 @@ public class ScenarioProcessor
                     .setSelectDeterminerScript(
                             scenario.getConfiguration().getWebConfiguration().getSelectDeterminerScript())
                     .setProcessSignalScript(commonConfiguration.getProcessSignalScript())
+                    .setSkipKeyboardScript(commonConfiguration.getSkipKeyboardScript())
                     .setGetFirefoxPidScript(commonConfiguration.getGetFirefoxPidScript())
                     .setFormDialogXpath(commonConfiguration.getFormOrDialogXpath());
 

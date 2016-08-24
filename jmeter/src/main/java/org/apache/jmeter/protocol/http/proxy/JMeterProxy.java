@@ -1,20 +1,6 @@
 package org.apache.jmeter.protocol.http.proxy;
 
-import java.io.*;
-import java.net.Socket;
-import java.net.URL;
-import java.net.UnknownHostException;
-import java.nio.charset.IllegalCharsetNameException;
-import java.security.GeneralSecurityException;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.net.ssl.*;
-
+import com.focusit.jmeter.JMeterRecorder;
 import org.apache.jmeter.protocol.http.control.HeaderManager;
 import org.apache.jmeter.protocol.http.parser.HTMLParseException;
 import org.apache.jmeter.protocol.http.sampler.HTTPSamplerBase;
@@ -28,7 +14,19 @@ import org.apache.jorphan.util.JOrphanUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.focusit.jmeter.JMeterRecorder;
+import javax.net.ssl.*;
+import java.io.*;
+import java.net.Socket;
+import java.net.URL;
+import java.net.UnknownHostException;
+import java.nio.charset.IllegalCharsetNameException;
+import java.security.GeneralSecurityException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Copy paste of org.apache.jmeter.protocol.http.proxy.Proxy
@@ -87,11 +85,11 @@ public class JMeterProxy extends Thread
     /**
      * Reference to Deamon's Map of url string to page character encoding of that page
      */
-    private Map<String, String> pageEncodings;
+    private final Map<String, String> pageEncodings = new HashMap<>();
     /**
      * Reference to Deamon's Map of url string to character encoding for the form
      */
-    private Map<String, String> formEncodings;
+    private final Map<String, String> formEncodings = new HashMap<>();
     private String port; // For identifying LOG messages
     private KeyStore keyStore; // keystore for SSL keys; fixed at config except for dynamic host key generation
     private String keyPassword;
@@ -190,7 +188,7 @@ public class JMeterProxy extends Thread
                 }
                 catch (IOException ioe)
                 { // most likely this is because of a certificate error
-                    // param.length is 2 here
+                  // param.length is 2 here
                     final String url = " for '" + param[0] + "'";
                     LOG.warn(port + "Problem with SSL certificate" + url
                             + "? Ensure browser is set to accept the JMeter proxy cert: " + ioe.getMessage());
@@ -298,9 +296,8 @@ public class JMeterProxy extends Thread
 
                 if (sampler != null)
                 {
-                    LOG.info(Thread.currentThread().getName() + ":Start scripting " + sampler.getName() + "\nHash "
-                            + System.identityHashCode(sampler));
-                    if (target.getRecorder().getScriptProcessor().processSampleDuringRecord(sampler, result))
+                    LOG.info("Start scripting " + sampler.getName() + "\nHash " + System.identityHashCode(sampler));
+                    if (target.getRecorder().getScriptProcessor().processSampleDuringRecord(sampler, result, recorder))
                     {
                         if (!target.getRecorder().getBridge().isCurrentStepEmpty())
                         {
@@ -312,8 +309,7 @@ public class JMeterProxy extends Thread
                                 sampler,
                                 children.isEmpty() ? null : (TestElement[])children.toArray(new TestElement[children
                                         .size()]), result);
-                        LOG.info(Thread.currentThread().getName() + ":End scripting " + sampler.getName() + "\nHash "
-                                + System.identityHashCode(sampler));
+                        LOG.info("End scripting " + sampler.getName() + "\nHash " + System.identityHashCode(sampler));
                     }
                 }
             }
@@ -329,7 +325,7 @@ public class JMeterProxy extends Thread
             {
                 sampler.threadFinished(); // Needed for HTTPSampler2
 
-                LOG.info(Thread.currentThread().getName() + ":" + "Finally dead " + sampler.getName());
+                LOG.info("Finally dead " + sampler.getName());
             }
         }
     }
@@ -342,17 +338,12 @@ public class JMeterProxy extends Thread
      *
      * @param _clientSocket  the socket connection to the client
      * @param _target        the ProxyControl which will receive the generated sampler
-     * @param _pageEncodings reference to the Map of Deamon, with mappings from page urls to encoding used
-     * @param _formEncodings reference to the Map of Deamon, with mappings from form action urls to encoding used
      */
-    public void configure(Socket _clientSocket, JMeterProxyControl _target, Map<String, String> _pageEncodings,
-            Map<String, String> _formEncodings)
+    public void configure(Socket _clientSocket, JMeterProxyControl _target)
     {
         this.target = _target;
         this.clientSocket = _clientSocket;
         this.captureHttpHeaders = _target.getCaptureHttpHeaders();
-        this.pageEncodings = _pageEncodings;
-        this.formEncodings = _formEncodings;
         this.port = "[" + clientSocket.getPort() + "] ";
         this.keyStore = _target.getKeyStore();
         this.keyPassword = _target.getKeyPassword();
@@ -368,7 +359,7 @@ public class JMeterProxy extends Thread
     {
         FormCharSetFinder finder = new FormCharSetFinder();
         if (!result.getContentType().startsWith("text/"))
-        { // TODO perhaps make more specific than this?
+        {
             return; // no point parsing anything else, e.g. GIF ...
         }
         try
@@ -405,10 +396,7 @@ public class JMeterProxy extends Thread
         if (pageEncoding != null)
         {
             String urlWithoutQuery = getUrlWithoutQuery(result.getURL());
-            synchronized (pageEncodings)
-            {
-                pageEncodings.put(urlWithoutQuery, pageEncoding);
-            }
+            pageEncodings.put(urlWithoutQuery, pageEncoding);
         }
         return pageEncoding;
     }

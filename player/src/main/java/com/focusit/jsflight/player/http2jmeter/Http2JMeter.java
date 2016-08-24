@@ -1,8 +1,12 @@
 package com.focusit.jsflight.player.http2jmeter;
 
-import java.io.*;
-import java.util.*;
-
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.FastInput;
+import com.esotericsoftware.kryo.serializers.MapSerializer;
+import com.focusit.jsflight.recorder.internalevent.IdRecordInfo;
+import com.focusit.jsflight.recorder.internalevent.InternalEventRecorder;
+import com.focusit.jsflight.recorder.internalevent.httprequest.HttpRecordInformation;
+import com.focusit.jsflight.utils.StringUtils;
 import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.control.LoopController;
 import org.apache.jmeter.control.TransactionController;
@@ -20,12 +24,8 @@ import org.apache.jmeter.util.JMeterUtils;
 import org.apache.jorphan.collections.HashTree;
 import org.apache.jorphan.collections.HashTreeTraverser;
 
-import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.io.FastInput;
-import com.esotericsoftware.kryo.serializers.MapSerializer;
-import com.focusit.jsflight.recorder.internalevent.IdRecordInfo;
-import com.focusit.jsflight.recorder.internalevent.InternalEventRecorder;
-import com.focusit.jsflight.recorder.internalevent.httprequest.HttpRecordInformation;
+import java.io.*;
+import java.util.*;
 
 /**
  * This example shows how to convert raw traffic recorded by HttpRecorder to JMeter scenario to reproduce a load
@@ -224,7 +224,7 @@ public class Http2JMeter
         for (RestoredRequest request : requests)
         {
             String uuid = getUserUuidByRequest(request);
-            if (uuid != null && uuid.trim().length() > 0)
+            if (!StringUtils.isNullOrEmptyOrWhiteSpace(uuid))
             {
                 List<RestoredRequest> filtered = result.get(uuid);
                 if (filtered == null)
@@ -253,7 +253,7 @@ public class Http2JMeter
         sample.setMethod(request.method);
         Arguments sampleArgs = new Arguments();
 
-        if (request.payload != null && request.payload.trim().length() > 0)
+        if (!StringUtils.isNullOrEmptyOrWhiteSpace(request.payload))
         {
             HTTPArgument arg = new HTTPArgument();
             arg.setAlwaysEncoded(false);
@@ -324,4 +324,5 @@ public class Http2JMeter
                     + ", additional=" + additional + '}';
         }
     }
+
 }

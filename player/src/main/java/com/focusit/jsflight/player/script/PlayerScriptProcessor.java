@@ -2,6 +2,7 @@ package com.focusit.jsflight.player.script;
 
 import com.focusit.jsflight.player.constants.EventConstants;
 import com.focusit.jsflight.player.scenario.UserScenario;
+import com.focusit.jsflight.utils.StringUtils;
 import com.focusit.script.ScriptEngine;
 import com.focusit.script.constants.ScriptBindingConstants;
 import groovy.lang.Binding;
@@ -28,12 +29,10 @@ import java.util.regex.Matcher;
 public class PlayerScriptProcessor
 {
     private static final Logger LOG = LoggerFactory.getLogger(PlayerScriptProcessor.class);
-    private ScriptEngine engine;
     private UserScenario scenario;
 
     public PlayerScriptProcessor(UserScenario scenario)
     {
-        engine = new ScriptEngine(scenario.getConfiguration().getCommonConfiguration().getScriptClassloader());
         this.scenario = scenario;
     }
 
@@ -114,7 +113,7 @@ public class PlayerScriptProcessor
             script = event.has(EventConstants.POST) ? event.getString(EventConstants.POST) : "";
         }
 
-        if (script.trim().isEmpty())
+        if (StringUtils.isNullOrEmptyOrWhiteSpace(script))
         {
             return;
         }
@@ -191,11 +190,11 @@ public class PlayerScriptProcessor
 
     public <T> T executeGroovyScript(String scriptBody, Map<String, Object> bindings, Class<T> clazz)
     {
-        LOG.debug("Executing script:\n", scriptBody);
+        LOG.debug("Executing script:\n{}", scriptBody);
         Binding binding = new Binding(bindings);
         addBasicBindings(binding);
 
-        Script script = engine.getThreadBindedScript(scriptBody);
+        Script script = ScriptEngine.getScript(scriptBody);
 
         if (script == null)
         {
@@ -210,7 +209,7 @@ public class PlayerScriptProcessor
         }
         catch (ClassCastException ex)
         {
-            LOG.warn(ex.getMessage(), ex);
+            LOG.error(ex.getMessage(), ex);
             return null;
         }
     }
@@ -218,7 +217,7 @@ public class PlayerScriptProcessor
     private void addBasicBindings(Binding binding)
     {
         binding.setVariable(ScriptBindingConstants.LOGGER, LOG);
-        binding.setVariable(ScriptBindingConstants.CLASSLOADER, engine.getClassLoader());
+        binding.setVariable(ScriptBindingConstants.CLASSLOADER, ScriptEngine.getClassLoader());
         binding.setVariable(ScriptBindingConstants.PLAYER_CONTEXT, scenario.getContext());
     }
 }

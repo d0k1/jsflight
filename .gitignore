@@ -23,3 +23,5 @@ player/test.json.pretty
 # IDEA
 *.iml
 .idea/*
+
+*/target

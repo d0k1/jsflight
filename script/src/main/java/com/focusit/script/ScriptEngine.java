@@ -1,115 +1,92 @@
 package com.focusit.script;
 
-import java.util.HashMap;
-import java.util.concurrent.ConcurrentHashMap;
-
-import javax.annotation.Nullable;
-
+import com.focusit.jsflight.utils.StringUtils;
+import groovy.lang.Binding;
+import groovy.lang.GroovyClassLoader;
+import groovy.lang.Script;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import groovy.lang.Binding;
-import groovy.lang.GroovyShell;
-import groovy.lang.Script;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Groovy script "compiler"
  * Class parses the script into some intermediate form and hold a reference to it.
- * Also class provides a thread local storage for scripts.
  * Created by doki on 06.04.16.
  */
-public class ScriptEngine
+public final class ScriptEngine
 {
-    // Storage to hold compiled script(s) in thread's bounds. Thread safe!
-    // One script for one thread. No way to manipulate script's bindings outside calling thread
-    private static final ThreadLocal<HashMap<String, Script>> threadBindedScripts = new ThreadLocal<>();
+    private static final ScriptEngine INSTANCE = new ScriptEngine();
     private static final Logger LOG = LoggerFactory.getLogger(ScriptEngine.class);
-    // General purpose script storage.
-    // Not Thread Safe, because compiled script has writable bindings. So one thread can easily change other one's bindings
-    private final ConcurrentHashMap<String, Script> generalScripts = new ConcurrentHashMap<>();
-    private final Script NO_SCRIPT = new Script()
-    {
-        @Override
-        public Object run()
-        {
-            return null;
-        }
-    };
-    private volatile ClassLoader loader;
-    private GroovyShell shell;
+    private static final ConcurrentHashMap<String, Class<? extends Script>> SCRIPT_CLASSES = new ConcurrentHashMap<>();
+    private static Boolean initialized = false;
+    private static GroovyClassLoader groovyClassLoader;
 
-    public ScriptEngine(ClassLoader classLoader)
+    private ScriptEngine() {}
+
+    private static void throwIfNotInitialized()
     {
-        this.loader = classLoader;
-        shell = new GroovyShell(loader);
+        if (!initialized)
+        {
+            throw new IllegalStateException("ScriptEngine wasn't initialized");
+        }
     }
 
-    public ClassLoader getClassLoader()
+    private static ScriptEngine getInstance()
     {
-        return this.loader;
+        throwIfNotInitialized();
+        return INSTANCE;
     }
 
-    @Nullable
-    public Script getScript(String script)
+    public static Script getScript(String scriptBody)
     {
-        if (script == null)
-        {
-            return null;
-        }
-
-        if (script.isEmpty())
-        {
-            return null;
-        }
-
-        Script result = generalScripts.get(script);
-
-        if (result == null)
-        {
-            if (script.trim().length() > 0)
-            {
-                result = shell.parse(script);
-            }
-            else
-            {
-                result = NO_SCRIPT;
-            }
-            generalScripts.put(script, result);
-        }
-
-        if (result.equals(NO_SCRIPT))
-        {
-            return null;
-        }
-
-        return result;
+        return getInstance().getScriptInternal(scriptBody);
     }
 
-    public Script getThreadBindedScript(String script)
+    public static void init(ClassLoader classLoader)
     {
-
-        if (script == null)
+        if (initialized)
         {
+            return;
+        }
+        groovyClassLoader = new GroovyClassLoader(classLoader);
+        initialized = true;
+    }
 
+    public static ClassLoader getClassLoader()
+    {
+        return getInstance().getClassLoaderInternal();
+    }
+
+    private Script getScriptInternal(String scriptBody)
+    {
+        if (StringUtils.isNullOrEmptyOrWhiteSpace(scriptBody))
+        {
             return null;
         }
 
-        HashMap<String, Script> scripts = threadBindedScripts.get();
-        if (scripts == null)
+        Class<? extends Script> clazz = SCRIPT_CLASSES
+                .computeIfAbsent(scriptBody, s -> groovyClassLoader.parseClass(s));
+        try
         {
-            scripts = new HashMap<>();
-            threadBindedScripts.set(scripts);
+            Script script = clazz.newInstance();
+            script.setBinding(new Binding());
+            return script;
         }
-
-        Script result = scripts.get(script);
-
-        if (result == null)
+        catch (InstantiationException e)
         {
-            result = shell.parse(script);
-            result.setBinding(new Binding());
-            scripts.put(script, result);
+            LOG.error(String.format("Failed to create script instance:\n%s", scriptBody), e);
+            throw new RuntimeException(e);
         }
+        catch (IllegalAccessException e)
+        {
+            LOG.error(e.getMessage(), e);
+            throw new RuntimeException(e);
+        }
+    }
 
-        return result;
+    private ClassLoader getClassLoaderInternal()
+    {
+        return groovyClassLoader.getParent();
     }
 }

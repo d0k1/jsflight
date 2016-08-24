@@ -23,7 +23,6 @@ public class UserScenario
     private static final Set<String> ALLOWED_EVENT_TYPES = new HashSet<>(Arrays.asList(EventType.CLICK,
             EventType.KEY_PRESS, EventType.KEY_UP, EventType.KEY_DOWN, EventType.SCROLL_EMULATION,
             EventType.MOUSEWHEEL, EventType.MOUSEDOWN, EventType.SCRIPT));
-    // TODO add classpath for scripts
     private static HashMap<String, JSONObject> lastEvents = new HashMap<>();
     private volatile int position = 0;
     private List<JSONObject> events = new ArrayList<>();
