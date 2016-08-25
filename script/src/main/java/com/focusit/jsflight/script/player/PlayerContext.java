@@ -2,11 +2,15 @@ package com.focusit.jsflight.script.player;
 
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.focusit.jsflight.script.jmeter.JMeterJSFlightBridge;
 import org.json.JSONObject;
+
+import com.focusit.jsflight.script.jmeter.JMeterJSFlightBridge;
 
 import groovy.lang.Binding;
 
+/**
+ * Some intermediate variables passed between various scripts and other modules
+ */
 public class PlayerContext
 {
     private static final ConcurrentHashMap<String, Object> context = new ConcurrentHashMap<>();

@@ -1,8 +1,8 @@
 package com.focusit.jsflight.script.jmeter;
 
-import org.json.JSONObject;
-
 import java.util.concurrent.ConcurrentHashMap;
+
+import org.json.JSONObject;
 
 /**
  * Class holds references to user scenario step and associated http samples.
@@ -10,6 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class JMeterJSFlightBridge
 {
+    public static final String DO_NOT_USE_IT_STEP = "DO NOT USE IT";
     public final JSONObject NO_SCENARIO_STEP;
     private final ConcurrentHashMap<Object, JSONObject> samplersEvents = new ConcurrentHashMap<>();
     private JSONObject currentScenarioStep;
@@ -17,7 +18,7 @@ public class JMeterJSFlightBridge
     public JMeterJSFlightBridge()
     {
         NO_SCENARIO_STEP = new JSONObject();
-        NO_SCENARIO_STEP.put("DO NOT USE IT", true);
+        NO_SCENARIO_STEP.put(DO_NOT_USE_IT_STEP, true);
         currentScenarioStep = NO_SCENARIO_STEP;
     }
 
