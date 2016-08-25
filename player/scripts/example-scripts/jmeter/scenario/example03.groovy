@@ -1,6 +1,6 @@
-import com.focusit.player.constants.EventConstants
-import com.focusit.script.jmeter.JMeterJSFlightBridge
-import com.focusit.script.jmeter.JMeterRecorderContext
+import com.focusit.jsflight.player.constants.EventConstants
+import com.focusit.jsflight.script.jmeter.JMeterJSFlightBridge
+import com.focusit.jsflight.script.jmeter.JMeterRecorderContext
 
 boolean accesKeyFound = false;
 

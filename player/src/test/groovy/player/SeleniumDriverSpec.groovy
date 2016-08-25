@@ -1,9 +1,9 @@
 package player
 
-import com.focusit.player.scenario.UserScenario
-import com.focusit.player.webdriver.SeleniumDriver
-import com.focusit.player.webdriver.WebDriverWrapper
-import com.focusit.script.ScriptEngine
+import com.focusit.jsflight.player.scenario.UserScenario
+import com.focusit.jsflight.player.webdriver.SeleniumDriver
+import com.focusit.jsflight.player.webdriver.WebDriverWrapper
+import com.focusit.jsflight.script.ScriptEngine
 import org.json.JSONObject
 import spock.lang.Shared
 import spock.lang.Specification

@@ -1,4 +1,4 @@
-import com.focusit.script.jmeter.JMeterRecorderContext
+import com.focusit.jsflight.script.jmeter.JMeterRecorderContext
 import spock.lang.Specification
 
 /**

@@ -1,6 +1,6 @@
 package org.apache.jmeter.protocol.http.proxy;
 
-import com.focusit.jmeter.JMeterRecorder;
+import com.focusit.jsflight.jmeter.JMeterRecorder;
 import org.apache.jmeter.protocol.http.control.HeaderManager;
 import org.apache.jmeter.protocol.http.parser.HTMLParseException;
 import org.apache.jmeter.protocol.http.sampler.HTTPSamplerBase;

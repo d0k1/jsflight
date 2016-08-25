@@ -1,4 +1,4 @@
-import com.focusit.script.jmeter.JMeterJSFlightBridge
+import com.focusit.jsflight.script.jmeter.JMeterJSFlightBridge
 import org.json.JSONObject
 import spock.lang.Specification
 
