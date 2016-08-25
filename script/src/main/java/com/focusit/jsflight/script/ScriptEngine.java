@@ -1,13 +1,16 @@
 package com.focusit.jsflight.script;
 
-import com.focusit.jsflight.utils.StringUtils;
-import groovy.lang.Binding;
-import groovy.lang.GroovyClassLoader;
-import groovy.lang.Script;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantLock;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.ConcurrentHashMap;
+import com.focusit.jsflight.utils.StringUtils;
+
+import groovy.lang.Binding;
+import groovy.lang.GroovyClassLoader;
+import groovy.lang.Script;
 
 /**
  * Groovy script "compiler"
@@ -19,10 +22,13 @@ public final class ScriptEngine
     private static final ScriptEngine INSTANCE = new ScriptEngine();
     private static final Logger LOG = LoggerFactory.getLogger(ScriptEngine.class);
     private static final ConcurrentHashMap<String, Class<? extends Script>> SCRIPT_CLASSES = new ConcurrentHashMap<>();
+    private static final ReentrantLock initLock = new ReentrantLock();
     private static Boolean initialized = false;
     private static GroovyClassLoader groovyClassLoader;
 
-    private ScriptEngine() {}
+    private ScriptEngine()
+    {
+    }
 
     private static void throwIfNotInitialized()
     {
@@ -34,8 +40,16 @@ public final class ScriptEngine
 
     private static ScriptEngine getInstance()
     {
-        throwIfNotInitialized();
-        return INSTANCE;
+        initLock.lock();
+        try
+        {
+            throwIfNotInitialized();
+            return INSTANCE;
+        }
+        finally
+        {
+            initLock.unlock();
+        }
     }
 
     public static Script getScript(String scriptBody)
@@ -49,8 +63,21 @@ public final class ScriptEngine
         {
             return;
         }
-        groovyClassLoader = new GroovyClassLoader(classLoader);
-        initialized = true;
+
+        initLock.lock();
+        try
+        {
+            if (initialized)
+            {
+                return;
+            }
+            groovyClassLoader = new GroovyClassLoader(classLoader);
+            initialized = true;
+        }
+        finally
+        {
+            initLock.unlock();
+        }
     }
 
     public static ClassLoader getClassLoader()
@@ -65,8 +92,8 @@ public final class ScriptEngine
             return null;
         }
 
-        Class<? extends Script> clazz = SCRIPT_CLASSES
-                .computeIfAbsent(scriptBody, s -> groovyClassLoader.parseClass(s));
+        Class<? extends Script> clazz = SCRIPT_CLASSES.computeIfAbsent(scriptBody,
+                s -> groovyClassLoader.parseClass(s));
         try
         {
             Script script = clazz.newInstance();
