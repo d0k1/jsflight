@@ -198,7 +198,7 @@
                     <!-- MainClass in mainfest make a executable jar -->
                     <archive>
                         <manifest>
-                            <mainClass>com.focusit.jsflight.player.Player</mainClass>
+                            <mainClass>com.focusit.player.Player</mainClass>
                         </manifest>
                     </archive>
 

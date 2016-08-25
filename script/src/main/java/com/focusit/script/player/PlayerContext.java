@@ -2,9 +2,8 @@ package com.focusit.script.player;
 
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.json.JSONObject;
-
 import com.focusit.script.jmeter.JMeterJSFlightBridge;
+import org.json.JSONObject;
 
 import groovy.lang.Binding;
 

@@ -1,11 +1,12 @@
-import com.focusit.jsflight.player.constants.EventConstants
+import com.focusit.player.constants.EventConstants
 import com.focusit.script.jmeter.JMeterJSFlightBridge
+import com.focusit.script.jmeter.JMeterRecorderContext
 
 boolean accesKeyFound = false;
 
 class Provider implements com.google.gwt.user.server.rpc.SerializationPolicyProvider {
     com.google.gwt.user.server.rpc.SerializationPolicy name;
-    private com.focusit.script.jmeter.JMeterRecorderContext ctx;
+    private JMeterRecorderContext ctx;
 
     Provider(request, ctx) {
         this.ctx = ctx;

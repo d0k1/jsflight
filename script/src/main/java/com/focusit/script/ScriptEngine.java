@@ -1,6 +1,6 @@
 package com.focusit.script;
 
-import com.focusit.jsflight.utils.StringUtils;
+import com.focusit.utils.StringUtils;
 import groovy.lang.Binding;
 import groovy.lang.GroovyClassLoader;
 import groovy.lang.Script;

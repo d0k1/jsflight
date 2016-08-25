@@ -1,6 +1,6 @@
 package com.focusit.specs.integration
 
-import com.focusit.ServerApplication
+import com.focusit.server.ServerApplication
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration
 import org.springframework.boot.autoconfigure.mongo.embedded.EmbeddedMongoAutoConfiguration

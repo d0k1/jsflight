@@ -1,11 +1,11 @@
 package com.focusit.specs.integration
 
-import com.focusit.ServerApplication
-import com.focusit.model.Event
-import com.focusit.model.Experiment
-import com.focusit.repository.EventRepositoryCustom
-import com.focusit.repository.ExperimentRepository
-import com.focusit.scenario.MongoDbScenario
+import com.focusit.server.ServerApplication
+import com.focusit.server.model.Event
+import com.focusit.server.model.Experiment
+import com.focusit.server.repository.EventRepositoryCustom
+import com.focusit.server.repository.ExperimentRepository
+import com.focusit.server.scenario.MongoDbScenario
 import org.bson.types.ObjectId
 import org.json.JSONObject
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration

@@ -225,7 +225,7 @@ public class JMeterProxy extends Thread
             {
                 LOG.debug(port + "Execute sample: " + sampler.getMethod() + " " + sampler.getUrl());
             }
-            LOG.info(Thread.currentThread().getName() + ":" + "Received " + sampler.getName());
+            LOG.info("Received " + sampler.getName());
             result = sampler.sample();
 
             // Find the page encoding and possibly encodings for forms in the page

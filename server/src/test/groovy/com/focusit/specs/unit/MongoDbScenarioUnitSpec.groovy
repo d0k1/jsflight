@@ -1,9 +1,9 @@
 package com.focusit.specs.unit
 
-import com.focusit.model.Experiment
-import com.focusit.repository.EventRepositoryCustom
-import com.focusit.repository.ExperimentRepository
-import com.focusit.scenario.MongoDbScenario
+import com.focusit.server.model.Experiment
+import com.focusit.server.repository.EventRepositoryCustom
+import com.focusit.server.repository.ExperimentRepository
+import com.focusit.server.scenario.MongoDbScenario
 import spock.lang.Specification
 
 

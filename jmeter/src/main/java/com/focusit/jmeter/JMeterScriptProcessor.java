@@ -88,7 +88,7 @@ public class JMeterScriptProcessor
             LOG.warn("Sample " + sampler.getName() + " script result UNDEFINED shifted to" + isOk);
         }
 
-        LOG.info(Thread.currentThread().getName() + ":" + "Sample " + sampler.getName() + " script result " + isOk);
+        LOG.info("Sample " + sampler.getName() + " script result " + isOk);
         return isOk;
     }
 
