@@ -1,7 +1,5 @@
 package com.focusit.jsflight.server;
 
-import javax.inject.Inject;
-
 import com.focusit.jsflight.server.service.SettingsService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -12,6 +10,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
+import javax.inject.Inject;
+
 /**
  * Generic Spring Boot Application entry point
  */
@@ -19,7 +19,7 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
 @EnableAutoConfiguration
 @ComponentScan
 @SpringBootApplication
-@EnableMongoRepositories(basePackages = "com.focusit.repository")
+@EnableMongoRepositories(basePackages = "com.focusit.jsflight.server.repository")
 @PropertySource(value = "classpath:application.properties", ignoreResourceNotFound = true)
 public class ServerApplication implements CommandLineRunner
 {
