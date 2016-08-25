@@ -9,7 +9,7 @@ import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.focusit.jmeter.JMeterRecorder;
+import com.focusit.jsflight.jmeter.JMeterRecorder;
 
 /**
  * Created by dkirpichenkov on 06.05.16.

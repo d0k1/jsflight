@@ -1,1 +1,1 @@
-java -Dcp=../external/player/liba -cp target/player-3.8.jar:target/player-3.8-jar-with-dependencies.jar com.focusit.jsflight.player.Player
+java -Dcp=../external/player/liba -cp target/player-3.8.jar:target/player-3.8-jar-with-dependencies.jar Player

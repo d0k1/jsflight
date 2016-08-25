@@ -6,8 +6,8 @@ import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.focusit.jsflight.recorder.internalevent.httprequest.HttpRecordInformation;
 import com.focusit.jsflight.recorder.internalevent.httprequest.HttpRecorderFilterBase;
+import com.focusit.jsflight.recorder.internalevent.httprequest.HttpRecordInformation;
 
 @WebFilter(filterName = "z_filter", asyncSupported = true, urlPatterns = { "/*" })
 public class HttpRecorderFilter extends HttpRecorderFilterBase

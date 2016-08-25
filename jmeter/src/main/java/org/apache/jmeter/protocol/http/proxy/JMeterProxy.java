@@ -1,6 +1,6 @@
 package org.apache.jmeter.protocol.http.proxy;
 
-import com.focusit.jmeter.JMeterRecorder;
+import com.focusit.jsflight.jmeter.JMeterRecorder;
 import org.apache.jmeter.protocol.http.control.HeaderManager;
 import org.apache.jmeter.protocol.http.parser.HTMLParseException;
 import org.apache.jmeter.protocol.http.sampler.HTTPSamplerBase;
@@ -225,7 +225,7 @@ public class JMeterProxy extends Thread
             {
                 LOG.debug(port + "Execute sample: " + sampler.getMethod() + " " + sampler.getUrl());
             }
-            LOG.info(Thread.currentThread().getName() + ":" + "Received " + sampler.getName());
+            LOG.info("Received " + sampler.getName());
             result = sampler.sample();
 
             // Find the page encoding and possibly encodings for forms in the page

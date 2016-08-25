@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+    <Properties>
+        <Property name="pattern">%-5level | %date{ISO8601} | [%tread] | %logger (%file:%line) - %msg%n</Property>
+        <Property name="serverFileName">${sys:logging.file}</Property>
+        <Property name="jmeterFileName">server.jmeter.log</Property>
+    </Properties>
+    <Appenders>
+        <RandomAccessFile name="SERVER_FILE" fileName="${serverFileName}" append="true">
+            <PatternLayout pattern="${pattern}"/>
+        </RandomAccessFile>
+        <RandomAccessFile name="JMETER_FILE" fileName="${jmeterFileName}" append="false">
+            <PatternLayout pattern="${pattern}"/>
+        </RandomAccessFile>
+        <Console name="STDOUT" target="SYSTEM_OUT">
+            <PatternLayout pattern="${pattern}"/>
+        </Console>
+    </Appenders>
+
+    <Loggers>
+        <Logger name="com.focusit" level="debug">
+            <AppenderRef ref="SERVER_FILE" />
+        </Logger>
+        <Logger name="org.apache.jmeter.protocol.http.proxy">
+            <AppenderRef ref="JMETER_FILE" />
+        </Logger>
+
+        <Root level="info">
+            <AppenderRef ref="STDOUT"/>
+        </Root>
+    </Loggers>
+</Configuration>

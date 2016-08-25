@@ -1,3 +1,4 @@
+import com.focusit.jsflight.script.jmeter.JMeterJSFlightBridge
 import org.json.JSONObject
 import spock.lang.Specification
 
@@ -7,7 +8,7 @@ import spock.lang.Specification
 
 class JMeterJSFlightBridgeSpec extends Specification {
 
-    com.focusit.script.jmeter.JMeterJSFlightBridge bridge = new com.focusit.script.jmeter.JMeterJSFlightBridge();
+    JMeterJSFlightBridge bridge = new JMeterJSFlightBridge();
 
     def "current step after construcor is literally null"() {
         when:

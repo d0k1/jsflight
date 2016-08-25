@@ -18,7 +18,7 @@ package org.apache.jmeter.protocol.http.proxy;
  *
  */
 
-import com.focusit.jmeter.JMeterRecorder;
+import com.focusit.jsflight.jmeter.JMeterRecorder;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.IOUtils;

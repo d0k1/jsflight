@@ -1,8 +1,8 @@
 package com.focusit.jsflight.player.config;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.focusit.script.ScriptsClassLoader;
-import com.focusit.script.constants.ScriptBindingConstants;
+import com.focusit.jsflight.script.ScriptsClassLoader;
+import com.focusit.jsflight.script.constants.ScriptBindingConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.annotation.Transient;

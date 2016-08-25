@@ -1,11 +1,11 @@
 package com.focusit.jsflight.player.webdriver;
 
-import com.focusit.jsflight.player.constants.EventConstants;
 import com.focusit.jsflight.player.constants.EventType;
 import com.focusit.jsflight.player.scenario.UserScenario;
 import com.focusit.jsflight.player.script.PlayerScriptProcessor;
+import com.focusit.jsflight.script.constants.ScriptBindingConstants;
+import com.focusit.jsflight.player.constants.EventConstants;
 import com.focusit.jsflight.utils.StringUtils;
-import com.focusit.script.constants.ScriptBindingConstants;
 import com.google.common.base.Predicate;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.json.JSONObject;

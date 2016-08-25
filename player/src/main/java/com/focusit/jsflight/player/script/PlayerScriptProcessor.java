@@ -1,10 +1,10 @@
 package com.focusit.jsflight.player.script;
 
-import com.focusit.jsflight.player.constants.EventConstants;
 import com.focusit.jsflight.player.scenario.UserScenario;
+import com.focusit.jsflight.player.constants.EventConstants;
 import com.focusit.jsflight.utils.StringUtils;
-import com.focusit.script.ScriptEngine;
-import com.focusit.script.constants.ScriptBindingConstants;
+import com.focusit.jsflight.script.ScriptEngine;
+import com.focusit.jsflight.script.constants.ScriptBindingConstants;
 import groovy.lang.Binding;
 import groovy.lang.Script;
 import groovy.text.SimpleTemplateEngine;

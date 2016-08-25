@@ -1,5 +1,5 @@
 import spock.lang.Specification
-import com.focusit.script.ScriptEngine;
+import com.focusit.jsflight.script.ScriptEngine;
 /**
  * Created by dkirpichenkov on 06.05.16.
  */

@@ -3,10 +3,11 @@ package com.focusit.jsflight.player.http2jmeter;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.FastInput;
 import com.esotericsoftware.kryo.serializers.MapSerializer;
-import com.focusit.jsflight.recorder.internalevent.IdRecordInfo;
 import com.focusit.jsflight.recorder.internalevent.InternalEventRecorder;
+import com.focusit.jsflight.recorder.internalevent.IdRecordInfo;
 import com.focusit.jsflight.recorder.internalevent.httprequest.HttpRecordInformation;
 import com.focusit.jsflight.utils.StringUtils;
+import com.focusit.jsflight.recorder.internalevent.httprequest.HttpRecorder;
 import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.control.LoopController;
 import org.apache.jmeter.control.TransactionController;
@@ -145,7 +146,7 @@ public class Http2JMeter
             String tag = new String(record.tag).trim();
 
             if (tag.equalsIgnoreCase(
-                    com.focusit.jsflight.recorder.internalevent.httprequest.HttpRecorder.HTTP_RECORDER_TAG))
+                    HttpRecorder.HTTP_RECORDER_TAG))
             {
                 HttpRecordInformation information = (HttpRecordInformation)record.data;
                 RestoredRequest request = new RestoredRequest();

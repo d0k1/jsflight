@@ -1,12 +1,12 @@
 package com.focusit.jsflight.player.scenario;
 
+import com.focusit.jsflight.player.script.PlayerScriptProcessor;
+import com.focusit.jsflight.script.player.PlayerContext;
+import com.focusit.jsflight.player.input.FileInput;
 import com.focusit.jsflight.player.config.Configuration;
 import com.focusit.jsflight.player.constants.EventConstants;
 import com.focusit.jsflight.player.constants.EventType;
 import com.focusit.jsflight.player.input.Events;
-import com.focusit.jsflight.player.input.FileInput;
-import com.focusit.jsflight.player.script.PlayerScriptProcessor;
-import com.focusit.script.player.PlayerContext;
 import org.json.JSONArray;
 import org.json.JSONObject;
 

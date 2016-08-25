@@ -1,10 +1,11 @@
+import com.focusit.jsflight.script.jmeter.JMeterRecorderContext
 import com.google.gwt.user.server.rpc.RPC
 
 java.lang.Thread.currentThread().setContextClassLoader(classloader);
 
 class Provider implements com.google.gwt.user.server.rpc.SerializationPolicyProvider {
     com.google.gwt.user.server.rpc.SerializationPolicy name;
-    private com.focusit.script.jmeter.JMeterRecorderContext ctx;
+    private JMeterRecorderContext ctx;
 
     Provider(request, ctx) {
         this.ctx = ctx;

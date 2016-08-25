@@ -3,8 +3,8 @@
  */
 
 
-import com.focusit.script.jmeter.JMeterJSFlightBridge
-import com.focusit.script.player.PlayerContext
+import com.focusit.jsflight.script.jmeter.JMeterJSFlightBridge
+import com.focusit.jsflight.script.player.PlayerContext
 import org.json.JSONObject
 import spock.lang.Specification
 

@@ -1,12 +1,12 @@
 package com.focusit.jsflight.player.ui;
 
-import com.focusit.jmeter.JMeterRecorder;
 import com.focusit.jsflight.player.fileconfigholder.*;
+import com.focusit.jsflight.player.scenario.UserScenario;
 import com.focusit.jsflight.player.input.FileInput;
 import com.focusit.jsflight.player.scenario.ScenarioProcessor;
-import com.focusit.jsflight.player.scenario.UserScenario;
+import com.focusit.jsflight.jmeter.JMeterRecorder;
 import com.focusit.jsflight.player.webdriver.SeleniumDriver;
-import com.focusit.script.ScriptEngine;
+import com.focusit.jsflight.script.ScriptEngine;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;

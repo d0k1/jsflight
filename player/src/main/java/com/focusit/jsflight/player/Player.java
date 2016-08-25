@@ -3,8 +3,8 @@ package com.focusit.jsflight.player;
 import com.beust.jcommander.JCommander;
 import com.focusit.jsflight.player.cli.CliConfig;
 import com.focusit.jsflight.player.cli.CliPlayer;
-import com.focusit.jsflight.player.ui.ExceptionDialog;
 import com.focusit.jsflight.player.ui.MainFrame;
+import com.focusit.jsflight.player.ui.ExceptionDialog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
