@@ -64,7 +64,6 @@ public class CliPlayer
         scenario.parse(config.getPathToRecording());
         scenario.postProcessScenario();
         seleniumDriver = new SeleniumDriver(scenario);
-        scenario.getContext().setJMeterBridge(jmeter.getBridge());
         if (config.isEnableRecording())
         {
             jmeter.setProxyPort(Integer.parseInt(config.getProxyPort()));

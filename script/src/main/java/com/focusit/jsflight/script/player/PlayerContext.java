@@ -1,12 +1,10 @@
 package com.focusit.jsflight.script.player;
 
-import java.util.concurrent.ConcurrentHashMap;
-
+import com.focusit.jsflight.script.jmeter.JMeterJSFlightBridge;
+import groovy.lang.Binding;
 import org.json.JSONObject;
 
-import com.focusit.jsflight.script.jmeter.JMeterJSFlightBridge;
-
-import groovy.lang.Binding;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Some intermediate variables passed between various scripts and other modules
@@ -14,7 +12,6 @@ import groovy.lang.Binding;
 public class PlayerContext
 {
     private static final ConcurrentHashMap<String, Object> context = new ConcurrentHashMap<>();
-    private JMeterJSFlightBridge jmeterBridge;
 
     public Binding asBindings()
     {
@@ -28,10 +25,7 @@ public class PlayerContext
 
     public void setCurrentScenarioStep(JSONObject currentScenarioStep)
     {
-        if (jmeterBridge != null)
-        {
-            jmeterBridge.setCurrentScenarioStep(currentScenarioStep);
-        }
+        JMeterJSFlightBridge.getInstance().setCurrentScenarioStep(currentScenarioStep);
     }
 
     public void put(String key, Object value)
@@ -42,10 +36,5 @@ public class PlayerContext
     public void reset()
     {
         context.keySet().forEach(context::remove);
-    }
-
-    public void setJMeterBridge(JMeterJSFlightBridge JMeterBridge)
-    {
-        this.jmeterBridge = JMeterBridge;
     }
 }

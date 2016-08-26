@@ -1,6 +1,5 @@
 package com.focusit.jsflight.jmeter;
 
-import com.focusit.jsflight.script.jmeter.JMeterJSFlightBridge;
 import com.focusit.jsflight.script.jmeter.JMeterRecorderContext;
 import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.protocol.http.control.HeaderManager;
@@ -41,8 +40,6 @@ public class JMeterRecorder
 
     private HashTree varsPlace = null;
     private String currentTemplate = DEFAULT_TEMPLATE_NAME;
-
-    private JMeterJSFlightBridge bridge = new JMeterJSFlightBridge();
 
     private JMeterRecorderContext context;
 
@@ -285,15 +282,5 @@ public class JMeterRecorder
     public void setContext(JMeterRecorderContext context)
     {
         this.context = context;
-    }
-
-    public JMeterJSFlightBridge getBridge()
-    {
-        return bridge;
-    }
-
-    public void setBridge(JMeterJSFlightBridge bridge)
-    {
-        this.bridge = bridge;
     }
 }

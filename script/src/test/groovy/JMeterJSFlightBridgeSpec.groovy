@@ -8,7 +8,7 @@ import spock.lang.Specification
 
 class JMeterJSFlightBridgeSpec extends Specification {
 
-    JMeterJSFlightBridge bridge = new JMeterJSFlightBridge();
+    JMeterJSFlightBridge bridge = JMeterJSFlightBridge.getInstance();
 
     def "current step after construcor is literally null"() {
         when:
