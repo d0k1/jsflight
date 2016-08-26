@@ -2,12 +2,12 @@ package com.focusit.jsflight.player.script;
 
 import com.focusit.jsflight.player.scenario.UserScenario;
 import com.focusit.jsflight.player.constants.EventConstants;
-import com.focusit.jsflight.utils.StringUtils;
 import com.focusit.jsflight.script.ScriptEngine;
 import com.focusit.jsflight.script.constants.ScriptBindingConstants;
 import groovy.lang.Binding;
 import groovy.lang.Script;
 import groovy.text.SimpleTemplateEngine;
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -113,7 +113,7 @@ public class PlayerScriptProcessor
             script = event.has(EventConstants.POST) ? event.getString(EventConstants.POST) : "";
         }
 
-        if (StringUtils.isNullOrEmptyOrWhiteSpace(script))
+        if (StringUtils.isBlank(script))
         {
             return;
         }

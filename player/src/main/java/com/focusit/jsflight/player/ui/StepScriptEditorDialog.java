@@ -1,7 +1,7 @@
 package com.focusit.jsflight.player.ui;
 
 import com.focusit.jsflight.player.scenario.UserScenario;
-import com.focusit.jsflight.utils.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.swing.*;
 import javax.swing.table.TableCellEditor;
@@ -54,7 +54,7 @@ public class StepScriptEditorDialog extends DefaultCellEditor implements TableCe
     {
         newInput = dialog.getNewValue();
 
-        if (!StringUtils.isNullOrEmptyOrWhiteSpace(newInput))
+        if (!StringUtils.isBlank(newInput))
         {
             scenario.getStepAt(position).put(stepProperty, newInput);
         }

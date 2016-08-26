@@ -5,9 +5,9 @@ import com.focusit.jsflight.player.scenario.UserScenario;
 import com.focusit.jsflight.player.script.PlayerScriptProcessor;
 import com.focusit.jsflight.script.constants.ScriptBindingConstants;
 import com.focusit.jsflight.player.constants.EventConstants;
-import com.focusit.jsflight.utils.StringUtils;
 import com.google.common.base.Predicate;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.openqa.selenium.*;
 import org.openqa.selenium.NoSuchElementException;
@@ -239,10 +239,10 @@ public class SeleniumDriver
             }
 
             DesiredCapabilities cap = new DesiredCapabilities();
-            if (!StringUtils.isNullOrEmptyOrWhiteSpace(proxyHost))
+            if (!StringUtils.isBlank(proxyHost))
             {
                 String host = proxyHost;
-                if (!StringUtils.isNullOrEmptyOrWhiteSpace(proxyPort))
+                if (!StringUtils.isBlank(proxyPort))
                 {
                     host += ":" + proxyPort;
                 }
@@ -254,7 +254,7 @@ public class SeleniumDriver
             {
                 FirefoxProfile profile = createProfile();
                 FirefoxBinary binary;
-                if (!StringUtils.isNullOrEmptyOrWhiteSpace(path))
+                if (!StringUtils.isBlank(path))
                 {
                     binary = new FirefoxBinary(new File(path));
                 }
@@ -262,7 +262,7 @@ public class SeleniumDriver
                 {
                     binary = new FirefoxBinary();
                 }
-                if (!StringUtils.isNullOrEmptyOrWhiteSpace(display))
+                if (!StringUtils.isBlank(display))
                 {
                     display = availiableDisplays.remove(0);
                     LOG.info("Binding to {} display", display);
@@ -274,7 +274,7 @@ public class SeleniumDriver
             }
             else
             {
-                if (!StringUtils.isNullOrEmptyOrWhiteSpace(path))
+                if (!StringUtils.isBlank(path))
                 {
                     cap.setCapability("phantomjs.binary.path", path);
 
