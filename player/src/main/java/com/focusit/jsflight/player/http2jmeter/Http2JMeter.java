@@ -3,6 +3,7 @@ package com.focusit.jsflight.player.http2jmeter;
 import java.io.*;
 import java.util.*;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.control.LoopController;
 import org.apache.jmeter.control.TransactionController;
@@ -27,7 +28,6 @@ import com.focusit.jsflight.recorder.internalevent.IdRecordInfo;
 import com.focusit.jsflight.recorder.internalevent.InternalEventRecorder;
 import com.focusit.jsflight.recorder.internalevent.httprequest.HttpRecordInformation;
 import com.focusit.jsflight.recorder.internalevent.httprequest.HttpRecorder;
-import com.focusit.jsflight.utils.StringUtils;
 
 /**
  * This example shows how to convert raw traffic recorded by HttpRecorder to JMeter scenario to reproduce a load
@@ -240,7 +240,7 @@ public class Http2JMeter
         for (RestoredRequest request : requests)
         {
             String uuid = getUserUuidByRequest(request);
-            if (!StringUtils.isNullOrEmptyOrWhiteSpace(uuid))
+            if (!StringUtils.isWhitespace(uuid))
             {
                 Integer filtered = result.get(uuid);
                 if (filtered == null)
@@ -272,7 +272,7 @@ public class Http2JMeter
         sample.setMethod(request.method);
         Arguments sampleArgs = new Arguments();
 
-        if (!StringUtils.isNullOrEmptyOrWhiteSpace(request.payload))
+        if (!StringUtils.isWhitespace(request.payload))
         {
             HTTPArgument arg = new HTTPArgument();
             arg.setAlwaysEncoded(false);
