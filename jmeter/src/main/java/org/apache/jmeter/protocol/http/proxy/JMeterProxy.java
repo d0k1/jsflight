@@ -1,6 +1,7 @@
 package org.apache.jmeter.protocol.http.proxy;
 
 import com.focusit.jsflight.jmeter.JMeterRecorder;
+import com.focusit.jsflight.script.jmeter.JMeterJSFlightBridge;
 import org.apache.jmeter.protocol.http.control.HeaderManager;
 import org.apache.jmeter.protocol.http.parser.HTMLParseException;
 import org.apache.jmeter.protocol.http.sampler.HTTPSamplerBase;
@@ -299,10 +300,10 @@ public class JMeterProxy extends Thread
                     LOG.info("Start scripting " + sampler.getName() + "\nHash " + System.identityHashCode(sampler));
                     if (target.getRecorder().getScriptProcessor().processSampleDuringRecord(sampler, result, recorder))
                     {
-                        if (!target.getRecorder().getBridge().isCurrentStepEmpty())
+                        if (!JMeterJSFlightBridge.getInstance().isCurrentStepEmpty())
                         {
                             // save link to JSFlight event
-                            target.getRecorder().getBridge().addSampler(sampler);
+                            JMeterJSFlightBridge.getInstance().addSampler(sampler);
                         }
 
                         target.deliverSampler(

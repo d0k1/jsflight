@@ -1,16 +1,14 @@
 package com.focusit.jsflight.script;
 
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.ReentrantLock;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.focusit.jsflight.utils.StringUtils;
-
 import groovy.lang.Binding;
 import groovy.lang.GroovyClassLoader;
 import groovy.lang.Script;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Groovy script "compiler"
@@ -87,7 +85,7 @@ public final class ScriptEngine
 
     private Script getScriptInternal(String scriptBody)
     {
-        if (StringUtils.isNullOrEmptyOrWhiteSpace(scriptBody))
+        if (StringUtils.isBlank(scriptBody))
         {
             return null;
         }

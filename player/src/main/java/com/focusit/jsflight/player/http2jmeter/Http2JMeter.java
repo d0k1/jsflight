@@ -6,8 +6,8 @@ import com.esotericsoftware.kryo.serializers.MapSerializer;
 import com.focusit.jsflight.recorder.internalevent.InternalEventRecorder;
 import com.focusit.jsflight.recorder.internalevent.IdRecordInfo;
 import com.focusit.jsflight.recorder.internalevent.httprequest.HttpRecordInformation;
-import com.focusit.jsflight.utils.StringUtils;
 import com.focusit.jsflight.recorder.internalevent.httprequest.HttpRecorder;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.control.LoopController;
 import org.apache.jmeter.control.TransactionController;
@@ -225,7 +225,7 @@ public class Http2JMeter
         for (RestoredRequest request : requests)
         {
             String uuid = getUserUuidByRequest(request);
-            if (!StringUtils.isNullOrEmptyOrWhiteSpace(uuid))
+            if (!StringUtils.isBlank(uuid))
             {
                 List<RestoredRequest> filtered = result.get(uuid);
                 if (filtered == null)
@@ -254,7 +254,7 @@ public class Http2JMeter
         sample.setMethod(request.method);
         Arguments sampleArgs = new Arguments();
 
-        if (!StringUtils.isNullOrEmptyOrWhiteSpace(request.payload))
+        if (!StringUtils.isBlank(request.payload))
         {
             HTTPArgument arg = new HTTPArgument();
             arg.setAlwaysEncoded(false);

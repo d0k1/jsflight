@@ -2,6 +2,7 @@ package com.focusit.jsflight.jmeter;
 
 import com.focusit.jsflight.script.constants.ScriptBindingConstants;
 import com.focusit.jsflight.script.ScriptEngine;
+import com.focusit.jsflight.script.jmeter.JMeterJSFlightBridge;
 import groovy.lang.Binding;
 import groovy.lang.Script;
 import org.apache.jmeter.config.Arguments;
@@ -64,7 +65,7 @@ public class JMeterScriptProcessor
         binding.setVariable(ScriptBindingConstants.REQUEST, sampler);
         binding.setVariable(ScriptBindingConstants.RESPONSE, result);
         binding.setVariable(ScriptBindingConstants.CONTEXT, recorder.getContext());
-        binding.setVariable(ScriptBindingConstants.JSFLIGHT, recorder.getBridge());
+        binding.setVariable(ScriptBindingConstants.JSFLIGHT, JMeterJSFlightBridge.getInstance());
         binding.setVariable(ScriptBindingConstants.CLASSLOADER, classLoader);
 
         boolean isOk = true;
@@ -105,7 +106,7 @@ public class JMeterScriptProcessor
         binding.setVariable(ScriptBindingConstants.SAMPLE, sample);
         binding.setVariable(ScriptBindingConstants.TREE, tree);
         binding.setVariable(ScriptBindingConstants.CONTEXT, recorder.getContext());
-        binding.setVariable(ScriptBindingConstants.JSFLIGHT, recorder.getBridge());
+        binding.setVariable(ScriptBindingConstants.JSFLIGHT, JMeterJSFlightBridge.getInstance());
         binding.setVariable(ScriptBindingConstants.USER_VARIABLES, userVariables);
         binding.setVariable(ScriptBindingConstants.CLASSLOADER, classLoader);
 

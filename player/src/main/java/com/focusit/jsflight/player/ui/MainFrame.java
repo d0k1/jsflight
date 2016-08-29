@@ -91,7 +91,6 @@ public class MainFrame
         ScriptEngine.init(scenario.getConfiguration().getCommonConfiguration().getScriptClassloader());
         jmeter = new JMeterRecorder();
         jmeter.init();
-        scenario.getContext().setJMeterBridge(jmeter.getBridge());
     }
 
     public AbstractTableModel createEventTableModel()

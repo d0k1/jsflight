@@ -37,8 +37,7 @@ class PlayerContextSpec extends Specification {
     }
 
     def "can set current scenario step in jmeter's bridge"() {
-        JMeterJSFlightBridge bridge = new JMeterJSFlightBridge();
-        ctx.setJMeterBridge(bridge);
+        JMeterJSFlightBridge bridge = JMeterJSFlightBridge.getInstance();
         JSONObject step = new JSONObject();
 
         when:

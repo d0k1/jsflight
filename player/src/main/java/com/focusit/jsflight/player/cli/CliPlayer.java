@@ -4,9 +4,9 @@ import com.focusit.jsflight.player.scenario.UserScenario;
 import com.focusit.jsflight.player.webdriver.SeleniumDriver;
 import com.focusit.jsflight.player.scenario.ScenarioProcessor;
 import com.focusit.jsflight.jmeter.JMeterRecorder;
-import com.focusit.jsflight.utils.StringUtils;
 import com.focusit.jsflight.script.ScriptEngine;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +35,7 @@ public class CliPlayer
         ScriptEngine.init(scenario.getConfiguration().getCommonConfiguration().getScriptClassloader());
         jmeter = new JMeterRecorder();
         String templatePath = config.getJmxTemplatePath();
-        if (StringUtils.isEmptyOrWhiteSpace(templatePath))
+        if (StringUtils.isBlank(templatePath))
         {
             LOG.info("Initializing Jmeter with default jmx template: template.jmx");
             jmeter.init();
@@ -64,7 +64,6 @@ public class CliPlayer
         scenario.parse(config.getPathToRecording());
         scenario.postProcessScenario();
         seleniumDriver = new SeleniumDriver(scenario);
-        scenario.getContext().setJMeterBridge(jmeter.getBridge());
         if (config.isEnableRecording())
         {
             jmeter.setProxyPort(Integer.parseInt(config.getProxyPort()));
@@ -90,13 +89,13 @@ public class CliPlayer
 
     private void updateControllers(UserScenario scenario) throws IOException
     {
-        if (!StringUtils.isNullOrEmptyOrWhiteSpace(this.config.getJmeterStepPreprocess()))
+        if (!StringUtils.isBlank(this.config.getJmeterStepPreprocess()))
         {
             jmeter.getScriptProcessor().setRecordingScript(
                     new String(Files.readAllBytes(Paths.get(config.getJmeterStepPreprocess().trim())), "UTF-8"));
         }
 
-        if (!StringUtils.isNullOrEmptyOrWhiteSpace(this.config.getJmeterScenarioPreprocess()))
+        if (!StringUtils.isBlank(this.config.getJmeterScenarioPreprocess()))
         {
             jmeter.getScriptProcessor().setProcessScript(
                     new String(Files.readAllBytes(Paths.get(config.getJmeterScenarioPreprocess().trim())), "UTF-8"));
