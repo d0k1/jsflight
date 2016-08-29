@@ -1,13 +1,8 @@
 package com.focusit.jsflight.player.http2jmeter;
 
-import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.io.FastInput;
-import com.esotericsoftware.kryo.serializers.MapSerializer;
-import com.focusit.jsflight.recorder.internalevent.InternalEventRecorder;
-import com.focusit.jsflight.recorder.internalevent.IdRecordInfo;
-import com.focusit.jsflight.recorder.internalevent.httprequest.HttpRecordInformation;
-import com.focusit.jsflight.recorder.internalevent.httprequest.HttpRecorder;
-import org.apache.commons.lang3.StringUtils;
+import java.io.*;
+import java.util.*;
+
 import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.control.LoopController;
 import org.apache.jmeter.control.TransactionController;
@@ -25,8 +20,14 @@ import org.apache.jmeter.util.JMeterUtils;
 import org.apache.jorphan.collections.HashTree;
 import org.apache.jorphan.collections.HashTreeTraverser;
 
-import java.io.*;
-import java.util.*;
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.FastInput;
+import com.esotericsoftware.kryo.serializers.MapSerializer;
+import com.focusit.jsflight.recorder.internalevent.IdRecordInfo;
+import com.focusit.jsflight.recorder.internalevent.InternalEventRecorder;
+import com.focusit.jsflight.recorder.internalevent.httprequest.HttpRecordInformation;
+import com.focusit.jsflight.recorder.internalevent.httprequest.HttpRecorder;
+import com.focusit.jsflight.utils.StringUtils;
 
 /**
  * This example shows how to convert raw traffic recorded by HttpRecorder to JMeter scenario to reproduce a load
@@ -39,8 +40,21 @@ public class Http2JMeter
     public static void main(String[] args) throws IOException
     {
         Http2JMeter converter = new Http2JMeter();
-        List<RestoredRequest> requests = converter.getRequests(args[0]);
-        Map<String, List<RestoredRequest>> byUuid = converter.getRequestsByUsers(requests);
+        List<RestoredRequest> requests = converter.getRequests(args[0], Integer.parseInt(args[2]));
+
+        requests.sort((o1, o2) -> {
+            if (o1.timestampNs < o2.timestampNs)
+            {
+                return -1;
+            }
+            if (o1.timestampNs == o2.timestampNs)
+            {
+                return 0;
+            }
+            return 1;
+        });
+
+        LinkedHashMap<String, Integer> byUuid = converter.getRequestsByUsers(requests);
 
         System.out.println(byUuid.size());
         String pathToTemplate = args[1];
@@ -131,7 +145,7 @@ public class Http2JMeter
         SaveService.saveTree(hashTree, new FileOutputStream(new File("result.jmx")));
     }
 
-    public List<RestoredRequest> getRequests(String file) throws IOException
+    public List<RestoredRequest> getRequests(String file, int limit) throws IOException
     {
         List<RestoredRequest> requests = new ArrayList<>();
         FastInput input = new FastInput(new FileInputStream(file));
@@ -145,8 +159,7 @@ public class Http2JMeter
 
             String tag = new String(record.tag).trim();
 
-            if (tag.equalsIgnoreCase(
-                    HttpRecorder.HTTP_RECORDER_TAG))
+            if (tag.equalsIgnoreCase(HttpRecorder.HTTP_RECORDER_TAG))
             {
                 HttpRecordInformation information = (HttpRecordInformation)record.data;
                 RestoredRequest request = new RestoredRequest();
@@ -168,12 +181,14 @@ public class Http2JMeter
                 {
                     request.payload = new String(information.payload);
                 }
-                else
-                {
 
-                }
                 request.additional = information.additional;
                 request.timestampNs = record.timestampNs;
+
+                if (limit > 0 && requests.size() >= limit)
+                {
+                    break;
+                }
                 requests.add(request);
             }
         }
@@ -218,23 +233,26 @@ public class Http2JMeter
         return uuid;
     }
 
-    public Map<String, List<RestoredRequest>> getRequestsByUsers(List<RestoredRequest> requests)
+    public LinkedHashMap<String, Integer> getRequestsByUsers(List<RestoredRequest> requests)
     {
-        HashMap<String, List<RestoredRequest>> result = new HashMap<>();
+        LinkedHashMap<String, Integer> result = new LinkedHashMap<>();
 
         for (RestoredRequest request : requests)
         {
             String uuid = getUserUuidByRequest(request);
-            if (!StringUtils.isBlank(uuid))
+            if (!StringUtils.isNullOrEmptyOrWhiteSpace(uuid))
             {
-                List<RestoredRequest> filtered = result.get(uuid);
+                Integer filtered = result.get(uuid);
                 if (filtered == null)
                 {
-                    filtered = new ArrayList<>();
+                    filtered = new Integer(0);
                     result.put(uuid, filtered);
                 }
+                else
+                {
+                    result.put(uuid, filtered + 1);
+                }
 
-                filtered.add(request);
             }
         }
 
@@ -254,7 +272,7 @@ public class Http2JMeter
         sample.setMethod(request.method);
         Arguments sampleArgs = new Arguments();
 
-        if (!StringUtils.isBlank(request.payload))
+        if (!StringUtils.isNullOrEmptyOrWhiteSpace(request.payload))
         {
             HTTPArgument arg = new HTTPArgument();
             arg.setAlwaysEncoded(false);
