@@ -36,7 +36,7 @@ import java.util.Date;
 public class MainFrame
 {
 
-    private static final Logger log = LoggerFactory.getLogger(MainFrame.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MainFrame.class);
     private final ButtonGroup buttonGroup = new ButtonGroup();
     private UserScenario scenario = new UserScenario();
     private AbstractTableModel model;
@@ -55,7 +55,6 @@ public class MainFrame
     private JRadioButton usePhantomButton;
     private JRadioButton useFirefoxButton;
     private JCheckBox makeShots;
-    private JPanel jmeterPanel;
     private JTextField screenDirTextField;
     private JTextField scenarioTextField;
     private JTextField pjsPath;
@@ -68,7 +67,6 @@ public class MainFrame
     private RSyntaxTextArea stepProcessScript;
     private RSyntaxTextArea scenarioProcessScript;
     private RSyntaxTextArea duplicatesScriptArea;
-    private JButton resetButton;
     private JTextField duplicatesFilePath;
     private JCheckBox useRandomCharsBox;
     private JTextField scriptEventHandlerFilePath;
@@ -295,7 +293,7 @@ public class MainFrame
         }
         catch (Exception e)
         {
-            log.error(e.toString(), e);
+            LOG.error(e.toString(), e);
         }
     }
 
@@ -480,7 +478,7 @@ public class MainFrame
                 }
                 catch (IOException e1)
                 {
-                    log.error(e1.toString(), e1);
+                    LOG.error(e1.toString(), e1);
                 }
             }
         });
@@ -641,7 +639,7 @@ public class MainFrame
                 }
                 catch (IOException e1)
                 {
-                    log.error(e1.toString(), e1);
+                    LOG.error(e1.toString(), e1);
                 }
             }
         });
@@ -1006,7 +1004,7 @@ public class MainFrame
 
         formDialogXpathField = new JTextField();
         optionsPanel.add(formDialogXpathField, "4, 26, fill, default");
-        jmeterPanel = new JPanel();
+        JPanel jmeterPanel = new JPanel();
         tabbedPane.addTab("JMeter", null, jmeterPanel, null);
         jmeterPanel.setLayout(new FormLayout(new ColumnSpec[] { FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC, FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"), },
@@ -1036,12 +1034,12 @@ public class MainFrame
                 }
                 catch (IOException e1)
                 {
-                    log.error(e1.toString(), e1);
+                    LOG.error(e1.toString(), e1);
                 }
             }
         });
 
-        resetButton = new JButton("Reset");
+        JButton resetButton = new JButton("Reset");
         resetButton.addActionListener(new ActionListener()
         {
             @Override
@@ -1055,7 +1053,7 @@ public class MainFrame
                 }
                 catch (IOException e1)
                 {
-                    log.error(e1.toString(), e1);
+                    LOG.error(e1.toString(), e1);
                 }
             }
         });
@@ -1088,7 +1086,7 @@ public class MainFrame
                 }
                 catch (IOException e1)
                 {
-                    log.error(e1.toString(), e1);
+                    LOG.error(e1.toString(), e1);
                 }
             }
         });
@@ -1350,7 +1348,7 @@ public class MainFrame
         }
         catch (Exception e)
         {
-            log.error(e.toString(), e);
+            LOG.error(e.toString(), e);
         }
         proxyHost.setText(scenario.getConfiguration().getCommonConfiguration().getProxyHost());
         proxyPort.setText(scenario.getConfiguration().getCommonConfiguration().getProxyPort());
@@ -1403,7 +1401,7 @@ public class MainFrame
         }
         catch (IOException e1)
         {
-            log.error(e1.toString(), e1);
+            LOG.error(e1.toString(), e1);
             throw e1;
         }
     }

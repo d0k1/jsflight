@@ -8,6 +8,7 @@ import org.apache.jmeter.protocol.http.sampler.HTTPSamplerBase;
 import org.apache.jmeter.protocol.http.util.ConversionUtils;
 import org.apache.jmeter.protocol.http.util.HTTPConstantsInterface;
 import org.apache.jmeter.samplers.SampleResult;
+import org.apache.jmeter.samplers.Sampler;
 import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.util.JMeterUtils;
 import org.apache.jorphan.util.JMeterException;
@@ -68,6 +69,14 @@ public class JMeterProxy extends Thread
         LOG.info("Proxy will remove the headers: " + removeList);
     }
 
+    /**
+     * Reference to Deamon's Map of url string to page character encoding of that page
+     */
+    private final Map<String, String> pageEncodings = new HashMap<>();
+    /**
+     * Reference to Deamon's Map of url string to character encoding for the form
+     */
+    private final Map<String, String> formEncodings = new HashMap<>();
     private JMeterRecorder recorder;
     // Use with SSL connection
     private OutputStream outStreamClient = null;
@@ -83,14 +92,6 @@ public class JMeterProxy extends Thread
      * Whether or not to capture the HTTP headers.
      */
     private boolean captureHttpHeaders;
-    /**
-     * Reference to Deamon's Map of url string to page character encoding of that page
-     */
-    private final Map<String, String> pageEncodings = new HashMap<>();
-    /**
-     * Reference to Deamon's Map of url string to character encoding for the form
-     */
-    private final Map<String, String> formEncodings = new HashMap<>();
     private String port; // For identifying LOG messages
     private KeyStore keyStore; // keystore for SSL keys; fixed at config except for dynamic host key generation
     private String keyPassword;
@@ -226,7 +227,7 @@ public class JMeterProxy extends Thread
             {
                 LOG.debug(port + "Execute sample: " + sampler.getMethod() + " " + sampler.getUrl());
             }
-            LOG.info("Received " + sampler.getName());
+            LOG.info(makeLogMessage("Received %s", sampler));
             result = sampler.sample();
 
             // Find the page encoding and possibly encodings for forms in the page
@@ -264,7 +265,7 @@ public class JMeterProxy extends Thread
         }
         finally
         {
-            if (sampler != null && isDebug)
+            if (sampler != null)
             {
                 LOG.debug(port + "Will deliver sample " + sampler.getName());
             }
@@ -297,9 +298,10 @@ public class JMeterProxy extends Thread
 
                 if (sampler != null)
                 {
-                    LOG.info("Start scripting " + sampler.getName() + "\nHash " + System.identityHashCode(sampler));
+                    LOG.info(makeLogMessage("Start scripting %s", sampler));
                     if (target.getRecorder().getScriptProcessor().processSampleDuringRecord(sampler, result, recorder))
                     {
+                        LOG.info(makeLogMessage("Adding sampler into tree: %s", sampler));
                         if (!JMeterJSFlightBridge.getInstance().isCurrentStepEmpty())
                         {
                             // save link to JSFlight event
@@ -308,10 +310,10 @@ public class JMeterProxy extends Thread
 
                         target.deliverSampler(
                                 sampler,
-                                children.isEmpty() ? null : (TestElement[])children.toArray(new TestElement[children
+                                children.isEmpty() ? null : children.toArray(new TestElement[children
                                         .size()]), result);
-                        LOG.info("End scripting " + sampler.getName() + "\nHash " + System.identityHashCode(sampler));
                     }
+                    LOG.info(makeLogMessage("End scripting %s", sampler));
                 }
             }
             try
@@ -325,10 +327,14 @@ public class JMeterProxy extends Thread
             if (sampler != null)
             {
                 sampler.threadFinished(); // Needed for HTTPSampler2
-
                 LOG.info("Finally dead " + sampler.getName());
             }
         }
+    }
+
+    private String makeLogMessage(String format, Sampler sampler)
+    {
+        return String.format(format, sampler.getName()) + ". Hash: " + System.identityHashCode(sampler);
     }
 
     /**

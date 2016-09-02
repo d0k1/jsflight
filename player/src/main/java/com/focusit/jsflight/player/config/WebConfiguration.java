@@ -1,11 +1,11 @@
 package com.focusit.jsflight.player.config;
 
-import java.io.IOException;
-import java.io.InputStream;
-
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * Created by dkirpichenkov on 06.05.16.
@@ -20,7 +20,7 @@ public class WebConfiguration
     private String duplicationScript = "";
     private String errorTextToSkipStep = "default text. Never skip errors";
     private String findBrowserErrorScript = "return null;";
-    private String emptySelections = "";
+    private String placeholders = "";
     private String selectXpath = "";
     private String selectDeterminerScript = "element.getAttribute(\"class\").contains(\"select\")";
 
@@ -44,14 +44,14 @@ public class WebConfiguration
         this.selectXpath = selectXpath;
     }
 
-    public String getEmptySelections()
+    public String getPlaceholders()
     {
-        return emptySelections;
+        return placeholders;
     }
 
-    public void setEmptySelections(String emptySelections)
+    public void setPlaceholders(String placeholders)
     {
-        this.emptySelections = emptySelections;
+        this.placeholders = placeholders;
     }
 
     public String getErrorTextToSkipStep()

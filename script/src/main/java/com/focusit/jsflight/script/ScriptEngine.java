@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
@@ -20,7 +21,7 @@ public final class ScriptEngine
     private static final ScriptEngine INSTANCE = new ScriptEngine();
     private static final Logger LOG = LoggerFactory.getLogger(ScriptEngine.class);
     private static final ConcurrentHashMap<String, Class<? extends Script>> SCRIPT_CLASSES = new ConcurrentHashMap<>();
-    private static final ReentrantLock initLock = new ReentrantLock();
+    private static final Lock initLock = new ReentrantLock();
     private static Boolean initialized = false;
     private static GroovyClassLoader groovyClassLoader;
 
