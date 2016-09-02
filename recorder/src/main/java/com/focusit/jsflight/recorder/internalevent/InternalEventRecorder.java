@@ -1,5 +1,8 @@
 package com.focusit.jsflight.recorder.internalevent;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.FastOutput;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -7,9 +10,6 @@ import java.io.UnsupportedEncodingException;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
-
-import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.io.FastOutput;
 
 /**
  * Recorder for special server event that must be recorded to get correct overall recording.
@@ -122,9 +122,6 @@ public class InternalEventRecorder
         private FastOutput output;
 
         private int filesCounter = 1;
-
-        // 4 mb buffer should be enough for everyone
-        private int size = 4 * 1024 * 1024;
 
         public StorageThread()
         {

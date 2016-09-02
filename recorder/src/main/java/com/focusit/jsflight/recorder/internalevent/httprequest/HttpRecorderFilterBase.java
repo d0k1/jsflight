@@ -1,20 +1,19 @@
 package com.focusit.jsflight.recorder.internalevent.httprequest;
 
-import java.io.IOException;
-import java.util.concurrent.atomic.AtomicBoolean;
+import com.focusit.jsflight.recorder.internalevent.InternalEventRecorder;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import com.focusit.jsflight.recorder.internalevent.InternalEventRecorder;
+import java.io.IOException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public abstract class HttpRecorderFilterBase implements Filter
 {
     public static final String ALREADY_FILTERED_SUFFIX = ".FILTERED";
     private static final AtomicBoolean enabled = new AtomicBoolean(false);
 
-    public final static void setEnabled(boolean enabled)
+    public static void setEnabled(boolean enabled)
     {
         HttpRecorderFilterBase.enabled.set(enabled);
     }
@@ -48,7 +47,7 @@ public abstract class HttpRecorderFilterBase implements Filter
         String alreadyFilteredAttributeName = getAlreadyFilteredAttributeName();
         boolean hasAlreadyFilteredAttribute = request.getAttribute(alreadyFilteredAttributeName) != null;
 
-        if (hasAlreadyFilteredAttribute || skipDispatch(httpRequest) || doNotRecordRequest(httpRequest, httpResponse))
+        if (hasAlreadyFilteredAttribute || skipDispatch() || doNotRecordRequest(httpRequest, httpResponse))
         {
 
             // Proceed without invoking this filter...
@@ -152,13 +151,9 @@ public abstract class HttpRecorderFilterBase implements Filter
         return false;
     }
 
-    private boolean skipDispatch(HttpServletRequest request)
+    private boolean skipDispatch()
     {
-        if (shouldNotFilterErrorDispatch())
-        {
-            return true;
-        }
-        return false;
+        return shouldNotFilterErrorDispatch();
     }
 
 }

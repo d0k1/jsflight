@@ -1,10 +1,10 @@
 package com.focusit.jsflight.player.webdriver;
 
+import com.focusit.jsflight.player.constants.EventConstants;
 import com.focusit.jsflight.player.constants.EventType;
 import com.focusit.jsflight.player.scenario.UserScenario;
 import com.focusit.jsflight.player.script.PlayerScriptProcessor;
 import com.focusit.jsflight.script.constants.ScriptBindingConstants;
-import com.focusit.jsflight.player.constants.EventConstants;
 import com.google.common.base.Predicate;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -76,7 +76,7 @@ public class SeleniumDriver
     private String maxElementGroovy;
     private String uiShownScript;
     private boolean useRandomChars;
-    private List<String> emptySelections;
+    private List<String> placeholders;
     private String selectXpath;
     private String selectDeterminerScript;
     private String processSignalScript;
@@ -133,9 +133,9 @@ public class SeleniumDriver
         return this;
     }
 
-    public SeleniumDriver setEmptySelections(String emptySelections)
+    public SeleniumDriver setPlaceholders(String placeholders)
     {
-        this.emptySelections = Arrays.asList(emptySelections.split(","));
+        this.placeholders = Arrays.asList(placeholders.split(","));
         return this;
     }
 
@@ -387,10 +387,8 @@ public class SeleniumDriver
     public void processKeyboardEvent(WebDriver wd, JSONObject event) throws UnsupportedEncodingException
     {
         WebElement element = findTargetWebElement(wd, event, scenario.getTargetForEvent(event));
-        if (element.equals(NO_OP_ELEMENT))
+        if (isNoOp(event, element))
         {
-            LOG.warn("Non operational element returned. Aborting event {} processing. Target xpath {}",
-                    event.get(EventConstants.EVENT_ID), event.getString(EventConstants.SECOND_TARGET));
             return;
         }
         initializeStringGenerator(useRandomChars);
@@ -414,24 +412,23 @@ public class SeleniumDriver
             {
                 char ch = (char)event.getBigInteger(EventConstants.CHAR_CODE).intValue();
                 String keys = stringGen.getAsString(ch);
-                if (!element.getTagName().contains("iframe"))
-                {
+                LOG.info("Trying to fill input with: {}", keys);
+                if (element.getTagName().contains("iframe")) {
+                    LOG.info("Input is iframe");
+                    WebDriver frame = wd.switchTo().frame(element);
+                    WebElement editor = frame.findElement(By.tagName("body"));
+                    editor.sendKeys(keys);
+                    wd.switchTo().defaultContent();
+                } else {
+                    LOG.info("Input is ordinary input");
                     String prevText = element.getAttribute("value");
-                    //If current value indicates a empty selection it must be discarded
-                    if (emptySelections.contains(prevText))
+                    //If current value indicates a placeholder it must be discarded
+                    if (placeholders.contains(prevText))
                     {
                         prevText = "";
                     }
                     element.clear();
                     element.sendKeys(prevText + keys);
-
-                }
-                else
-                {
-                    WebDriver frame = wd.switchTo().frame(element);
-                    WebElement editor = frame.findElement(By.tagName("body"));
-                    editor.sendKeys(keys);
-                    wd.switchTo().defaultContent();
                 }
             }
         }
@@ -487,13 +484,22 @@ public class SeleniumDriver
         }
     }
 
-    public void processMouseEvent(WebDriver wd, JSONObject event)
+    private boolean isNoOp(JSONObject event, WebElement element)
     {
-        WebElement element = findTargetWebElement(wd, event, scenario.getTargetForEvent(event));
         if (element.equals(NO_OP_ELEMENT))
         {
             LOG.warn("Non operational element returned. Aborting event {} processing. Target xpath {}",
                     event.get(EventConstants.EVENT_ID), event.getString(EventConstants.SECOND_TARGET));
+            return true;
+        }
+        return false;
+    }
+
+    public void processMouseEvent(WebDriver wd, JSONObject event)
+    {
+        WebElement element = findTargetWebElement(wd, event, scenario.getTargetForEvent(event));
+        if (isNoOp(event, element))
+        {
             return;
         }
         ensureElementInWindow(wd, element);
@@ -503,6 +509,7 @@ public class SeleniumDriver
         if (isSelect)
         {
             //Wait for select to popup
+            LOG.debug("Mouse event is kind of select");
             waitElement(wd, selectXpath);
         }
 
@@ -554,10 +561,8 @@ public class SeleniumDriver
             return;
         }
         WebElement el = findTargetWebElement(wd, event, target);
-        if (NO_OP_ELEMENT.equals(el))
+        if (isNoOp(event, el))
         {
-            LOG.warn("Non operational element returned. Aborting event {} processing. Target xpath {}",
-                    event.get(EventConstants.EVENT_ID), event.getString(EventConstants.SECOND_TARGET));
             return;
         }
         //Web lookup script MUST return //body element if scroll occurs not in a popup
@@ -737,11 +742,12 @@ public class SeleniumDriver
     {
         int windowHeight = wd.manage().window().getSize().getHeight();
         int elementYCoord = element.getLocation().getY();
-        if (elementYCoord > windowHeight) {
+        if (elementYCoord > windowHeight)
+        {
             //Using division of the Y coordinate by 2 ensures target element visibility in the browser view
             //anyway TODO think of not using hardcoded constants in scrolling
             String scrollScript = "window.scrollTo(0, " + elementYCoord / 2 + ");";
-            ((JavascriptExecutor) wd).executeScript(scrollScript);
+            ((JavascriptExecutor)wd).executeScript(scrollScript);
         }
     }
 
@@ -875,7 +881,8 @@ public class SeleniumDriver
         return this;
     }
 
-    public SeleniumDriver setSkipKeyboardScript(String skipKeyboardScript) {
+    public SeleniumDriver setSkipKeyboardScript(String skipKeyboardScript)
+    {
         this.skipKeyboardScript = skipKeyboardScript;
         return this;
     }
@@ -887,22 +894,28 @@ public class SeleniumDriver
 
     private static class CharStringGenerator implements StringGenerator
     {
+        private static final Logger LOG = LoggerFactory.getLogger(CharStringGenerator.class);
 
         @Override
         public String getAsString(char ch) throws UnsupportedEncodingException
         {
-            return String.valueOf(ch);
+            String result = String.valueOf(ch);
+            LOG.info("Returning {}", result);
+            return result;
         }
 
     }
 
     private static class RandomStringGenerator implements StringGenerator
     {
+        private static final Logger LOG = LoggerFactory.getLogger(RandomStringGenerator.class);
 
         @Override
         public String getAsString(char ch)
         {
-            return RandomStringUtils.randomAlphanumeric(1);
+            String result = RandomStringUtils.randomAlphanumeric(1);
+            LOG.info("Returning {}", result);
+            return result;
         }
 
     }

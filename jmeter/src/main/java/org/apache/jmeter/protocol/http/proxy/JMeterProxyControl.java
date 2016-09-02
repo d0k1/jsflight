@@ -25,13 +25,10 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.http.conn.ssl.AbstractVerifier;
-import org.apache.jmeter.assertions.gui.AssertionGui;
 import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.config.ConfigElement;
 import org.apache.jmeter.config.ConfigTestElement;
 import org.apache.jmeter.control.GenericController;
-import org.apache.jmeter.control.gui.LogicControllerGui;
-import org.apache.jmeter.control.gui.TransactionControllerGui;
 import org.apache.jmeter.engine.util.ValueReplacer;
 import org.apache.jmeter.functions.InvalidVariableException;
 import org.apache.jmeter.gui.tree.JMeterTreeNode;
@@ -39,8 +36,6 @@ import org.apache.jmeter.protocol.http.control.AuthManager;
 import org.apache.jmeter.protocol.http.control.Authorization;
 import org.apache.jmeter.protocol.http.control.Header;
 import org.apache.jmeter.protocol.http.control.HeaderManager;
-import org.apache.jmeter.protocol.http.gui.AuthPanel;
-import org.apache.jmeter.protocol.http.gui.HeaderPanel;
 import org.apache.jmeter.protocol.http.sampler.HTTPSampleResult;
 import org.apache.jmeter.protocol.http.sampler.HTTPSamplerBase;
 import org.apache.jmeter.protocol.http.sampler.HTTPSamplerFactory;
@@ -71,20 +66,13 @@ import java.util.prefs.Preferences;
 /**
  * Copy paste of org.apache.jmeter.protocol.http.proxy.ProxyControl
  */
+@SuppressWarnings({"unused", "unchecked"})
 public class JMeterProxyControl extends GenericController
 {
 
     public static final int DEFAULT_PORT = 8080;
-    // and as a string
-    public static final String DEFAULT_PORT_S = Integer.toString(DEFAULT_PORT);// Used by GUI
-    private static final Logger log = LoggerFactory.getLogger(JMeterProxyControl.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JMeterProxyControl.class);
     private static final long serialVersionUID = 240L;
-    private static final String ASSERTION_GUI = AssertionGui.class.getName();
-    private static final String TRANSACTION_CONTROLLER_GUI = TransactionControllerGui.class.getName();
-    private static final String LOGIC_CONTROLLER_GUI = LogicControllerGui.class.getName();
-    private static final String HEADER_PANEL = HeaderPanel.class.getName();
-    private static final String AUTH_PANEL = AuthPanel.class.getName();
-    private static final String AUTH_MANAGER = AuthManager.class.getName();
     //+ JMX file attributes
     private static final String PORT = "ProxyControlGui.port"; // $NON-NLS-1$
 
@@ -124,21 +112,10 @@ public class JMeterProxyControl extends GenericController
 
     //- JMX file attributes
 
-    // Must agree with the order of entries in the drop-down
-    // created in ProxyControlGui.createGroupingPanel()
-    //private static final int GROUPING_NO_GROUPS = 0;
-    private static final int GROUPING_ADD_SEPARATORS = 1;
-    private static final int GROUPING_IN_SIMPLE_CONTROLLERS = 2;
-    private static final int GROUPING_STORE_FIRST_ONLY = 3;
-    private static final int GROUPING_IN_TRANSACTION_CONTROLLERS = 4;
-
     // Original numeric order (we now use strings)
     private static final String SAMPLER_TYPE_HTTP_SAMPLER_JAVA = "0";
     private static final String SAMPLER_TYPE_HTTP_SAMPLER_HC3_1 = "1";
     private static final String SAMPLER_TYPE_HTTP_SAMPLER_HC4 = "2";
-
-    private static final long sampleGap = JMeterUtils.getPropDefault("proxy.pause", 5000); // $NON-NLS-1$
-    // Detect if user has pressed a new link
 
     // for ssl connection
     private static final String KEYSTORE_TYPE = JMeterUtils.getPropDefault("proxy.cert.type", "JKS"); // $NON-NLS-1$ $NON-NLS-2$
@@ -185,7 +162,7 @@ public class JMeterProxyControl extends GenericController
         if (CERT_ALIAS != null)
         {
             KEYSTORE_MODE = KeystoreMode.USER_KEYSTORE;
-            log.info("HTTP(S) Test Script Recorder will use the keystore '" + CERT_PATH_ABS + "' with the alias: '"
+            LOG.info("HTTP(S) Test Script Recorder will use the keystore '" + CERT_PATH_ABS + "' with the alias: '"
                     + CERT_ALIAS + "'");
         }
         else
@@ -197,13 +174,13 @@ public class JMeterProxyControl extends GenericController
             else if (USE_DYNAMIC_KEYS)
             {
                 KEYSTORE_MODE = KeystoreMode.DYNAMIC_KEYSTORE;
-                log.info("HTTP(S) Test Script Recorder SSL Proxy will use keys that support embedded 3rd party resources in file "
+                LOG.info("HTTP(S) Test Script Recorder SSL Proxy will use keys that support embedded 3rd party resources in file "
                         + CERT_PATH_ABS);
             }
             else
             {
                 KEYSTORE_MODE = KeystoreMode.JMETER_KEYSTORE;
-                log.warn("HTTP(S) Test Script Recorder SSL Proxy will use keys that may not work for embedded resources in file "
+                LOG.warn("HTTP(S) Test Script Recorder SSL Proxy will use keys that may not work for embedded resources in file "
                         + CERT_PATH_ABS);
             }
         }
@@ -218,8 +195,6 @@ public class JMeterProxyControl extends GenericController
      * Is there a better way to do this?
      */
     private transient KeyStore sslKeyStore;
-    private volatile boolean addAssertions = false;
-    private volatile int groupingMode = 0;
     private volatile boolean samplerRedirectAutomatically = false;
     private volatile boolean samplerFollowRedirects = false;
     private volatile boolean useKeepAlive = false;
@@ -238,8 +213,8 @@ public class JMeterProxyControl extends GenericController
     public JMeterProxyControl(JMeterRecorder jMeterRecorder)
     {
         setPort(DEFAULT_PORT);
-        setExcludeList(new HashSet<String>());
-        setIncludeList(new HashSet<String>());
+        setExcludeList(new HashSet<>());
+        setIncludeList(new HashSet<>());
         setCaptureHttpHeaders(true); // maintain original behaviour
         this.recorder = jMeterRecorder;
     }
@@ -301,7 +276,6 @@ public class JMeterProxyControl extends GenericController
 
     public void setAssertions(boolean b)
     {
-        addAssertions = b;
         setProperty(new BooleanProperty(ADD_ASSERTIONS, b));
     }
 
@@ -312,7 +286,6 @@ public class JMeterProxyControl extends GenericController
 
     public void setGroupingMode(int grouping)
     {
-        this.groupingMode = grouping;
         setProperty(new IntegerProperty(GROUPING_MODE, grouping));
     }
 
@@ -466,12 +439,12 @@ public class JMeterProxyControl extends GenericController
         }
         catch (GeneralSecurityException e)
         {
-            log.error("Could not initialise key store", e);
+            LOG.error("Could not initialise key store", e);
             throw new IOException("Could not create keystore", e);
         }
         catch (IOException e)
-        { // make sure we log the error
-            log.error("Could not initialise key store", e);
+        { // make sure we LOG the error
+            LOG.error("Could not initialise key store", e);
             throw e;
         }
         //        notifyTestListenersOfStart();
@@ -483,7 +456,7 @@ public class JMeterProxyControl extends GenericController
         }
         catch (IOException e)
         {
-            log.error("Could not create Proxy daemon", e);
+            LOG.error("Could not create Proxy daemon", e);
             throw e;
         }
     }
@@ -555,7 +528,6 @@ public class JMeterProxyControl extends GenericController
     public synchronized void deliverSampler(final HTTPSamplerBase sampler, final TestElement[] subConfigs,
             final SampleResult result)
     {
-        boolean notifySampleListeners = true;
         if (sampler != null)
         {
             if (ATTEMPT_REDIRECT_DISABLING && (samplerRedirectAutomatically || samplerFollowRedirects))
@@ -596,20 +568,15 @@ public class JMeterProxyControl extends GenericController
                 sampler.setImageParser(samplerDownloadImages);
 
                 Authorization authorization = createAuthorization(subConfigs, sampler);
-                if (authorization != null)
-                {
-                    //                    setAuthorization(authorization, myTarget);
-                }
                 placeSampler(sampler, subConfigs, myTarget);
             }
             else
             {
-                if (log.isDebugEnabled())
+                if (LOG.isDebugEnabled())
                 {
-                    log.debug("Sample excluded based on url or content-type: " + result.getUrlAsString() + " - "
+                    LOG.debug("Sample excluded based on url or content-type: " + result.getUrlAsString() + " - "
                             + result.getContentType());
                 }
-                notifySampleListeners = notifyChildSamplerListenersOfFilteredSamples;
                 result.setSampleLabel("[" + result.getSampleLabel() + "]");
             }
         }
@@ -627,7 +594,7 @@ public class JMeterProxyControl extends GenericController
      */
     private Authorization createAuthorization(final TestElement[] subConfigs, HTTPSamplerBase sampler)
     {
-        Header authHeader = null;
+        Header authHeader;
         Authorization authorization = null;
         // Iterate over subconfig elements searching for HeaderManager
         for (TestElement te : subConfigs)
@@ -645,7 +612,7 @@ public class JMeterProxyControl extends GenericController
                         authHeader = (Header)tep.getObjectValue();
                         String[] authHeaderContent = authHeader.getValue().split(" ");//$NON-NLS-1$
                         String authType = null;
-                        String authCredentialsBase64 = null;
+                        String authCredentialsBase64;
                         if (authHeaderContent.length >= 2)
                         {
                             authType = authHeaderContent[0];
@@ -657,7 +624,7 @@ public class JMeterProxyControl extends GenericController
                             }
                             catch (MalformedURLException e)
                             {
-                                log.error("Error filling url on authorization, message:" + e.getMessage(), e);
+                                LOG.error("Error filling url on authorization, message:" + e.getMessage(), e);
                                 authorization.setURL("${AUTH_BASE_URL}");//$NON-NLS-1$
                             }
                             // if HEADER_AUTHORIZATION contains "Basic"
@@ -726,7 +693,7 @@ public class JMeterProxyControl extends GenericController
             }
             catch (GeneralSecurityException e)
             {
-                log.error("Problem reading root CA from keystore", e);
+                LOG.error("Problem reading root CA from keystore", e);
                 return new String[] { "Problem with root certificate", e.getMessage() };
             }
         }
@@ -787,29 +754,20 @@ public class JMeterProxyControl extends GenericController
         String sampleContentType = result.getContentType();
         if (sampleContentType == null || sampleContentType.length() == 0)
         {
-            if (log.isDebugEnabled())
+            if (LOG.isDebugEnabled())
             {
-                log.debug("No Content-type found for : " + result.getUrlAsString());
+                LOG.debug("No Content-type found for : " + result.getUrlAsString());
             }
 
             return true;
         }
 
-        if (log.isDebugEnabled())
+        if (LOG.isDebugEnabled())
         {
-            log.debug("Content-type to filter : " + sampleContentType);
+            LOG.debug("Content-type to filter : " + sampleContentType);
         }
 
-        // Check if the include pattern is matched
-        boolean matched = testPattern(includeExp, sampleContentType, true);
-        if (!matched)
-        {
-            return false;
-        }
-
-        // Check if the exclude pattern is matched
-        matched = testPattern(excludeExp, sampleContentType, false);
-        return matched == true;
+        return testPattern(includeExp, sampleContentType, true) && testPattern(excludeExp, sampleContentType, false);
     }
 
     /**
@@ -819,17 +777,17 @@ public class JMeterProxyControl extends GenericController
      * @param sampleContentType
      * @return boolean true if Matching expression
      */
-    private final boolean testPattern(String expression, String sampleContentType, boolean expectedToMatch)
+    private boolean testPattern(String expression, String sampleContentType, boolean expectedToMatch)
     {
         if (expression != null && expression.length() > 0)
         {
-            if (log.isDebugEnabled())
+            if (LOG.isDebugEnabled())
             {
-                log.debug("Testing Expression : " + expression + " on sampleContentType:" + sampleContentType
+                LOG.debug("Testing Expression : " + expression + " on sampleContentType:" + sampleContentType
                         + ", expected to match:" + expectedToMatch);
             }
 
-            Pattern pattern = null;
+            Pattern pattern;
             try
             {
                 pattern = JMeterUtils.getPatternCache().getPattern(expression,
@@ -841,7 +799,7 @@ public class JMeterProxyControl extends GenericController
             }
             catch (MalformedCachePatternException e)
             {
-                log.warn("Skipped invalid content pattern: " + expression, e);
+                LOG.warn("Skipped invalid content pattern: " + expression, e);
             }
         }
         return true;
@@ -851,14 +809,7 @@ public class JMeterProxyControl extends GenericController
     {
         try
         {
-            JMeterUtils.runSafe(new Runnable()
-            {
-                @Override
-                public void run()
-                {
-                    myTarget.addTestElement(sampler);
-                }
-            });
+            JMeterUtils.runSafe(() -> myTarget.addTestElement(sampler));
         }
         catch (Exception e)
         {
@@ -924,13 +875,12 @@ public class JMeterProxyControl extends GenericController
 
     private boolean matchesPatterns(String url, CollectionProperty patterns)
     {
-        for (JMeterProperty jMeterProperty : (java.lang.Iterable<JMeterProperty>)patterns)
+        for (JMeterProperty jMeterProperty : patterns)
         {
             String item = jMeterProperty.getStringValue();
-            Pattern pattern = null;
             try
             {
-                pattern = JMeterUtils.getPatternCache().getPattern(item,
+                Pattern pattern = JMeterUtils.getPatternCache().getPattern(item,
                         Perl5Compiler.READ_ONLY_MASK | Perl5Compiler.SINGLELINE_MASK);
                 if (JMeterUtils.getMatcher().matches(url, pattern))
                 {
@@ -939,7 +889,7 @@ public class JMeterProxyControl extends GenericController
             }
             catch (MalformedCachePatternException e)
             {
-                log.warn("Skipped invalid pattern: " + item, e);
+                LOG.warn("Skipped invalid pattern: " + item, e);
             }
         }
         return false;
@@ -986,7 +936,7 @@ public class JMeterProxyControl extends GenericController
         }
         catch (InvalidVariableException e)
         {
-            log.warn("Invalid variables included for replacement into recorded " + "sample", e);
+            LOG.warn("Invalid variables included for replacement into recorded " + "sample", e);
         }
     }
 
@@ -1013,7 +963,7 @@ public class JMeterProxyControl extends GenericController
         case USER_KEYSTORE:
             storePassword = JMeterUtils.getPropDefault("proxy.cert.keystorepass", DEFAULT_PASSWORD); // $NON-NLS-1$;
             keyPassword = JMeterUtils.getPropDefault("proxy.cert.keypassword", DEFAULT_PASSWORD); // $NON-NLS-1$;
-            log.info("HTTP(S) Test Script Recorder will use the keystore '" + CERT_PATH_ABS + "' with the alias: '"
+            LOG.info("HTTP(S) Test Script Recorder will use the keystore '" + CERT_PATH_ABS + "' with the alias: '"
                     + CERT_ALIAS + "'");
             initUserKeyStore();
             break;
@@ -1035,7 +985,7 @@ public class JMeterProxyControl extends GenericController
             X509Certificate caCert = (X509Certificate)sslKeyStore.getCertificate(CERT_ALIAS);
             if (caCert == null)
             {
-                log.error("Could not find key with alias " + CERT_ALIAS);
+                LOG.error("Could not find key with alias " + CERT_ALIAS);
                 sslKeyStore = null;
             }
             else
@@ -1046,7 +996,7 @@ public class JMeterProxyControl extends GenericController
         catch (Exception e)
         {
             sslKeyStore = null;
-            log.error("Could not open keystore or certificate is not valid " + CERT_PATH_ABS + " " + e.getMessage());
+            LOG.error("Could not open keystore or certificate is not valid " + CERT_PATH_ABS + " " + e.getMessage());
         }
     }
 
@@ -1071,7 +1021,7 @@ public class JMeterProxyControl extends GenericController
                     else
                     {
                         caCert.checkValidity(new Date(System.currentTimeMillis() + DateUtils.MILLIS_PER_DAY));
-                        log.info("Valid alias found for " + alias);
+                        LOG.info("Valid alias found for " + alias);
                     }
                 }
             }
@@ -1080,17 +1030,17 @@ public class JMeterProxyControl extends GenericController
                 sslKeyStore = null; // if cert is not valid, flag up to recreate it
                 if (e.getCause() instanceof UnrecoverableKeyException)
                 {
-                    log.warn("Could not read key store " + e.getMessage() + "; cause: " + e.getCause().getMessage());
+                    LOG.warn("Could not read key store " + e.getMessage() + "; cause: " + e.getCause().getMessage());
                 }
                 else
                 {
-                    log.warn("Could not open/read key store " + e.getMessage()); // message includes the file name
+                    LOG.warn("Could not open/read key store " + e.getMessage()); // message includes the file name
                 }
             }
             catch (GeneralSecurityException e)
             {
                 sslKeyStore = null; // if cert is not valid, flag up to recreate it
-                log.warn("Problem reading key store: " + e.getMessage());
+                LOG.warn("Problem reading key store: " + e.getMessage());
             }
         }
         if (sslKeyStore == null)
@@ -1098,9 +1048,9 @@ public class JMeterProxyControl extends GenericController
             storePassword = RandomStringUtils.randomAlphanumeric(20); // Alphanum to avoid issues with command-line quoting
             keyPassword = storePassword; // we use same password for both
             setPassword(storePassword);
-            log.info("Creating Proxy CA in " + CERT_PATH_ABS);
+            LOG.info("Creating Proxy CA in " + CERT_PATH_ABS);
             KeyToolUtils.generateProxyCA(CERT_PATH, storePassword, CERT_VALIDITY);
-            log.info("Created keystore in " + CERT_PATH_ABS);
+            LOG.info("Created keystore in " + CERT_PATH_ABS);
             sslKeyStore = getKeyStore(storePassword.toCharArray()); // This should now work
         }
         final String sslDomains = getSslDomains().trim();
@@ -1114,7 +1064,7 @@ public class JMeterProxyControl extends GenericController
                 {
                     if (!sslKeyStore.containsAlias(subject))
                     {
-                        log.info("Creating entry " + subject + " in " + CERT_PATH_ABS);
+                        LOG.info("Creating entry " + subject + " in " + CERT_PATH_ABS);
                         KeyToolUtils.generateHostCert(CERT_PATH, storePassword, subject, CERT_VALIDITY);
                         sslKeyStore = getKeyStore(storePassword.toCharArray()); // reload to pick up new aliases
                         // reloading is very quick compared with creating an entry currently
@@ -1122,20 +1072,16 @@ public class JMeterProxyControl extends GenericController
                 }
                 else
                 {
-                    log.warn("Attempt to create an invalid domain certificate: " + subject);
+                    LOG.warn("Attempt to create an invalid domain certificate: " + subject);
                 }
             }
         }
     }
 
-    private boolean isValid(String subject)
-    {
+    private boolean isValid(String subject) {
         String parts[] = subject.split("\\.");
-        if (!parts[0].endsWith("*"))
-        { // not a wildcard
-            return true;
-        }
-        return parts.length >= 3 && AbstractVerifier.acceptableCountryWildcard(subject);
+        // not a wildcard
+        return !parts[0].endsWith("*") || parts.length >= 3 && AbstractVerifier.acceptableCountryWildcard(subject);
     }
 
     // This should only be called for a specific host
@@ -1145,7 +1091,7 @@ public class JMeterProxyControl extends GenericController
         { // ensure Proxy threads cannot interfere with each other
             if (!sslKeyStore.containsAlias(host))
             {
-                log.info(port + "Creating entry " + host + " in " + CERT_PATH_ABS);
+                LOG.info(port + "Creating entry " + host + " in " + CERT_PATH_ABS);
                 KeyToolUtils.generateHostCert(CERT_PATH, storePassword, host, CERT_VALIDITY);
             }
             sslKeyStore = getKeyStore(storePassword.toCharArray()); // reload after adding alias
@@ -1169,7 +1115,7 @@ public class JMeterProxyControl extends GenericController
             catch (Exception e)
             { // store is faulty, we need to recreate it
                 sslKeyStore = null; // if cert is not valid, flag up to recreate it
-                log.warn("Could not open expected file or certificate is not valid " + CERT_PATH_ABS + " "
+                LOG.warn("Could not open expected file or certificate is not valid " + CERT_PATH_ABS + " "
                         + e.getMessage());
             }
         }
@@ -1178,10 +1124,10 @@ public class JMeterProxyControl extends GenericController
             storePassword = RandomStringUtils.randomAlphanumeric(20); // Alphanum to avoid issues with command-line quoting
             keyPassword = storePassword; // we use same password for both
             setPassword(storePassword);
-            log.info("Generating standard keypair in " + CERT_PATH_ABS);
+            LOG.info("Generating standard keypair in " + CERT_PATH_ABS);
             if (!CERT_PATH.delete())
             { // safer to start afresh
-                log.warn("Could not delete " + CERT_PATH.getAbsolutePath()
+                LOG.warn("Could not delete " + CERT_PATH.getAbsolutePath()
                         + ", this could create issues, stop jmeter, ensure file is deleted and restart again");
             }
             KeyToolUtils.genkeypair(CERT_PATH, JMETER_SERVER_ALIAS, storePassword, CERT_VALIDITY, null, null);
@@ -1195,10 +1141,10 @@ public class JMeterProxyControl extends GenericController
         try
         {
             in = new BufferedInputStream(new FileInputStream(CERT_PATH));
-            log.debug("Opened Keystore file: " + CERT_PATH_ABS);
+            LOG.debug("Opened Keystore file: " + CERT_PATH_ABS);
             KeyStore ks = KeyStore.getInstance(KEYSTORE_TYPE);
             ks.load(in, password);
-            log.debug("Loaded Keystore file: " + CERT_PATH_ABS);
+            LOG.debug("Loaded Keystore file: " + CERT_PATH_ABS);
             return ks;
         }
         finally
