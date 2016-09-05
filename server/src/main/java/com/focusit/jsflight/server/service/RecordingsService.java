@@ -1,16 +1,10 @@
 package com.focusit.jsflight.server.service;
 
-import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-
-import javax.inject.Inject;
-
 import com.focusit.jsflight.server.model.Event;
 import com.focusit.jsflight.server.model.Recording;
 import com.focusit.jsflight.server.repository.EventRepositoryCustom;
 import com.focusit.jsflight.server.repository.RecordingRepository;
+import com.google.gson.Gson;
 import org.apache.commons.io.IOUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -18,7 +12,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import com.google.gson.Gson;
+import javax.inject.Inject;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Created by doki on 14.05.16.
@@ -109,10 +110,6 @@ public class RecordingsService
                 }
             }
         }
-        catch (UnsupportedEncodingException e)
-        {
-            e.printStackTrace();
-        }
         catch (IOException e)
         {
             e.printStackTrace();
@@ -132,7 +129,7 @@ public class RecordingsService
 
     public List<Recording> getAllRecordings()
     {
-        ArrayList result = new ArrayList();
+        List<Recording> result = new ArrayList<>();
         recordingRepository.findAll().forEach(result::add);
         return result;
     }

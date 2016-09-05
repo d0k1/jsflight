@@ -34,11 +34,12 @@ public class JMeterRecorder
 
     private HashTree hashTree;
     private JMeterProxyControl ctrl;
+
     private RecordingController recCtrl = null;
     private HashTree recCtrlPlace = null;
+
     private Arguments vars = null;
 
-    private HashTree varsPlace = null;
     private String currentTemplate = DEFAULT_TEMPLATE_NAME;
 
     private JMeterRecorderContext context;
@@ -73,74 +74,32 @@ public class JMeterRecorder
         JMeterUtils.setLocale(Locale.ENGLISH);
 
         JMeterUtils.setProperty("proxy.cert.directory", new File("").getAbsolutePath());
-        hashTree = SaveService.loadTree(new File(pathToTemplate));
         ctrl = new JMeterProxyControl(this);
 
-        hashTree.traverse(new HashTreeTraverser()
-        {
-
-            @Override
-            public void addNode(Object node, HashTree subTree)
-            {
-                System.out.println("Node: " + node.toString());
-
-                if (node instanceof Arguments)
-                {
-                    if (((Arguments)node).getName().equalsIgnoreCase("UDV"))
-                    {
-                        if (varsPlace == null)
-                        {
-                            varsPlace = subTree;
-                            vars = (Arguments)node;
-                        }
-                    }
-                }
-
-                if (node instanceof RecordingController)
-                {
-                    if (recCtrl == null)
-                    {
-                        recCtrl = (RecordingController)node;
-                        recCtrlPlace = subTree;
-                    }
-                }
-            }
-
-            @Override
-            public void processPath()
-            {
-            }
-
-            @Override
-            public void subtractNode()
-            {
-            }
-        });
-
-        ctrl.setTargetTestElement(recCtrl);
+        reset();
     }
 
     public void saveScenario(OutputStream outStream) throws IOException
     {
-        TestElement sample1 = recCtrl.next();
-
         List<TestElement> samples = new ArrayList<>();
 
-        while (sample1 != null)
+        TestElement sample = recCtrl.next();
+
+        while (sample != null)
         {
             // skip unknown nasty requests
-            if (sample1 instanceof HTTPSamplerBase)
+            if (sample instanceof HTTPSamplerBase)
             {
-                HTTPSamplerBase http = (HTTPSamplerBase)sample1;
+                HTTPSamplerBase http = (HTTPSamplerBase)sample;
                 if (http.getArguments().getArgumentCount() > 0
                         && http.getArguments().getArgument(0).getValue().startsWith("0Q0O0M0K0I0"))
                 {
-                    sample1 = recCtrl.next();
+                    sample = recCtrl.next();
                     continue;
                 }
             }
-            samples.add(sample1);
-            sample1 = recCtrl.next();
+            samples.add(sample);
+            sample = recCtrl.next();
         }
 
         Collections.sort(samples, (o1, o2) -> {
@@ -149,11 +108,11 @@ public class JMeterRecorder
             return ((Integer)Integer.parseInt(num1)).compareTo(Integer.parseInt(num2));
         });
 
-        for (TestElement sample : samples)
+        for (TestElement element : samples)
         {
-            final List<TestElement> childs = new ArrayList<>();
+            final List<TestElement> descendants = new ArrayList<>();
             final List<JMeterProperty> keys = new ArrayList<>();
-            sample.traverse(new TestElementTraverser()
+            element.traverse(new TestElementTraverser()
             {
 
                 @Override
@@ -161,7 +120,7 @@ public class JMeterRecorder
                 {
                     if (key.getObjectValue() instanceof HeaderManager)
                     {
-                        childs.add((HeaderManager)key.getObjectValue());
+                        descendants.add((HeaderManager)key.getObjectValue());
                         keys.add(key);
                     }
                 }
@@ -184,20 +143,16 @@ public class JMeterRecorder
 
             for (JMeterProperty key : keys)
             {
-                sample.removeProperty(key.getName());
+                element.removeProperty(key.getName());
             }
 
-            HashTree parent = recCtrlPlace.add(sample);
+            HashTree parent = recCtrlPlace.add(element);
 
-            for (TestElement child : childs)
-            {
-                parent.add(child);
-            }
+            descendants.forEach(parent::add);
 
-            // TODO Groovy script should decide whether add cookie manager or not
-            if (sample instanceof HTTPSamplerBase)
+            if (element instanceof HTTPSamplerBase)
             {
-                HTTPSamplerBase http = (HTTPSamplerBase)sample;
+                HTTPSamplerBase http = (HTTPSamplerBase)element;
 
                 scriptProcessor.processScenario(http, parent, vars, this);
             }
@@ -242,9 +197,8 @@ public class JMeterRecorder
                 {
                     if (((Arguments)node).getName().equalsIgnoreCase("UDV"))
                     {
-                        if (varsPlace == null)
+                        if (vars == null)
                         {
-                            varsPlace = subTree;
                             vars = (Arguments)node;
                         }
                     }

@@ -1,16 +1,15 @@
 package com.focusit.jsflight.server.service;
 
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-
-import javax.annotation.PostConstruct;
-import javax.inject.Inject;
-
 import com.focusit.jsflight.server.model.Settings;
 import com.focusit.jsflight.server.repository.SettingsRepository;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+
+import javax.annotation.PostConstruct;
+import javax.inject.Inject;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * Created by doki on 30.04.16.
@@ -38,7 +37,7 @@ public class SettingsService
             Settings settings = repository.findOne(new ObjectId(Settings.SETTINGS_ID));
             if (settings == null)
             {
-                System.err.println("No settings found. Creating default");
+                LOG.warn("No settings found. Creating default");
                 settings = new Settings();
                 repository.save(settings);
             }

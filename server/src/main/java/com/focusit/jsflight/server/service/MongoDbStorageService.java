@@ -1,10 +1,11 @@
 package com.focusit.jsflight.server.service;
 
-import java.io.InputStream;
-
-import javax.annotation.Nullable;
-import javax.inject.Inject;
-
+import com.focusit.jsflight.server.scenario.MongoDbScenario;
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
+import com.mongodb.gridfs.GridFSDBFile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -12,17 +13,15 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.stereotype.Service;
 
-import com.focusit.jsflight.server.scenario.MongoDbScenario;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
-import com.mongodb.gridfs.GridFSDBFile;
+import javax.annotation.Nullable;
+import javax.inject.Inject;
+import java.io.InputStream;
 
-/**
- * Created by doki on 14.05.16.
- */
 @Service
 public class MongoDbStorageService
 {
+    public static final String POSITION_FORMAT = "%06d";
+    private static final Logger LOG = LoggerFactory.getLogger(MongoDbStorageService.class);
     @Inject
     MongoDbFactory mongoDbFactory;
     @Inject
@@ -35,6 +34,7 @@ public class MongoDbStorageService
 
     public void storeScreenshot(MongoDbScenario scenario, int position, InputStream stream, boolean error)
     {
+        LOG.info("Making screenshot");
         DBObject metaData = new BasicDBObject();
         metaData.put("recordingName", scenario.getRecordingName());
         metaData.put("recordingId", scenario.getRecordingId());
@@ -42,24 +42,21 @@ public class MongoDbStorageService
         metaData.put("tag", scenario.getTag());
         metaData.put("tagHash", scenario.getTagHash());
 
-        String recordingName = scenario.getScenarioFilename();
-        String errorPart = error ? "error_" : "";
-        String fname = new String(recordingName + "_" + scenario.getExperimentId() + "_" + errorPart
-                + String.format("%05d", position) + ".png");
+        String filename = error
+                ? createErrorImageName(scenario.getRecordingName(), scenario.getExperimentId(), position)
+                : createImageName(scenario.getRecordingName(), scenario.getExperimentId(), position);
 
-        getGridFsTemplate().store(stream, fname, "image/png", metaData);
+        getGridFsTemplate().store(stream, filename, "image/png", metaData);
     }
 
     public InputStream getScreenshot(String recordingName, String experimentId, int step)
     {
-        String fname = new String(recordingName + "_" + experimentId + "_" + String.format("%05d", step) + ".png");
-        return getStreamByFilename(fname);
+        return getStreamByFilename(createImageName(recordingName, experimentId, step));
     }
 
     public InputStream getErrorScreenShot(String recordingName, String experimentId, int step)
     {
-        String fname = new String(recordingName + "_" + experimentId + "_error_" + String.format("%05d", step) + ".png");
-        return getStreamByFilename(fname);
+        return getStreamByFilename(createErrorImageName(recordingName, experimentId, step));
     }
 
     @Nullable
@@ -82,14 +79,28 @@ public class MongoDbStorageService
         metaData.put("tag", scenario.getTag());
         metaData.put("tagHash", scenario.getTagHash());
 
-        String recordingName = scenario.getScenarioFilename();
-        String fname = new String(recordingName + "_" + scenario.getExperimentId() + ".jmx");
+        String fname = createJmxName(scenario.getScenarioFilename(), scenario.getExperimentId());
         getGridFsTemplate().store(stream, fname, "text/xml", metaData);
     }
 
     public InputStream getJMeterScenario(String recordingName, String experimentId)
     {
-        String fname = new String(recordingName + "_" + experimentId + ".jmx");
-        return getStreamByFilename(fname);
+        return getStreamByFilename(createJmxName(recordingName, experimentId));
+    }
+
+    private String createJmxName(String recordingName, String experimentId) {
+        return recordingName + "_" + experimentId + ".jmx";
+    }
+
+    private String createImageName(String recordingName, String experimentId, int position)
+    {
+        return String.format("%s_%s_%s.png", recordingName, experimentId,
+                String.format(POSITION_FORMAT, position));
+    }
+
+    private String createErrorImageName(String recordingName, String experimentId, int position)
+    {
+        return String.format("%s_%s_error_%s.png", recordingName, experimentId,
+                String.format(POSITION_FORMAT, position));
     }
 }

@@ -1,11 +1,11 @@
 package com.focusit.jsflight.player.scenario;
 
+import com.focusit.jsflight.player.config.CommonConfiguration;
+import com.focusit.jsflight.player.constants.EventConstants;
 import com.focusit.jsflight.player.constants.EventType;
 import com.focusit.jsflight.player.script.PlayerScriptProcessor;
 import com.focusit.jsflight.player.webdriver.SeleniumDriver;
 import com.focusit.jsflight.script.constants.ScriptBindingConstants;
-import com.focusit.jsflight.player.config.CommonConfiguration;
-import com.focusit.jsflight.player.constants.EventConstants;
 import org.json.JSONObject;
 import org.openqa.selenium.WebDriver;
 import org.slf4j.Logger;
@@ -86,6 +86,7 @@ public class ScenarioProcessor
     {
         if (scenario.getConfiguration().getCommonConfiguration().getMakeShots())
         {
+            LOG.info("Making screenshot");
             String screenDir = scenario.getConfiguration().getCommonConfiguration().getScreenDir();
             File dir = new File(screenDir, Paths.get(scenario.getScenarioFilename()).getFileName().toString());
 
@@ -137,13 +138,14 @@ public class ScenarioProcessor
                 return;
             }
 
-            String type = event.getString(EventConstants.TYPE);
-
             if (scenario.isEventIgnored(event) || scenario.isEventBad(event))
             {
                 LOG.warn("Event is ignored or bad");
                 return;
             }
+
+            String type = event.getString(EventConstants.TYPE);
+            LOG.info("Event type: {}", type);
 
             if (type.equalsIgnoreCase(EventType.SCRIPT))
             {
@@ -164,7 +166,7 @@ public class ScenarioProcessor
                     .setUseRandomChars(commonConfiguration.isUseRandomChars())
                     .setIntervalBetweenUiChecksMs(commonConfiguration.getIntervalBetweenUiChecksMs())
                     .setUiShowTimeoutSeconds(commonConfiguration.getUiShowTimeoutSeconds())
-                    .setEmptySelections(scenario.getConfiguration().getWebConfiguration().getEmptySelections())
+                    .setPlaceholders(scenario.getConfiguration().getWebConfiguration().getPlaceholders())
                     .setSelectXpath(scenario.getConfiguration().getWebConfiguration().getSelectXpath())
                     .setSelectDeterminerScript(
                             scenario.getConfiguration().getWebConfiguration().getSelectDeterminerScript())
@@ -182,7 +184,6 @@ public class ScenarioProcessor
 
             String target = scenario.getTargetForEvent(event);
 
-            LOG.info("Event type: {}", type);
             LOG.info("Event {}, Display {}", position, seleniumDriver.getDriverDisplay(theWebDriver));
 
             seleniumDriver.waitPageReadyWithRefresh(theWebDriver, event);
@@ -213,8 +214,6 @@ public class ScenarioProcessor
                     break;
                 }
 
-                makeAShot(scenario, seleniumDriver, theWebDriver, position, error);
-
                 hasBrowserAnError(scenario, theWebDriver);
             }
             catch (Exception e)
@@ -223,37 +222,28 @@ public class ScenarioProcessor
             }
 
         }
-        catch (NullPointerException e)
-        {
-            error = true;
-            LOG.error(e.getMessage(), e);
-            throw new RuntimeException(e);
-        }
         catch (Exception e)
         {
             error = true;
             LOG.error(e.getMessage(), e);
-            makeAShot(scenario, seleniumDriver, theWebDriver, position, error);
             throw new RuntimeException(e);
         }
         finally
         {
             //webdriver can stay null if event is ignored or bad, thus can`t be postprocessed
-            if (!error && theWebDriver != null)
+            if (theWebDriver != null)
             {
-                scenario.updateEvent(event);
-                try
+                if (!error)
                 {
+                    scenario.updateEvent(event);
                     new PlayerScriptProcessor(scenario).runStepPrePostScript(event, position, false);
                 }
-                catch (Exception e)
-                {
-                    LOG.error(e.getMessage(), e);
-                    makeAShot(scenario, seleniumDriver, theWebDriver, position, true);
-                    throw e;
-                }
-
+                makeAShot(scenario, seleniumDriver, theWebDriver, position, error);
                 seleniumDriver.releaseBrowser(theWebDriver, event);
+            }
+            else
+            {
+                LOG.warn("Unable to make screenshot, because web driver is null");
             }
         }
     }

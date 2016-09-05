@@ -21,7 +21,7 @@
         <Logger name="com.focusit" level="debug">
             <AppenderRef ref="SERVER_FILE" />
         </Logger>
-        <Logger name="org.apache.jmeter.protocol.http.proxy">
+        <Logger name="org.apache.jmeter.protocol.http.proxy" level="debug">
             <AppenderRef ref="JMETER_FILE" />
         </Logger>
 

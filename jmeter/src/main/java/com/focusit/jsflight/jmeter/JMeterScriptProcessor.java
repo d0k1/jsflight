@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 public class JMeterScriptProcessor
 {
     private static final Logger LOG = LoggerFactory.getLogger(JMeterScriptProcessor.class);
+    public static final boolean SHOULD_BE_PROCESSED_DEFAULT = true;
     // script called at recording phase. Can skip sample
     private String recordingScript;
     // script callled at storing phase. Can skip sample
@@ -62,35 +63,35 @@ public class JMeterScriptProcessor
     {
         Binding binding = new Binding();
         binding.setVariable(ScriptBindingConstants.LOGGER, LOG);
-        binding.setVariable(ScriptBindingConstants.REQUEST, sampler);
-        binding.setVariable(ScriptBindingConstants.RESPONSE, result);
+        binding.setVariable(ScriptBindingConstants.SAMPLER, sampler);
+        binding.setVariable(ScriptBindingConstants.SAMPLE, result);
         binding.setVariable(ScriptBindingConstants.CONTEXT, recorder.getContext());
         binding.setVariable(ScriptBindingConstants.JSFLIGHT, JMeterJSFlightBridge.getInstance());
         binding.setVariable(ScriptBindingConstants.CLASSLOADER, classLoader);
 
-        boolean isOk = true;
-
-        Script s = ScriptEngine.getScript(recordingScript);
-        if (s == null)
+        Script script = ScriptEngine.getScript(recordingScript);
+        if (script == null)
         {
-            LOG.warn("Sample " + sampler.getName() + ". No script found. default result " + isOk);
-            return isOk;
+            LOG.warn(sampler.getName() + ". No script found. Default result is " + SHOULD_BE_PROCESSED_DEFAULT);
+            return SHOULD_BE_PROCESSED_DEFAULT;
         }
-        s.setBinding(binding);
-        LOG.info("Running " + sampler.getName() + " compiled script");
-        Object scriptResult = s.run();
+        script.setBinding(binding);
+        LOG.info(sampler.getName() + ". Running compiled script");
+        Object scriptResult = script.run();
 
+        boolean shouldBeProcessed;
         if (scriptResult != null && scriptResult instanceof Boolean)
         {
-            isOk = (boolean)scriptResult;
+            shouldBeProcessed = (boolean)scriptResult;
+            LOG.info(sampler.getName() + ". Script result " + shouldBeProcessed);
         }
         else
         {
-            LOG.warn("Sample " + sampler.getName() + " script result UNDEFINED shifted to" + isOk);
+            shouldBeProcessed = SHOULD_BE_PROCESSED_DEFAULT;
+            LOG.warn(sampler.getName() + ". Script result UNDEFINED. Default result is " + SHOULD_BE_PROCESSED_DEFAULT);
         }
 
-        LOG.info("Sample " + sampler.getName() + " script result " + isOk);
-        return isOk;
+        return shouldBeProcessed;
     }
 
     /**
@@ -103,7 +104,7 @@ public class JMeterScriptProcessor
     {
         Binding binding = new Binding();
         binding.setVariable(ScriptBindingConstants.LOGGER, LOG);
-        binding.setVariable(ScriptBindingConstants.SAMPLE, sample);
+        binding.setVariable(ScriptBindingConstants.SAMPLER, sample);
         binding.setVariable(ScriptBindingConstants.TREE, tree);
         binding.setVariable(ScriptBindingConstants.CONTEXT, recorder.getContext());
         binding.setVariable(ScriptBindingConstants.JSFLIGHT, JMeterJSFlightBridge.getInstance());

@@ -103,15 +103,7 @@ public class PlayerScriptProcessor
 
     public void runStepPrePostScript(JSONObject event, int step, boolean pre)
     {
-        String script;
-        if (pre)
-        {
-            script = event.has(EventConstants.PRE) ? event.getString(EventConstants.PRE) : "";
-        }
-        else
-        {
-            script = event.has(EventConstants.POST) ? event.getString(EventConstants.POST) : "";
-        }
+        String script = getStringOrDefault(event, pre ? EventConstants.PRE : EventConstants.POST, "");
 
         if (StringUtils.isBlank(script))
         {
@@ -131,6 +123,10 @@ public class PlayerScriptProcessor
         catch (Throwable ignored)
         {
         }
+    }
+
+    private String getStringOrDefault(JSONObject event, String pre, String defaultString) {
+        return event.has(pre) ? event.getString(pre) : defaultString;
     }
 
     public JSONObject runStepTemplating(UserScenario scenario, JSONObject step)

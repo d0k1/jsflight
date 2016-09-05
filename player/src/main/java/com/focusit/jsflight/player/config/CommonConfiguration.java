@@ -421,11 +421,13 @@ public class CommonConfiguration
         return getFirefoxPidScript;
     }
 
-    public String getSkipKeyboardScript() {
+    public String getSkipKeyboardScript()
+    {
         return skipKeyboardScript;
     }
 
-    public void setSkipKeyboardScript(String skipKeayboardScript) {
+    public void setSkipKeyboardScript(String skipKeayboardScript)
+    {
         this.skipKeyboardScript = skipKeayboardScript;
     }
 }
