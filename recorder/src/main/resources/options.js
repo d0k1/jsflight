@@ -29,6 +29,8 @@ jsflight.options = {
     trackHash : false,
     // track xhr request/response
     trackXhr : false,
+    // track ping request/response
+    trackPing : false,
     // time to track, milliseconds
     track_duration : -1,
     // time interval to send tracked data, milliseconds
@@ -94,6 +96,9 @@ jsflight.parseOptions = function(options) {
 
     if (options.trackXhr)
         jsflight.options.trackXhr = options.trackXhr;
+
+    if (options.trackPing)
+        jsflight.options.trackPing = options.trackPing;
 
     if (options.propertyProvider)
         jsflight.options.propertyProvider = options.propertyProvider;
