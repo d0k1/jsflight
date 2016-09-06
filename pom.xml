@@ -36,7 +36,6 @@
         <jcommander.version>1.48</jcommander.version>
         <jgoodies-common.version>1.8.1</jgoodies-common.version>
         <jgoodies-forms.version>1.9.0</jgoodies-forms.version>
-        <jsflight.version>4.4</jsflight.version>
         <json.version>20150729</json.version>
         <jstl.version>1.2</jstl.version>
         <jszip-maven-plugin.version>0.1-alpha-6</jszip-maven-plugin.version>
