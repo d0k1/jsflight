@@ -184,7 +184,7 @@ jsflight.initXhrTracking = function() {
     XMLHttpRequest.prototype.oldOpen = XMLHttpRequest.prototype.open;
 
     XMLHttpRequest.prototype.open = function (method, url, async, user, password) {
-        if (jsflight.options.trackXhr || url.indexOf("ping_payload.dat") !== -1) {
+        if (jsflight.options.trackXhr || url.indexOf(jsflight.options.pingPathSubstring) !== -1) {
             var data = {
                 method: method,
                 target: url,
