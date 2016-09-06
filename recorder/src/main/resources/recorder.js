@@ -53,7 +53,7 @@ jsflight.startRecorder = function() {
         jsflight.eventId = 0;
     }
 
-    if (jsflight.options.trackXhr) {
+    if (jsflight.options.trackXhr || jsflight.options.trackPing) {
         jsflight.initXhrTracking();
     }
 
@@ -97,7 +97,7 @@ jsflight.stopRecorder = function() {
     window.sessionStorage.removeItem('recorder.active');
     window.sessionStorage.removeItem('recorder.max');
 
-    if (jsflight.options.trackXhr) {
+    if (jsflight.options.trackXhr || jsflight.options.trackPing) {
         jsflight.stopXhrTracking();
     }
 

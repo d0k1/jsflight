@@ -184,37 +184,41 @@ jsflight.initXhrTracking = function() {
     XMLHttpRequest.prototype.oldOpen = XMLHttpRequest.prototype.open;
 
     XMLHttpRequest.prototype.open = function (method, url, async, user, password) {
-        var data = {
-            method: method,
-            target: url,
-            async: async,
-            user: user,
-            password: password,
-            xhrId: jsflight.xhrId
-        };
-        jsflight.xhrId++;
-        // skip open to ourself url
-        if (url != jsflight.options.baseUrl + jsflight.options.downloadPath) {
-            jsflight.TrackXhrOpen(data);
+        if (jsflight.options.trackXhr || url.indexOf(jsflight.options.pingPathSubstring) !== -1) {
+            var data = {
+                method: method,
+                target: url,
+                async: async,
+                user: user,
+                password: password,
+                xhrId: jsflight.xhrId
+            };
+            jsflight.xhrId++;
+            // skip open to ourself url
+            if (url != jsflight.options.baseUrl + jsflight.options.downloadPath) {
+                jsflight.TrackXhrOpen(data);
+            }
+            this.openData = data;
         }
-        this.openData = data;
         this.oldOpen(method, url, async, user, password);
     };
 
     XMLHttpRequest.prototype.oldSend = XMLHttpRequest.prototype.send;
     XMLHttpRequest.prototype.send = function(data) {
-        if (document.addEventListener) {
-            this.addEventListener("load", jsflight.TrackXhrStateLoad, false);
-        } else {
-            this.attachEvent("load", jsflight.TrackXhrStateLoad, false);
-        }
-        var trackData = {
-            open : this.openData,
-            data : data
-        };
-        // skip send to ourself url
-        if (trackData.open.target.indexOf(jsflight.options.baseUrl + jsflight.options.downloadPath) !== 0) {
-            jsflight.TrackXhrSend(trackData);
+        if (this.openData !== undefined) {
+            if (document.addEventListener) {
+                this.addEventListener("load", jsflight.TrackXhrStateLoad, false);
+            } else {
+                this.attachEvent("load", jsflight.TrackXhrStateLoad, false);
+            }
+            var trackData = {
+                open : this.openData,
+                data : data
+            };
+            // skip send to ourself url
+            if (trackData.open.target.indexOf(jsflight.options.baseUrl + jsflight.options.downloadPath) !== 0) {
+                jsflight.TrackXhrSend(trackData);
+            }
         }
         this.oldSend.call(this, data);
     };
