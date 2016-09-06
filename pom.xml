@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.github.d0k1</groupId>
     <artifactId>jsflight</artifactId>
-    <version>4.2-SNAPSHOT</version>
+    <version>4.4</version>
     <name>jsflight</name>
     <description>Javascript Flight Recorder, Player</description>
     <packaging>pom</packaging>
@@ -36,7 +36,7 @@
         <jcommander.version>1.48</jcommander.version>
         <jgoodies-common.version>1.8.1</jgoodies-common.version>
         <jgoodies-forms.version>1.9.0</jgoodies-forms.version>
-        <jsflight.version>4.2-SNAPSHOT</jsflight.version>
+        <jsflight.version>4.4</jsflight.version>
         <json.version>20150729</json.version>
         <jstl.version>1.2</jstl.version>
         <jszip-maven-plugin.version>0.1-alpha-6</jszip-maven-plugin.version>
@@ -59,6 +59,7 @@
         <spock-spring.version>1.0-groovy-2.4</spock-spring.version>
         <spring-data-commons.version>1.9.4.RELEASE</spring-data-commons.version>
         <velocity.version>1.7</velocity.version>
+        <maven-release-plugin.version>2.3.2</maven-release-plugin.version>
     </properties>
 
     <parent>
@@ -115,6 +116,12 @@
             </plugin>
         </plugins>
     </build>
+
+    <scm>
+        <url>https://github.com/d0k1/jsflight</url>
+        <connection>scm:git:git://git@github.com:d0k1/jsflight.git</connection>
+        <developerConnection>scm:git:git@github.com:d0k1/jsflight.git</developerConnection>
+    </scm>
 
     <repositories>
         <repository>

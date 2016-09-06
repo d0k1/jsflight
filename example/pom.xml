@@ -10,14 +10,14 @@
     <parent>
         <groupId>com.github.d0k1</groupId>
         <artifactId>jsflight</artifactId>
-        <version>4.2-SNAPSHOT</version>
+        <version>4.4</version>
     </parent>
 
     <dependencies>
         <dependency>
             <groupId>com.github.d0k1.jsflight</groupId>
             <artifactId>recorder</artifactId>
-            <version>${jsflight.version}</version>
+            <version>${project.version}</version>
         </dependency>
 
         <dependency>

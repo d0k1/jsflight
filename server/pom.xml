@@ -13,7 +13,7 @@
     <parent>
         <artifactId>jsflight</artifactId>
         <groupId>com.github.d0k1</groupId>
-        <version>4.2-SNAPSHOT</version>
+        <version>4.4</version>
     </parent>
 
     <scm>
@@ -49,7 +49,7 @@
         <dependency>
             <groupId>com.github.d0k1.jsflight</groupId>
             <artifactId>player</artifactId>
-            <version>${jsflight.version}</version>
+            <version>${project.version}</version>
             <exclusions>
                 <exclusion>
                     <artifactId>servlet-api</artifactId>

@@ -9,7 +9,7 @@
     <parent>
         <groupId>com.github.d0k1</groupId>
         <artifactId>jsflight</artifactId>
-        <version>4.2-SNAPSHOT</version>
+        <version>4.4</version>
         <!-- <relativePath>../sample-multi-module-parent</relativePath> -->
     </parent>
 
@@ -17,17 +17,17 @@
         <dependency>
             <groupId>com.github.d0k1.jsflight</groupId>
             <artifactId>jmeter</artifactId>
-            <version>${jsflight.version}</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.github.d0k1</groupId>
             <artifactId>script</artifactId>
-            <version>${jsflight.version}</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.github.d0k1.jsflight</groupId>
             <artifactId>recorder</artifactId>
-            <version>${jsflight.version}</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.velocity</groupId>
@@ -127,12 +127,6 @@
             </snapshots>
         </repository>
     </repositories>
-
-    <scm>
-        <url>https://github.com/d0k1/jsflight</url>
-        <connection>scm:git:git://git@github.com:d0k1/jsflight.git</connection>
-        <developerConnection>scm:git:git@github.com:d0k1/jsflight.git</developerConnection>
-    </scm>
 
     <build>
         <plugins>
