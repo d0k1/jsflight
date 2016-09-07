@@ -14,7 +14,7 @@
     <parent>
         <artifactId>jsflight</artifactId>
         <groupId>com.github.d0k1</groupId>
-        <version>4.5-SNAPSHOT</version>
+        <version>4.6</version>
     </parent>
 
     <dependencies>

@@ -13,7 +13,7 @@
     <parent>
         <groupId>com.github.d0k1</groupId>
         <artifactId>jsflight</artifactId>
-        <version>4.5-SNAPSHOT</version>
+        <version>4.6</version>
         <!-- <relativePath>../sample-multi-module-parent</relativePath> -->
     </parent>
 
