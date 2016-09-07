@@ -2,14 +2,20 @@
 <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.github.d0k1.jsflight</groupId>
+    <artifactId>script</artifactId>
+    <packaging>jar</packaging>
+    <url>http://maven.apache.org</url>
+
+    <name>script</name>
+    <description>JSFlight script engine</description>
+
     <parent>
         <artifactId>jsflight</artifactId>
         <groupId>com.github.d0k1</groupId>
         <version>4.5-SNAPSHOT</version>
     </parent>
-    <modelVersion>4.0.0</modelVersion>
-
-    <artifactId>script</artifactId>
 
     <dependencies>
         <dependency>

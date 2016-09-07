@@ -7,6 +7,9 @@
     <packaging>jar</packaging>
     <url>http://maven.apache.org</url>
 
+    <name>recorder</name>
+    <description>JSFlight recorder</description>
+
     <parent>
         <groupId>com.github.d0k1</groupId>
         <artifactId>jsflight</artifactId>

@@ -19,7 +19,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.github.d0k1</groupId>
+            <groupId>com.github.d0k1.jsflight</groupId>
             <artifactId>script</artifactId>
             <version>${project.version}</version>
         </dependency>
