@@ -34,6 +34,6 @@ git reset --hard HEAD^1
 
 mvn -B versions:set -DnewVersion="${NEW_DEV_VERSION}" -DgenerateBackupPoms=false
 git commit -am "New development version: ${NEW_DEV_VERSION}"
-git push
+#git push
 
 cd "${CURRENT_DIR}"
