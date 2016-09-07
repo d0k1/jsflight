@@ -13,13 +13,13 @@
     <parent>
         <groupId>com.github.d0k1</groupId>
         <artifactId>jsflight</artifactId>
-        <version>4.4</version>
+        <version>4.5-SNAPSHOT</version>
         <!-- <relativePath>../sample-multi-module-parent</relativePath> -->
     </parent>
 
     <dependencies>
         <dependency>
-            <groupId>com.github.d0k1</groupId>
+            <groupId>com.github.d0k1.jsflight</groupId>
             <artifactId>script</artifactId>
             <version>${project.version}</version>
         </dependency>

@@ -6,10 +6,14 @@
     <artifactId>player</artifactId>
     <packaging>jar</packaging>
     <url>http://maven.apache.org</url>
+
+    <name>player</name>
+    <description>JSFlight recording player</description>
+
     <parent>
         <groupId>com.github.d0k1</groupId>
         <artifactId>jsflight</artifactId>
-        <version>4.4</version>
+        <version>4.5-SNAPSHOT</version>
         <!-- <relativePath>../sample-multi-module-parent</relativePath> -->
     </parent>
 
@@ -20,7 +24,7 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.github.d0k1</groupId>
+            <groupId>com.github.d0k1.jsflight</groupId>
             <artifactId>script</artifactId>
             <version>${project.version}</version>
         </dependency>
