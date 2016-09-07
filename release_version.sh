@@ -24,7 +24,7 @@ fi
 echo ${VERSION}
 echo ${TAG}
 echo ${NEW_DEV_VERSION}
-exit 0
+#exit 0
 
 mvn -B versions:set -DnewVersion="${VERSION}" -DgenerateBackupPoms=false
 git commit -am "Version ${VERSION}"
