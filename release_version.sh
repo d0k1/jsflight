@@ -26,10 +26,11 @@ echo "Tag: ${TAG}"
 echo "New development version: ${NEW_DEV_VERSION}"
 
 mvn -B versions:set -DnewVersion="${VERSION}" -DgenerateBackupPoms=false
+current_hash="$( git rev-parse HEAD )"
 git commit -am "Version ${VERSION}"
 git tag -a ${TAG} -m "Version ${VERSION}"
 git push origin ${TAG}
-git reset --hard HEAD^1
+git reset --hard "${current_hash}"
 
 mvn -B versions:set -DnewVersion="${NEW_DEV_VERSION}" -DgenerateBackupPoms=false
 git commit -am "New development version: ${NEW_DEV_VERSION}"
