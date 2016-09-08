@@ -1,19 +1,18 @@
 package com.focusit.jsflight.recorder;
 
-import java.io.IOException;
-import java.io.StringWriter;
+import org.apache.commons.io.IOUtils;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import org.apache.commons.io.IOUtils;
+import java.io.IOException;
+import java.io.StringWriter;
 
 /**
  * Servlet to process tracked data from a browser.
- * It's logic can be overrided by {@link RecorderProcessor}
+ * It's logic can be overrided by {@link RecordingProcessor}
  *
  * @author Denis V. Kirpichenkov
  */
@@ -33,16 +32,6 @@ public class RecorderStorageServlet extends HttpServlet
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException
     {
-        StringWriter writer = new StringWriter();
-        IOUtils.copy(req.getInputStream(), writer, "UTF-8");
-        String theString = writer.toString();
-
-        String result = java.net.URLDecoder.decode(theString, "UTF-8");
-        if (result.length() < 5)
-        {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
-            return;
-        }
         RecordingProcessor recProcess = processor;
         if (recProcess == null)
         {
@@ -51,19 +40,37 @@ public class RecorderStorageServlet extends HttpServlet
             return;
         }
 
+        StringWriter writer = new StringWriter();
+        IOUtils.copy(req.getInputStream(), writer, "UTF-8");
+        String data = writer.toString();
+        try
+        {
+            data = java.net.URLDecoder.decode(data, "UTF-8");
+        }
+        catch (Exception ex)
+        {
+            recProcess.processError(req, resp, data);
+        }
+
+        if (data.length() < 5)
+        {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+            return;
+        }
+
         // 'cause form's data starts with 'data='
-        result = result.substring(5, result.length());
+        data = data.substring(5, data.length());
         if (req.getParameter("download") != null)
         {
-            recProcess.processDownloadRequest(req, resp, result);
+            recProcess.processDownloadRequest(req, resp, data);
         }
         else if (req.getParameter("stop") != null)
         {
-            recProcess.processRecordStop(req, resp, result);
+            recProcess.processRecordStop(req, resp, data);
         }
         else
         {
-            recProcess.processStoreEvent(req, resp, result);
+            recProcess.processStoreEvent(req, resp, data);
         }
     }
 }

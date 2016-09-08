@@ -1,9 +1,8 @@
 package com.focusit.jsflight.recorder;
 
-import java.io.IOException;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
 /**
  * A custom logic example to serve tracked data
@@ -38,5 +37,12 @@ public class ExampleRecordingProcessor implements RecordingProcessor
         System.err.println(jsonData);
         resp.getWriter().print("{\"OK\"}");
         resp.setStatus(HttpServletResponse.SC_OK);
+    }
+
+    @Override
+    public void processError(HttpServletRequest req, HttpServletResponse resp, String urlEncodedData) throws IOException {
+        System.err.println(urlEncodedData);
+        resp.getWriter().print("{\"BAD REQUEST\"}");
+        resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
     }
 }
