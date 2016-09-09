@@ -16,6 +16,7 @@ Besides it can store HttpRequests on server-side and convert them to a JMeter Sc
 * The filter will record any http request to urls it has been mapped to
 * Of course you can add some special app's internal events to the recording. For example to monitor a production environment (or to get more data to replay user load more accurate)
 
+[![Release](https://jitpack.io/v/User/Repo.svg)](https://jitpack.io/#d0k1/jsflight)
 [![Codeship Status for d0k1/JSFlightRecorder](https://codeship.com/projects/56dc64a0-6a0d-0133-3e69-6e257542035e/status?branch=master)](https://codeship.com/projects/114774)
 [![Codacy Badge](https://api.codacy.com/project/badge/grade/1f078e96ab984f2f92419c3c65bb7aa9)](https://www.codacy.com/app/denis-kirpichenkov/jsflight)
 [![Code Climate](https://codeclimate.com/github/d0k1/jsflight/badges/gpa.svg)](https://codeclimate.com/github/d0k1/jsflight)
