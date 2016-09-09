@@ -50,6 +50,7 @@ public class RecorderStorageServlet extends HttpServlet
         catch (Exception ex)
         {
             recProcess.processError(req, resp, data);
+            return;
         }
 
         if (data.length() < 5)
