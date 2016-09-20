@@ -6,10 +6,6 @@
     <artifactId>jmeter</artifactId>
     <packaging>jar</packaging>
     <url>http://maven.apache.org</url>
-    <properties>
-        <ApacheJMeter.version>3.0</ApacheJMeter.version>
-        <ApacheJMeter_java.version>2.13</ApacheJMeter_java.version>
-    </properties>
     <parent>
         <groupId>com.github.d0k1</groupId>
         <artifactId>jsflight</artifactId>
@@ -21,32 +17,26 @@
         <dependency>
             <groupId>com.github.d0k1.jsflight</groupId>
             <artifactId>script</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.codehaus.groovy</groupId>
             <artifactId>groovy-all</artifactId>
-            <version>${groovy-all.version}</version>
         </dependency>
         <dependency>
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>
-            <version>${json.version}</version>
         </dependency>
         <dependency>
             <groupId>com.jgoodies</groupId>
             <artifactId>jgoodies-forms</artifactId>
-            <version>${jgoodies-forms.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-math3</artifactId>
-            <version>${commons-math3.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.jmeter</groupId>
             <artifactId>ApacheJMeter_core</artifactId>
-            <version>${ApacheJMeter.version}</version>
             <exclusions>
                 <exclusion>
                     <artifactId>commons-math3</artifactId>
@@ -61,7 +51,6 @@
         <dependency>
             <groupId>org.apache.jmeter</groupId>
             <artifactId>ApacheJMeter_http</artifactId>
-            <version>${ApacheJMeter.version}</version>
             <exclusions>
                 <exclusion>
                     <artifactId>commons-math3</artifactId>
@@ -76,7 +65,6 @@
         <dependency>
             <groupId>org.apache.jmeter</groupId>
             <artifactId>ApacheJMeter_components</artifactId>
-            <version>${ApacheJMeter.version}</version>
             <exclusions>
                 <exclusion>
                     <artifactId>commons-math3</artifactId>
@@ -91,7 +79,6 @@
         <dependency>
             <groupId>org.apache.jmeter</groupId>
             <artifactId>jorphan</artifactId>
-            <version>${ApacheJMeter.version}</version>
             <exclusions>
                 <exclusion>
                     <artifactId>commons-math3</artifactId>
@@ -106,7 +93,6 @@
         <dependency>
             <groupId>org.apache.jmeter</groupId>
             <artifactId>ApacheJMeter_java</artifactId>
-            <version>${ApacheJMeter_java.version}</version>
             <exclusions>
                 <exclusion>
                     <artifactId>commons-math3</artifactId>
@@ -121,7 +107,6 @@
         <dependency>
             <groupId>org.apache.jmeter</groupId>
             <artifactId>ApacheJMeter_config</artifactId>
-            <version>${ApacheJMeter.version}</version>
             <exclusions>
                 <exclusion>
                     <artifactId>commons-math3</artifactId>
@@ -136,12 +121,10 @@
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-            <version>${commons-io.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-pool2</artifactId>
-            <version>${commons-pool2.version}</version>
         </dependency>
     </dependencies>
 
@@ -167,16 +150,10 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>${maven-compiler-plugin.version}</version>
-                <configuration>
-                    <source>${maven.compiler.source}</source>
-                    <target>${maven.compiler.target}</target>
-                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-war-plugin</artifactId>
-                <version>${maven-war-plugin.version}</version>
                 <configuration>
                     <failOnMissingWebXml>false</failOnMissingWebXml>
                     <archive>
@@ -194,7 +171,6 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>buildnumber-maven-plugin</artifactId>
-                <version>${buildnumber-maven-plugin.version}</version>
                 <executions>
                     <execution>
                         <phase>validate</phase>
@@ -209,38 +185,6 @@
                 </configuration>
             </plugin>
         </plugins>
-        <pluginManagement>
-            <plugins>
-                <!--This plugin's configuration is used to store Eclipse m2e settings
-                    only. It has no influence on the Maven build itself. -->
-                <plugin>
-                    <groupId>org.eclipse.m2e</groupId>
-                    <artifactId>lifecycle-mapping</artifactId>
-                    <version>${lifecycle-mapping.version}</version>
-                    <configuration>
-                        <lifecycleMappingMetadata>
-                            <pluginExecutions>
-                                <pluginExecution>
-                                    <pluginExecutionFilter>
-                                        <groupId>org.jszip.maven</groupId>
-                                        <artifactId>
-                                            jszip-maven-plugin
-                                        </artifactId>
-                                        <versionRange>[${jszip-maven-plugin.version},)</versionRange>
-                                        <goals>
-                                            <goal>unpack</goal>
-                                        </goals>
-                                    </pluginExecutionFilter>
-                                    <action>
-                                        <ignore/>
-                                    </action>
-                                </pluginExecution>
-                            </pluginExecutions>
-                        </lifecycleMappingMetadata>
-                    </configuration>
-                </plugin>
-            </plugins>
-        </pluginManagement>
     </build>
 
     <profiles>
