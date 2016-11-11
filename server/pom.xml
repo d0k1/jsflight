@@ -12,7 +12,7 @@
     <parent>
         <artifactId>jsflight</artifactId>
         <groupId>com.github.d0k1.jsflight</groupId>
-        <version>4.10-SNAPSHOT</version>
+        <version>4.11-SNAPSHOT</version>
     </parent>
 
     <scm>
