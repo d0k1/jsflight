@@ -9,7 +9,7 @@
     <parent>
         <groupId>com.github.d0k1.jsflight</groupId>
         <artifactId>jsflight</artifactId>
-        <version>4.11-SNAPSHOT</version>
+        <version>4.11</version>
     </parent>
 
     <dependencies>
