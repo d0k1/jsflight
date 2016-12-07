@@ -41,9 +41,11 @@ jsflight.getEventInfo = function(event) {
     result.caretPosition = inputData.selectionStart;
     result.selectionEnd = inputData.selectionEnd;
     result.isSelection = inputData.isSelection;
-    try {
-        result.clipboardData = (event.clipboardData || window.clipboardData).getData('Text');
-    } catch(e) {}
+    if(!jsflight.isIE()){
+        try {
+            result.clipboardData = (event.clipboardData || window.clipboardData).getData('Text');
+        } catch(e) {}
+    }
     result.tabuuid = jsflight.tabUuid;
     result.type = event.type;
     result.url = window.location.href;
@@ -197,3 +199,15 @@ jsflight.sendEventData = function(sendStop) {
     };
     xhr.send('data=' + encodeURIComponent(data));
 };
+
+jsflight.isIE = function(){
+    var ua = window.navigator.userAgent;
+
+        var msie = ua.indexOf('MSIE ');
+        var trident = ua.indexOf('Trident/');
+        var edge = ua.indexOf('Edge/');
+        if (msie > 0 || trident > 0 || edge > 0) {
+            return true
+        }
+        return false;
+}
