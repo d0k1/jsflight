@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+    <Properties>
+        <Property name="pattern">%-5level | %date{ISO8601} | [%tread] | %logger (%file:%line) - %msg%n</Property>
+        <Property name="serverFileName">${sys:logs.dir}/${sys:logging.file}</Property>
+        <Property name="jmeterFileName">${sys:logs.dir}/server.jmeter.log</Property>
+    </Properties>
+    <Appenders>
+        <RandomAccessFile name="SERVER_FILE" fileName="${serverFileName}" append="true">
+            <PatternLayout pattern="${pattern}"/>
+        </RandomAccessFile>
+        <RandomAccessFile name="JMETER_FILE" fileName="${jmeterFileName}" append="false">
+            <PatternLayout pattern="${pattern}"/>
+        </RandomAccessFile>
+        <Console name="STDOUT" target="SYSTEM_OUT">
+            <PatternLayout pattern="${pattern}"/>
+            <Filters>
+                <ThresholdFilter level="info"  onMatch="ACCEPT" onMismatch="DENY"/>
+            </Filters>
+        </Console>
+    </Appenders>
+
+    <Loggers>
+        <!--Log levels sorted ascending by verbosity: OFF/FATAL/ERROR/WARN/INFO/DEBUG/TRACE/ALL-->
+        <Logger name="com.focusit" level="info">
+            <AppenderRef ref="SERVER_FILE" />
+        </Logger>
+        <Logger name="org.apache.jmeter.protocol.http.proxy" level="error">
+            <AppenderRef ref="JMETER_FILE" />
+        </Logger>
+
+        <Root level="trace">
+            <AppenderRef ref="STDOUT"/>
+        </Root>
+    </Loggers>
+</Configuration>

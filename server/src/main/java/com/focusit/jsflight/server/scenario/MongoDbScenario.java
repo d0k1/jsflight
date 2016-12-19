@@ -1,13 +1,14 @@
 package com.focusit.jsflight.server.scenario;
 
-import com.focusit.jsflight.player.config.Configuration;
+import org.bson.types.ObjectId;
+import org.json.JSONObject;
+
+import com.focusit.jsflight.player.configurations.Configuration;
 import com.focusit.jsflight.player.scenario.UserScenario;
 import com.focusit.jsflight.server.model.Event;
 import com.focusit.jsflight.server.model.Experiment;
-import com.focusit.jsflight.server.repository.EventRepositoryCustom;
+import com.focusit.jsflight.server.repository.EventRepository;
 import com.focusit.jsflight.server.repository.ExperimentRepository;
-import org.bson.types.ObjectId;
-import org.json.JSONObject;
 
 /**
  * This class wraps an experiment in user scenario.
@@ -17,11 +18,10 @@ import org.json.JSONObject;
 public class MongoDbScenario extends UserScenario
 {
     private final Experiment experiment;
-    private EventRepositoryCustom repository;
+    private EventRepository repository;
     private ExperimentRepository experimentRepository;
 
-    public MongoDbScenario(Experiment experiment, EventRepositoryCustom repository,
-            ExperimentRepository experimentRepository)
+    public MongoDbScenario(Experiment experiment, EventRepository repository, ExperimentRepository experimentRepository)
     {
         this.experiment = experiment;
         this.repository = repository;
@@ -61,13 +61,9 @@ public class MongoDbScenario extends UserScenario
         {
             throw new IllegalArgumentException("No event found at position " + position);
         }
+        event.setUrl(event.getUrl()
+                .replace("0.0.0.0:0", getConfiguration().getCommonConfiguration().getTargetBaseUrl()));
         return new JSONObject(event);
-    }
-
-    @Override
-    public void moveToNextStep()
-    {
-        setPosition(Math.min(getPosition() + 1, getStepsCount()));
     }
 
     @Override

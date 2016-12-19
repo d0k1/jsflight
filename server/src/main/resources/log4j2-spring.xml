@@ -2,8 +2,8 @@
 <Configuration>
     <Properties>
         <Property name="pattern">%-5level | %date{ISO8601} | [%tread] | %logger (%file:%line) - %msg%n</Property>
-        <Property name="serverFileName">${sys:logging.file}</Property>
-        <Property name="jmeterFileName">server.jmeter.log</Property>
+        <Property name="serverFileName">${sys:logs.dir}/${sys:logging.file}</Property>
+        <Property name="jmeterFileName">${sys:logs.dir}/server.jmeter.log</Property>
     </Properties>
     <Appenders>
         <RandomAccessFile name="SERVER_FILE" fileName="${serverFileName}" append="true">
@@ -14,18 +14,21 @@
         </RandomAccessFile>
         <Console name="STDOUT" target="SYSTEM_OUT">
             <PatternLayout pattern="${pattern}"/>
+            <Filters>
+                <ThresholdFilter level="info"  onMatch="ACCEPT" onMismatch="DENY"/>
+            </Filters>
         </Console>
     </Appenders>
 
     <Loggers>
-        <Logger name="com.focusit" level="debug">
+        <Logger name="com.focusit" level="error">
             <AppenderRef ref="SERVER_FILE" />
         </Logger>
-        <Logger name="org.apache.jmeter.protocol.http.proxy" level="debug">
+        <Logger name="org.apache.jmeter.protocol.http.proxy" level="error">
             <AppenderRef ref="JMETER_FILE" />
         </Logger>
 
-        <Root level="info">
+        <Root level="trace">
             <AppenderRef ref="STDOUT"/>
         </Root>
     </Loggers>

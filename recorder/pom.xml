@@ -2,32 +2,31 @@
          xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.github.d0k1.jsflight</groupId>
     <artifactId>recorder</artifactId>
     <packaging>jar</packaging>
     <url>http://maven.apache.org</url>
 
+    <name>recorder</name>
+    <description>JSFlight recorder</description>
+
     <parent>
-        <groupId>com.github.d0k1</groupId>
+        <groupId>com.github.d0k1.jsflight</groupId>
         <artifactId>jsflight</artifactId>
-        <version>4.2-SNAPSHOT</version>
+        <version>4.13-SNAPSHOT</version>
     </parent>
 
     <dependencies>
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
-            <version>${javax.servlet-api.version}</version>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-            <version>${commons-io.version}</version>
         </dependency>
         <dependency>
             <groupId>com.esotericsoftware</groupId>
             <artifactId>kryo</artifactId>
-            <version>${kryo.version}</version>
         </dependency>
     </dependencies>
 
@@ -53,16 +52,10 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>${maven-compiler-plugin.version}</version>
-                <configuration>
-                    <source>${maven.compiler.source}</source>
-                    <target>${maven.compiler.target}</target>
-                </configuration>
             </plugin>
             <plugin>
                 <groupId>com.samaxes.maven</groupId>
                 <artifactId>minify-maven-plugin</artifactId>
-                <version>${minify-maven-plugin.version}</version>
                 <executions>
                     <execution>
                         <id>default-minify</id>

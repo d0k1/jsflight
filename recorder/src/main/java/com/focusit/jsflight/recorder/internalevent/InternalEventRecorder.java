@@ -1,15 +1,13 @@
 package com.focusit.jsflight.recorder.internalevent;
 
-import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.io.FastOutput;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.zip.GZIPOutputStream;
+
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.FastOutput;
 
 /**
  * Recorder for special server event that must be recorded to get correct overall recording.
@@ -21,19 +19,30 @@ import java.util.concurrent.atomic.AtomicLong;
 public class InternalEventRecorder
 {
     private static final InternalEventRecorder instance = new InternalEventRecorder();
-
-    private ArrayBlockingQueue<InternalEventRecord> records = new ArrayBlockingQueue<>(4096);
+    private final int maxElementsBeforeFlush;
+    private final boolean storeInGzip;
+    private ArrayBlockingQueue<InternalEventRecord> records;
     private AtomicLong lastId = new AtomicLong(-1);
     private AtomicLong timestampNs = new AtomicLong(0);
     private AtomicBoolean recording = new AtomicBoolean(false);
     private volatile String eventsFilename = "internal.data";
-    private StorageThread storageThread = new StorageThread();
+    private StorageThread storageThread;
     private AtomicBoolean shuttingDown = new AtomicBoolean(false);
     private AtomicBoolean newFile = new AtomicBoolean(false);
     private WallClock wallClock = new WallClock();
 
     private InternalEventRecorder()
     {
+        this(-1, 4096, "internal-event-storage", false);
+    }
+
+    private InternalEventRecorder(int maxElementsBeforeFlush, int maxQueueSize, String storagePrefix,
+            boolean storeInGzip)
+    {
+        this.maxElementsBeforeFlush = maxElementsBeforeFlush;
+        this.records = new ArrayBlockingQueue<>(maxQueueSize);
+        this.storeInGzip = storeInGzip;
+        this.storageThread = new StorageThread(storagePrefix);
         wallClock.start();
         storageThread.start();
     }
@@ -41,6 +50,12 @@ public class InternalEventRecorder
     public static InternalEventRecorder getInstance()
     {
         return instance;
+    }
+
+    public static InternalEventRecorder build(int maxElementsBeforeFlush, int maxQueueSize, String storagePrefix,
+            boolean storeInGzip)
+    {
+        return new InternalEventRecorder(maxElementsBeforeFlush, maxQueueSize, storagePrefix, storeInGzip);
     }
 
     public long getWallTime()
@@ -123,9 +138,9 @@ public class InternalEventRecorder
 
         private int filesCounter = 1;
 
-        public StorageThread()
+        public StorageThread(String storagePrefix)
         {
-            super("internal-event-storage");
+            super(storagePrefix);
             setPriority(NORM_PRIORITY);
             kryo = new Kryo();
         }
@@ -146,7 +161,9 @@ public class InternalEventRecorder
             {
                 File destinationFile = new File(fileName);
                 System.out.println("Storing internal events to " + destinationFile.getAbsolutePath());
-                output = new FastOutput(new FileOutputStream(fileName));
+                FileOutputStream fos = new FileOutputStream(fileName);
+                OutputStream out = storeInGzip ? new GZIPOutputStream(fos) : fos;
+                output = new FastOutput(out);
             }
             catch (IOException e)
             {
@@ -176,17 +193,19 @@ public class InternalEventRecorder
         public void run()
         {
             boolean needFlush = false;
+            int flushedObjects = 0;
             while (isAlive() && !isInterrupted() && !shuttingDown.get())
             {
                 try
                 {
                     if (recording.get())
                     {
-                        InternalEventRecord record = records.poll();
-                        if (record != null)
+                        InternalEventRecord record;
+                        if (flushedObjects != maxElementsBeforeFlush && (record = records.poll()) != null)
                         {
                             kryo.writeObject(output, record);
                             needFlush = true;
+                            flushedObjects++;
                             yield();
                         }
                         else
@@ -194,6 +213,7 @@ public class InternalEventRecorder
                             if (needFlush)
                             {
                                 output.flush();
+                                flushedObjects = 0;
                                 needFlush = false;
                             }
                             if (newFile.get())

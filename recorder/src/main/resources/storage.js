@@ -36,11 +36,16 @@ jsflight.getEventInfo = function(event) {
         : event.srcElement;
 
     var result = {};
+    var inputData = jsflight.getInputData(event.target);
 
-    result.caretPosition = jsflight.getCaretPosition(event.target);
-    try {
-        result.clipboardData = (event.clipboardData || window.clipboardData).getData('Text');
-    } catch(e) {}
+    result.caretPosition = inputData.selectionStart;
+    result.selectionEnd = inputData.selectionEnd;
+    result.isSelection = inputData.isSelection;
+    if(!jsflight.isIE()){
+        try {
+            result.clipboardData = (event.clipboardData || window.clipboardData).getData('Text');
+        } catch(e) {}
+    }
     result.tabuuid = jsflight.tabUuid;
     result.type = event.type;
     result.url = window.location.href;
@@ -114,26 +119,14 @@ jsflight.getEventInfo = function(event) {
     return result;
 };
 
-
-jsflight.getCaretPosition = function (node) {
-     //node.focus();
-     /* without node.focus() IE will returns -1 when focus is not on node */
-     if(node.selectionStart)
-         return node.selectionStart;
-     else if(!document.selection)
-         return 0;
-     var dummyCharacter = "\001";
-     var selection = document.selection.createRange();
-     if (selection === null)
-         return 0;
-     var selectionDuplicate = selection.duplicate();
-     var caretPosition = 0;
-     selectionDuplicate.moveToElementText(node);
-     selection.text = dummyCharacter;
-     caretPosition = (selectionDuplicate.text.indexOf(dummyCharacter));
-     selection.moveStart('character',-1);
-     selection.text = "";
-     return caretPosition;
+/**
+ * Get input data:current caret position(stored in selectionStart property),
+ * selectionEnd(if no selection equals to selectionStart) and presence of a selection in input
+ */
+jsflight.getInputData = function (node) {
+    var start = node && 'selectionStart' in node ? node.selectionStart :0 ;
+    var end = node && 'selectionEnd' in node ? node.selectionEnd : 0;
+    return {selectionStart: start, selectionEnd:end, isSelection: start != end}
  }
 
 /**
@@ -206,3 +199,15 @@ jsflight.sendEventData = function(sendStop) {
     };
     xhr.send('data=' + encodeURIComponent(data));
 };
+
+jsflight.isIE = function(){
+    var ua = window.navigator.userAgent;
+
+        var msie = ua.indexOf('MSIE ');
+        var trident = ua.indexOf('Trident/');
+        var edge = ua.indexOf('Edge/');
+        if (msie > 0 || trident > 0 || edge > 0) {
+            return true
+        }
+        return false;
+}
