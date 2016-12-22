@@ -1,5 +1,11 @@
 package com.focusit.jsflight.player;
 
+import java.awt.*;
+import java.io.File;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.beust.jcommander.JCommander;
 import com.focusit.jsflight.player.cli.CliPlayer;
 import com.focusit.jsflight.player.cli.config.CliConfig;
@@ -7,11 +13,6 @@ import com.focusit.jsflight.player.cli.config.IConfig;
 import com.focusit.jsflight.player.cli.config.PropertiesConfig;
 import com.focusit.jsflight.player.ui.ExceptionDialog;
 import com.focusit.jsflight.player.ui.MainFrame;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.awt.*;
-import java.io.File;
 
 public class Player
 {
@@ -44,14 +45,12 @@ public class Player
         }
     }
 
-    private static IConfig getConfig(String[] args) {
+    private static IConfig getConfig(String[] args)
+    {
         LOG.info("Configs parsing");
         IConfig config;
-        if (Player.class.getResource("application.properties") != null)
-        {
-            config = new PropertiesConfig(Player.class.getResource("application.properties").getPath());
-        }
-        else if (new File(System.getProperty("configFile")).exists())
+
+        if (new File(System.getProperty("configFile")).exists())
         {
             config = new PropertiesConfig(System.getProperty("configFile"));
         }
