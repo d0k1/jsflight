@@ -46,7 +46,7 @@ public class JMeterRecorderService
 
     public void startJMeter(MongoDbScenario scenario) throws Exception
     {
-        if (scenario.getConfiguration().getCommonConfiguration().getProxyPort() == null)
+        if (scenario.getConfiguration().getCommonConfiguration().getProxyPort() != null)
         {
             return;
         }
