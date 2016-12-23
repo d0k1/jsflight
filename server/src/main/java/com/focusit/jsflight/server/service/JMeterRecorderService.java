@@ -1,13 +1,5 @@
 package com.focusit.jsflight.server.service;
 
-import com.focusit.jsflight.jmeter.JMeterRecorder;
-import com.focusit.jsflight.player.configurations.ScriptsConfiguration;
-import com.focusit.jsflight.server.scenario.MongoDbScenario;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
-
-import javax.inject.Inject;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -17,6 +9,16 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
+
+import javax.inject.Inject;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import com.focusit.jsflight.jmeter.JMeterRecorder;
+import com.focusit.jsflight.player.configurations.ScriptsConfiguration;
+import com.focusit.jsflight.server.scenario.MongoDbScenario;
 
 /**
  * Created by dkirpichenkov on 19.05.16.
@@ -44,7 +46,7 @@ public class JMeterRecorderService
 
     public void startJMeter(MongoDbScenario scenario) throws Exception
     {
-        if (scenario.getConfiguration().getCommonConfiguration().getProxyPort() != null)
+        if (scenario.getConfiguration().getCommonConfiguration().getProxyPort() == null)
         {
             return;
         }

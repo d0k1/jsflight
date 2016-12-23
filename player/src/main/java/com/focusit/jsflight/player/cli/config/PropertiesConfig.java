@@ -1,29 +1,39 @@
 package com.focusit.jsflight.player.cli.config;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.beust.jcommander.IParameterValidator;
 import com.beust.jcommander.IStringConverter;
 import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.validators.PositiveInteger;
 import com.focusit.jsflight.player.constants.BrowserType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Properties;
 
 public class PropertiesConfig implements IConfig
 {
     private static final Logger LOG = LoggerFactory.getLogger(PropertiesConfig.class.getSimpleName());
 
     private static final IParameterValidator REQUIRED = (name, value) -> {
-        if (value == null){
+        if (value == null)
+        {
             throw new ParameterException("Parameter '" + name + "' is null");
         }
     };
 
     private Properties properties = new Properties();
+
+    public PropertiesConfig()
+    {
+
+    }
 
     public PropertiesConfig(String propertiesFilePath)
     {
@@ -73,9 +83,11 @@ public class PropertiesConfig implements IConfig
     }
 
     @Override
+    @Nullable
     public String getPathToBrowserExecutable()
     {
-        return getProperty(PropertiesConstants.BROWSER_EXECUTABLE_PATH);
+        return getProperty(PropertiesConstants.BROWSER_EXECUTABLE_PATH,
+                System.getProperty(PropertiesConstants.BROWSER_EXECUTABLE_PATH), null, String::toString);
     }
 
     @Override
@@ -157,8 +169,11 @@ public class PropertiesConfig implements IConfig
     }
 
     @Override
-    public String getTargetBaseUrl() {
-        return getProperty(PropertiesConstants.TARGET_BASE_URL, REQUIRED);
+    @Nonnull
+    public String getTargetBaseUrl()
+    {
+        return getProperty(PropertiesConstants.TARGET_BASE_URL, System.getProperty("AppTargetUrl"), REQUIRED,
+                String::toString);
     }
 
     @Override
@@ -228,14 +243,14 @@ public class PropertiesConfig implements IConfig
 
     public Integer getXvfbDisplayLowerBound()
     {
-        return getProperty(PropertiesConstants.XVFB_LOWER_BOUND, DefaultValues.XVFB_ZERO_DISPLAY,
-                new PositiveInteger(), Integer::new);
+        return getProperty(PropertiesConstants.XVFB_LOWER_BOUND, DefaultValues.XVFB_ZERO_DISPLAY, new PositiveInteger(),
+                Integer::new);
     }
 
     public Integer getXvfbDisplayUpperBound()
     {
-        return getProperty(PropertiesConstants.XVFB_UPPER_BOUND, DefaultValues.XVFB_ZERO_DISPLAY,
-                new PositiveInteger(), Integer::new);
+        return getProperty(PropertiesConstants.XVFB_UPPER_BOUND, DefaultValues.XVFB_ZERO_DISPLAY, new PositiveInteger(),
+                Integer::new);
     }
 
     @Override

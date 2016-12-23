@@ -1,5 +1,16 @@
 package com.focusit.jsflight.player.scenario;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.file.Paths;
+import java.util.Map;
+
+import org.json.JSONObject;
+import org.openqa.selenium.WebDriver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.focusit.jsflight.player.configurations.CommonConfiguration;
 import com.focusit.jsflight.player.configurations.ScriptsConfiguration;
 import com.focusit.jsflight.player.constants.BrowserType;
@@ -8,16 +19,6 @@ import com.focusit.jsflight.player.constants.EventType;
 import com.focusit.jsflight.player.script.PlayerScriptProcessor;
 import com.focusit.jsflight.player.webdriver.SeleniumDriver;
 import com.focusit.jsflight.script.constants.ScriptBindingConstants;
-import org.json.JSONObject;
-import org.openqa.selenium.WebDriver;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.file.Paths;
-import java.util.Map;
 
 /**
  * Class that really replays an event in given scenario and given selenium driver
@@ -82,8 +83,8 @@ public class ScenarioProcessor
      * @param theWebDriver
      * @param position
      */
-    protected void makeAShot(UserScenario scenario, SeleniumDriver seleniumDriver, WebDriver theWebDriver,
-            int position, boolean isError)
+    protected void makeAShot(UserScenario scenario, SeleniumDriver seleniumDriver, WebDriver theWebDriver, int position,
+            boolean isError)
     {
         if (scenario.getConfiguration().getCommonConfiguration().getMakeShots())
         {
@@ -145,13 +146,17 @@ public class ScenarioProcessor
                 return;
             }
 
+            eventUrl = new PlayerScriptProcessor(scenario)
+                    .executeUrlReplacementScript(scriptsConfiguration.getUrlReplacementScript(), event);
+
+            event.put(EventConstants.URL, eventUrl);
             String type = event.getString(EventConstants.TYPE);
             LOG.info("Event type: {}", type);
 
             if (type.equalsIgnoreCase(EventType.SCRIPT))
             {
-                new PlayerScriptProcessor(scenario).executeScriptEvent(
-                        scriptsConfiguration.getScriptEventHandlerScript(), event);
+                new PlayerScriptProcessor(scenario)
+                        .executeScriptEvent(scriptsConfiguration.getScriptEventHandlerScript(), event);
                 return;
             }
 

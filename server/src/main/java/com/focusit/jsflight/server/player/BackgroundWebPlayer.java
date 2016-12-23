@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 import org.bson.types.ObjectId;
@@ -73,6 +74,7 @@ public class BackgroundWebPlayer
         config = getConfig();
     }
 
+    @Nullable
     private PropertiesConfig getConfig()
     {
         if (System.getProperty("configFile") != null)
@@ -80,11 +82,8 @@ public class BackgroundWebPlayer
             LOG.info("Loading properties from '{}' file", System.getProperty("configFile"));
             return new PropertiesConfig(System.getProperty("configFile"));
         }
-        else
-        {
-            LOG.warn("Can't find any configuration file!");
-            return new PropertiesConfig("");
-        }
+
+        return new PropertiesConfig();
     }
 
     public Experiment start(String recordingId, boolean withScreenshots, boolean paused) throws Exception

@@ -28,4 +28,5 @@ public final class ScriptBindingConstants
     public static final String SAMPLE = "sample";
     public static final String TREE = "tree";
     public static final String USER_VARIABLES = "vars";
+    public static final String APP_BASE_URL = "targetBaseUrl";
 }

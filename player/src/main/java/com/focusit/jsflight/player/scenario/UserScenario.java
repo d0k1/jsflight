@@ -1,5 +1,19 @@
 package com.focusit.jsflight.player.scenario;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.*;
+
+import javax.annotation.Nullable;
+
+import org.apache.commons.lang3.StringUtils;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.focusit.jsflight.player.cli.config.IConfig;
 import com.focusit.jsflight.player.configurations.CommonConfiguration;
 import com.focusit.jsflight.player.configurations.Configuration;
@@ -10,17 +24,6 @@ import com.focusit.jsflight.player.input.EventsParser;
 import com.focusit.jsflight.player.input.FileInput;
 import com.focusit.jsflight.player.script.PlayerScriptProcessor;
 import com.focusit.jsflight.script.player.PlayerContext;
-import org.apache.commons.lang3.StringUtils;
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.*;
 
 /**
  * Recorded scenario encapsulation: parses file, plays the scenario by step, modifies the scenario, saves to a disk.
@@ -31,9 +34,9 @@ public class UserScenario
 {
     private static final Logger LOG = LoggerFactory.getLogger(UserScenario.class.getSimpleName());
 
-    private static final Set<String> ALLOWED_EVENT_TYPES = new HashSet<>(Arrays.asList(EventType.CLICK,
-            EventType.KEY_PRESS, EventType.KEY_UP, EventType.KEY_DOWN, EventType.SCROLL_EMULATION,
-            EventType.MOUSE_WHEEL, EventType.MOUSE_DOWN, EventType.SCRIPT));
+    private static final Set<String> ALLOWED_EVENT_TYPES = new HashSet<>(
+            Arrays.asList(EventType.CLICK, EventType.KEY_PRESS, EventType.KEY_UP, EventType.KEY_DOWN,
+                    EventType.SCROLL_EMULATION, EventType.MOUSE_WHEEL, EventType.MOUSE_DOWN, EventType.SCRIPT));
     private static HashMap<String, JSONObject> lastEvents = new HashMap<>();
     private volatile int position = 0;
     private List<JSONObject> events = new ArrayList<>();
@@ -46,8 +49,8 @@ public class UserScenario
         CommonConfiguration commonConfiguration = getConfiguration().getCommonConfiguration();
         commonConfiguration.setPathToBrowserExecutable(config.getPathToBrowserExecutable());
         commonConfiguration.setMakeShots(config.shouldMakeScreenshots());
-        commonConfiguration.setAsyncRequestsCompletedTimeoutInSeconds(config
-                .getAsyncRequestsCompletedTimeoutInSeconds());
+        commonConfiguration
+                .setAsyncRequestsCompletedTimeoutInSeconds(config.getAsyncRequestsCompletedTimeoutInSeconds());
         commonConfiguration.setProxyHost(config.getProxyHost());
         commonConfiguration.setScreenshotsDirectory(config.getScreenshotsDirectory());
         commonConfiguration.setBrowserType(config.getBrowserType());
@@ -67,8 +70,8 @@ public class UserScenario
         scriptsConfiguration.setStepProcessorScript(readFile(config.getPathToJmeterStepProcessorScript()));
         scriptsConfiguration.setScriptEventHandlerScript(readFile(config.getPathToScriptEventHandlerScript()));
         scriptsConfiguration.setShouldSkipKeyboardScript(readFile(config.getPathToShouldSkipKeyboardScript()));
-        scriptsConfiguration.setIsAsyncRequestsCompletedScript(readFile(config
-                .getPathToIsAsyncRequestsCompletedScript()));
+        scriptsConfiguration
+                .setIsAsyncRequestsCompletedScript(readFile(config.getPathToIsAsyncRequestsCompletedScript()));
 
         getConfiguration().getWebConfiguration().setSelectXpath(config.getSelectXpath());
 
@@ -76,7 +79,6 @@ public class UserScenario
 
         getConfiguration().loadDefaults();
     }
-
 
     public static String getTagForEvent(JSONObject event)
     {
@@ -102,8 +104,11 @@ public class UserScenario
         return array.getJSONObject(0).getString("getxp");
     }
 
-    private String readFile(String path)
+    @Nullable
+    private String readFile(@Nullable String path)
     {
+        if (path == null)
+            return null;
         try
         {
             return new String(Files.readAllBytes(Paths.get(path.trim())), StandardCharsets.UTF_8);
@@ -158,6 +163,7 @@ public class UserScenario
         this.position = position;
     }
 
+    @Nullable
     public JSONObject getPrevEvent(JSONObject event)
     {
         return lastEvents.get(getTagForEvent(event));

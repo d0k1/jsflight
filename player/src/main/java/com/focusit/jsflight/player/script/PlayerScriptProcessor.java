@@ -1,12 +1,14 @@
 package com.focusit.jsflight.player.script;
 
-import com.focusit.jsflight.player.constants.EventConstants;
-import com.focusit.jsflight.player.scenario.UserScenario;
-import com.focusit.jsflight.script.ScriptEngine;
-import com.focusit.jsflight.script.constants.ScriptBindingConstants;
-import groovy.lang.Binding;
-import groovy.lang.Script;
-import groovy.text.SimpleTemplateEngine;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
+
+import javax.annotation.Nullable;
+
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.openqa.selenium.WebDriver;
@@ -14,12 +16,14 @@ import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.regex.Matcher;
+import com.focusit.jsflight.player.constants.EventConstants;
+import com.focusit.jsflight.player.scenario.UserScenario;
+import com.focusit.jsflight.script.ScriptEngine;
+import com.focusit.jsflight.script.constants.ScriptBindingConstants;
+
+import groovy.lang.Binding;
+import groovy.lang.Script;
+import groovy.text.SimpleTemplateEngine;
 
 /**
  * PlayerScriptProcessor that runs groovy scripts or GString templates
@@ -51,12 +55,42 @@ public class PlayerScriptProcessor
     }
 
     /**
+     * Return an event's url. Used to  change original urls to ones in test environment
+     * @param script
+     * @param currentEvent
+     * @return return new target url based on script's execution results
+     */
+    public String executeUrlReplacementScript(String script, JSONObject currentEvent)
+    {
+        Map<String, Object> binding = getEmptyBindingsMap();
+        binding.put(ScriptBindingConstants.EVENT, currentEvent);
+        binding.put(ScriptBindingConstants.APP_BASE_URL,
+                scenario.getConfiguration().getCommonConfiguration().getTargetBaseUrl());
+
+        String result = currentEvent.getString(EventConstants.URL);
+        try
+        {
+            result = executeGroovyScript(script, binding, String.class);
+            if (StringUtils.isEmpty(result))
+            {
+                return currentEvent.getString(EventConstants.URL);
+            }
+        }
+        catch (Exception e)
+        {
+            LOG.warn("Failed to create duplicateHandler script. Default value is false", e);
+        }
+
+        return result;
+    }
+
+    /**
      * @param script
      * @param currentEvent
      * @param prevEvent
      * @return true if currentEvent duplicates prevEvent and should be skipped
      */
-    public boolean executeDuplicateHandlerScript(String script, JSONObject currentEvent, JSONObject prevEvent)
+    public boolean executeDuplicateHandlerScript(String script, JSONObject currentEvent, @Nullable JSONObject prevEvent)
     {
         Map<String, Object> binding = getEmptyBindingsMap();
         binding.put(ScriptBindingConstants.CURRENT, currentEvent);
@@ -126,7 +160,8 @@ public class PlayerScriptProcessor
         }
     }
 
-    private String getStringOrDefault(JSONObject event, String pre, String defaultString) {
+    private String getStringOrDefault(JSONObject event, String pre, String defaultString)
+    {
         return event.has(pre) ? event.getString(pre) : defaultString;
     }
 
@@ -185,6 +220,7 @@ public class PlayerScriptProcessor
         return executeGroovyScript(script, bindings, Object.class);
     }
 
+    @Nullable
     public <T> T executeGroovyScript(String scriptBody, Map<String, Object> bindings, Class<T> clazz)
     {
         LOG.debug("Executing script:\n{}", scriptBody);

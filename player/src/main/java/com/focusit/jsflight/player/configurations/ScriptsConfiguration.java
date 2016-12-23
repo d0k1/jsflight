@@ -1,14 +1,5 @@
 package com.focusit.jsflight.player.configurations;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.focusit.jsflight.jmeter.JMeterRecorder;
-import com.focusit.jsflight.player.configurations.interfaces.DefaultFile;
-import com.focusit.jsflight.player.configurations.interfaces.IDefaults;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
@@ -16,6 +7,18 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.nio.file.Paths;
 import java.util.Arrays;
+
+import javax.annotation.Nullable;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.focusit.jsflight.jmeter.JMeterRecorder;
+import com.focusit.jsflight.player.configurations.interfaces.DefaultFile;
+import com.focusit.jsflight.player.configurations.interfaces.IDefaults;
 
 public class ScriptsConfiguration implements IDefaults
 {
@@ -58,6 +61,18 @@ public class ScriptsConfiguration implements IDefaults
     @DefaultFile("js/isAsyncRequestsCompleted.js")
     private String isAsyncRequestsCompletedScript;
 
+    private String urlReplacementScript = "";
+
+    public String getUrlReplacementScript()
+    {
+        return urlReplacementScript;
+    }
+
+    public void setUrlReplacementScript(String urlReplacementScript)
+    {
+        this.urlReplacementScript = urlReplacementScript;
+    }
+
     private static Method getGetterForField(Field field) throws NoSuchMethodException
     {
         return getMethodWithPrefixForField(field, "get");
@@ -92,9 +107,12 @@ public class ScriptsConfiguration implements IDefaults
         return elementLookupScript;
     }
 
-    public void setElementLookupScript(String elementLookupScript)
+    public void setElementLookupScript(@Nullable String elementLookupScript)
     {
-        this.elementLookupScript = elementLookupScript;
+        if (elementLookupScript != null)
+        {
+            this.elementLookupScript = elementLookupScript;
+        }
     }
 
     public String getDuplicationHandlerScript()
@@ -102,9 +120,12 @@ public class ScriptsConfiguration implements IDefaults
         return duplicationHandlerScript;
     }
 
-    public void setDuplicationHandlerScript(String duplicationHandlerScript)
+    public void setDuplicationHandlerScript(@Nullable String duplicationHandlerScript)
     {
-        this.duplicationHandlerScript = duplicationHandlerScript;
+        if (duplicationHandlerScript != null)
+        {
+            this.duplicationHandlerScript = duplicationHandlerScript;
+        }
     }
 
     public String getIsBrowserHaveErrorScript()
@@ -112,9 +133,12 @@ public class ScriptsConfiguration implements IDefaults
         return isBrowserHaveErrorScript;
     }
 
-    public void setIsBrowserHaveErrorScript(String isBrowserHaveErrorScript)
+    public void setIsBrowserHaveErrorScript(@Nullable String isBrowserHaveErrorScript)
     {
-        this.isBrowserHaveErrorScript = isBrowserHaveErrorScript;
+        if (isBrowserHaveErrorScript != null)
+        {
+            this.isBrowserHaveErrorScript = isBrowserHaveErrorScript;
+        }
     }
 
     public String getIsSelectElementScript()
@@ -124,7 +148,10 @@ public class ScriptsConfiguration implements IDefaults
 
     public void setIsSelectElementScript(String isSelectElementScript)
     {
-        this.isSelectElementScript = isSelectElementScript;
+        if (isSelectElementScript != null)
+        {
+            this.isSelectElementScript = isSelectElementScript;
+        }
     }
 
     public String getIsUiShownScript()
@@ -132,9 +159,12 @@ public class ScriptsConfiguration implements IDefaults
         return isUiShownScript;
     }
 
-    public void setIsUiShownScript(String isUiShownScript)
+    public void setIsUiShownScript(@Nullable String isUiShownScript)
     {
-        this.isUiShownScript = isUiShownScript;
+        if (isUiShownScript != null)
+        {
+            this.isUiShownScript = isUiShownScript;
+        }
     }
 
     public String getStepProcessorScript()
@@ -142,9 +172,12 @@ public class ScriptsConfiguration implements IDefaults
         return stepProcessorScript;
     }
 
-    public void setStepProcessorScript(String stepProcessorScript)
+    public void setStepProcessorScript(@Nullable String stepProcessorScript)
     {
-        this.stepProcessorScript = stepProcessorScript;
+        if (stepProcessorScript != null)
+        {
+            this.stepProcessorScript = stepProcessorScript;
+        }
     }
 
     public String getScenarioProcessorScript()
@@ -152,9 +185,12 @@ public class ScriptsConfiguration implements IDefaults
         return scenarioProcessorScript;
     }
 
-    public void setScenarioProcessorScript(String scenarioProcessorScript)
+    public void setScenarioProcessorScript(@Nullable String scenarioProcessorScript)
     {
-        this.scenarioProcessorScript = scenarioProcessorScript;
+        if (scenarioProcessorScript != null)
+        {
+            this.scenarioProcessorScript = scenarioProcessorScript;
+        }
     }
 
     public String getScriptEventHandlerScript()
@@ -162,9 +198,12 @@ public class ScriptsConfiguration implements IDefaults
         return scriptEventHandlerScript;
     }
 
-    public void setScriptEventHandlerScript(String scriptEventHandlerScript)
+    public void setScriptEventHandlerScript(@Nullable String scriptEventHandlerScript)
     {
-        this.scriptEventHandlerScript = scriptEventHandlerScript;
+        if (scriptEventHandlerScript != null)
+        {
+            this.scriptEventHandlerScript = scriptEventHandlerScript;
+        }
     }
 
     public String getShouldSkipKeyboardScript()
@@ -172,9 +211,12 @@ public class ScriptsConfiguration implements IDefaults
         return shouldSkipKeyboardScript;
     }
 
-    public void setShouldSkipKeyboardScript(String shouldSkipKeyboardScript)
+    public void setShouldSkipKeyboardScript(@Nullable String shouldSkipKeyboardScript)
     {
-        this.shouldSkipKeyboardScript = shouldSkipKeyboardScript;
+        if (shouldSkipKeyboardScript != null)
+        {
+            this.shouldSkipKeyboardScript = shouldSkipKeyboardScript;
+        }
     }
 
     public String getSendSignalToProcessScript()
@@ -182,7 +224,7 @@ public class ScriptsConfiguration implements IDefaults
         return sendSignalToProcessScript;
     }
 
-    public void setSendSignalToProcessScript(String sendSignalToProcessScript)
+    public void setSendSignalToProcessScript(@Nullable String sendSignalToProcessScript)
     {
         this.sendSignalToProcessScript = sendSignalToProcessScript;
     }
@@ -192,7 +234,7 @@ public class ScriptsConfiguration implements IDefaults
         return getWebDriverPidScript;
     }
 
-    public void setGetWebDriverPidScript(String getWebDriverPidScript)
+    public void setGetWebDriverPidScript(@Nullable String getWebDriverPidScript)
     {
         this.getWebDriverPidScript = getWebDriverPidScript;
     }
@@ -202,9 +244,12 @@ public class ScriptsConfiguration implements IDefaults
         return isAsyncRequestsCompletedScript;
     }
 
-    public void setIsAsyncRequestsCompletedScript(String isAsyncRequestsCompletedScript)
+    public void setIsAsyncRequestsCompletedScript(@Nullable String isAsyncRequestsCompletedScript)
     {
-        this.isAsyncRequestsCompletedScript = isAsyncRequestsCompletedScript;
+        if (isAsyncRequestsCompletedScript != null)
+        {
+            this.isAsyncRequestsCompletedScript = isAsyncRequestsCompletedScript;
+        }
     }
 
     @Override

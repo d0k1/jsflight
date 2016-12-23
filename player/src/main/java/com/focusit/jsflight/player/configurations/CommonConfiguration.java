@@ -1,12 +1,5 @@
 package com.focusit.jsflight.player.configurations;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.focusit.jsflight.player.constants.BrowserType;
-import com.focusit.jsflight.script.ScriptsClassLoader;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.data.annotation.Transient;
-
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
@@ -17,6 +10,16 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
+
+import javax.annotation.Nullable;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.annotation.Transient;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.focusit.jsflight.player.constants.BrowserType;
+import com.focusit.jsflight.script.ScriptsClassLoader;
 
 /**
  * Common configuration i.e. everything about player. browser settings, timeout settings
@@ -97,8 +100,13 @@ public class CommonConfiguration
         this.uiShownTimeoutSeconds = uiShownTimeoutSeconds;
     }
 
-    private List<URL> findClasspathForScripts(String path)
+    private List<URL> findClasspathForScripts(@Nullable String path)
     {
+        if (path == null)
+        {
+            return new ArrayList<>();
+        }
+
         try
         {
             return Files.walk(Paths.get(path)).filter(Files::isRegularFile).map(CommonConfiguration::toUrl)
@@ -215,29 +223,15 @@ public class CommonConfiguration
     {
         if (getMaxElementGroovy() == null)
         {
-            setMaxElementGroovy("def list = webdriver.findElements(org.openqa.selenium.By.xpath(\"//div[@id='gwt-debug-PopupListSelect']//div[@__idx]\"));\n"
-                    + "\n"
-                    + "def maxEl = null;\n"
-                    + "Integer val = null;\n"
-                    + "\n"
-                    + "def tempEl = null;\n"
-                    + "def tempVal = 0;\n"
-                    + "\n"
-                    + "for(int i=0;i<list.size();i++)\n"
-                    + "{\n"
-                    + "\ttempEl = list.get(i);\n"
-                    + "\ttempVal = Integer.parseInt(tempEl.getAttribute(\"__idx\"));\n"
-                    + "\n"
-                    + "\tif(maxEl==null)\n"
-                    + "\t{\n"
-                    + "\t\tmaxEl = tempEl;\n"
-                    + "\t\tval = tempVal;\n"
-                    + "\t\tcontinue;\n"
-                    + "\t}\n"
-                    + "\n"
-                    + "\tif(val<tempVal){\n"
-                    + "\t\tmaxEl = tempEl;\n"
-                    + "\t\tval = tempVal;\n" + "\t}\n" + "}\n" + "\n" + "return maxEl;\n");
+            setMaxElementGroovy(
+                    "def list = webdriver.findElements(org.openqa.selenium.By.xpath(\"//div[@id='gwt-debug-PopupListSelect']//div[@__idx]\"));\n"
+                            + "\n" + "def maxEl = null;\n" + "Integer val = null;\n" + "\n" + "def tempEl = null;\n"
+                            + "def tempVal = 0;\n" + "\n" + "for(int i=0;i<list.size();i++)\n" + "{\n"
+                            + "\ttempEl = list.get(i);\n"
+                            + "\ttempVal = Integer.parseInt(tempEl.getAttribute(\"__idx\"));\n" + "\n"
+                            + "\tif(maxEl==null)\n" + "\t{\n" + "\t\tmaxEl = tempEl;\n" + "\t\tval = tempVal;\n"
+                            + "\t\tcontinue;\n" + "\t}\n" + "\n" + "\tif(val<tempVal){\n" + "\t\tmaxEl = tempEl;\n"
+                            + "\t\tval = tempVal;\n" + "\t}\n" + "}\n" + "\n" + "return maxEl;\n");
         }
     }
 
@@ -260,8 +254,8 @@ public class CommonConfiguration
             {
                 ArrayList<URL> urls = new ArrayList<>();
                 urls.addAll(findClasspathForScripts(System.getProperty("cp")));
-                scriptClassloader = new ScriptsClassLoader(this.getClass().getClassLoader(), urls.toArray(new URL[urls
-                        .size()]));
+                scriptClassloader = new ScriptsClassLoader(this.getClass().getClassLoader(),
+                        urls.toArray(new URL[urls.size()]));
             }
             return scriptClassloader;
         }
@@ -271,11 +265,13 @@ public class CommonConfiguration
         }
     }
 
-    public CharSequence getTargetBaseUrl() {
+    public CharSequence getTargetBaseUrl()
+    {
         return targetBaseUrl;
     }
 
-    public void setTargetBaseUrl(CharSequence targetBaseUrl) {
+    public void setTargetBaseUrl(CharSequence targetBaseUrl)
+    {
         this.targetBaseUrl = targetBaseUrl;
     }
 }
