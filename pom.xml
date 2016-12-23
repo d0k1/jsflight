@@ -55,7 +55,7 @@
         <phantomjsdriver.version>1.2.1</phantomjsdriver.version>
         <rstaui.version>2.5.7</rstaui.version>
         <rsyntaxtextarea.version>2.5.8</rsyntaxtextarea.version>
-        <selenium.version>2.53.0</selenium.version>
+        <selenium.version>2.53.1</selenium.version>
         <spock-core.version>1.0-groovy-2.4</spock-core.version>
         <spock-spring.version>1.0-groovy-2.4</spock-spring.version>
         <velocity.version>1.7</velocity.version>
