@@ -1,6 +1,10 @@
 package com.focusit.jsflight.server.repository;
 
-import com.focusit.jsflight.server.model.Event;
+import java.util.List;
+import java.util.concurrent.atomic.LongAdder;
+
+import javax.inject.Inject;
+
 import org.bson.types.ObjectId;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -8,8 +12,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Repository;
 
-import javax.inject.Inject;
-import java.util.List;
+import com.focusit.jsflight.server.model.Event;
 
 /**
  * Created by dkirpichenkov on 20.05.16.
@@ -17,6 +20,7 @@ import java.util.List;
 @Repository
 public class EventRepositoryImpl implements EventRepository
 {
+    private LongAdder adder = new LongAdder();
     private MongoTemplate mongoTemplate;
 
     @Inject
@@ -47,6 +51,12 @@ public class EventRepositoryImpl implements EventRepository
     @Override
     public void save(List<Event> lineEvents)
     {
+        adder.add(lineEvents.size());
         mongoTemplate.insertAll(lineEvents);
+    }
+
+    public long getAdded()
+    {
+        return adder.longValue();
     }
 }

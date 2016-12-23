@@ -1,18 +1,5 @@
 package com.focusit.jsflight.server.service;
 
-import com.focusit.jsflight.server.model.Event;
-import com.focusit.jsflight.server.model.Recording;
-import com.focusit.jsflight.server.repository.EventRepository;
-import com.focusit.jsflight.server.repository.RecordingRepository;
-import com.google.gson.Gson;
-import org.apache.commons.io.IOUtils;
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
-
-import javax.inject.Inject;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -20,8 +7,21 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+
+import javax.inject.Inject;
+
+import org.apache.commons.io.IOUtils;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import com.focusit.jsflight.server.model.Event;
+import com.focusit.jsflight.server.model.Recording;
+import com.focusit.jsflight.server.repository.EventRepository;
+import com.focusit.jsflight.server.repository.RecordingRepository;
+import com.google.gson.Gson;
 
 /**
  * Created by doki on 14.05.16.
@@ -30,7 +30,6 @@ import java.util.regex.Pattern;
 public class RecordingsService
 {
     private final static Logger LOG = LoggerFactory.getLogger(RecordingsService.class);
-    public static final String URL_BASE_TEMPLATE = "0.0.0.0:0";
 
     private RecordingRepository recordingRepository;
     private EventRepository eventRepository;
@@ -84,10 +83,6 @@ public class RecordingsService
                                     LOG.error("Parsed event was null. Event as JSON: {}", eventAsJson.toString(4));
                                     continue;
                                 }
-                                LOG.info("Changing event's url base to template {}", URL_BASE_TEMPLATE);
-                                Pattern pattern = Pattern.compile("^https?://([^:/]+:?\\d*)?/.*$");
-                                Matcher matcher = pattern.matcher(event.getUrl());
-                                event.setUrl(event.getUrl().replace(matcher.group(1), URL_BASE_TEMPLATE));
                                 lineEvents.add(event);
                             }
                             catch (Throwable t)
@@ -122,14 +117,23 @@ public class RecordingsService
         }
 
         final boolean[] result = { true };
-        CompletableFuture.allOf(operations.toArray(new CompletableFuture[operations.size()])).whenComplete(
-                (aVoid, throwable) -> {
-                    if (throwable != null)
-                    {
-                        result[0] = false;
-                    }
-                });
 
+        try
+        {
+            CompletableFuture.allOf(operations.toArray(new CompletableFuture[operations.size()]))
+                    .whenComplete((aVoid, throwable) -> {
+                        if (throwable != null)
+                        {
+                            result[0] = false;
+                        }
+                    }).get();
+        }
+        catch (Exception e)
+        {
+            LOG.error(e.toString(), e);
+        }
+
+        System.out.println("inserted " + eventRepository.getAdded());
         return result[0];
     }
 

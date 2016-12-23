@@ -16,4 +16,6 @@ public interface EventRepository
     long countByRecordingId(ObjectId recordingId);
 
     void save(List<Event> lineEvents);
+
+    long getAdded();
 }

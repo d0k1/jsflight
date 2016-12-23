@@ -82,7 +82,7 @@ public class BackgroundWebPlayer
         }
         else
         {
-            LOG.error("Can't find any configuration file!");
+            LOG.warn("Can't find any configuration file!");
             return new PropertiesConfig("");
         }
     }
