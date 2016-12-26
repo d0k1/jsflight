@@ -7,6 +7,7 @@ import javax.annotation.Nullable
 import java.util.stream.Collectors
 
 import static com.focusit.jsflight.player.webdriver.SeleniumDriver.NO_OP_ELEMENT
+
 /**
  * Базовый скрипт поиска элементов
  * Скрипту доступны след. переменные:
@@ -15,6 +16,10 @@ import static com.focusit.jsflight.player.webdriver.SeleniumDriver.NO_OP_ELEMENT
  *      event - само событие
  *      logger - лог
  */
+
+def swapToValidTreeXp(def elements) {
+    // Write you custom logic here
+}
 
 List<String> elements = Arrays.stream(target.split("//\\*"))
         .filter { element -> !element.isEmpty() }

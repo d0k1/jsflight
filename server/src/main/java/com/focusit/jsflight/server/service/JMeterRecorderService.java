@@ -1,5 +1,7 @@
 package com.focusit.jsflight.server.service;
 
+import static com.focusit.jsflight.player.cli.config.PropertiesConstants.NO_JMETER_PARAM;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -46,6 +48,10 @@ public class JMeterRecorderService
 
     public void startJMeter(MongoDbScenario scenario) throws Exception
     {
+        if (System.getProperty(NO_JMETER_PARAM) != null)
+        {
+            return;
+        }
         if (scenario.getConfiguration().getCommonConfiguration().getProxyPort() != null)
         {
             return;
@@ -87,6 +93,10 @@ public class JMeterRecorderService
 
     public void stopJMeter(MongoDbScenario scenario) throws Exception
     {
+        if (System.getProperty(NO_JMETER_PARAM) != null)
+        {
+            return;
+        }
         Integer proxyPort = scenario.getConfiguration().getCommonConfiguration().getProxyPort();
         if (proxyPort == 0)
         {

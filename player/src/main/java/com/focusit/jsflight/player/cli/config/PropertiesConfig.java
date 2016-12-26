@@ -193,13 +193,15 @@ public class PropertiesConfig implements IConfig
     @Override
     public String getKeepBrowserXpath()
     {
-        return getProperty(PropertiesConstants.BROWSER_KEEP_XPATH);
+        return getProperty(PropertiesConstants.BROWSER_KEEP_XPATH,
+                System.getProperty(PropertiesConstants.BROWSER_KEEP_XPATH), null, String::toString);
     }
 
     @Override
     public String getSelectXpath()
     {
-        return getProperty(PropertiesConstants.SELECT_XPATH);
+        return getProperty(PropertiesConstants.SELECT_XPATH, System.getProperty(PropertiesConstants.SELECT_XPATH), null,
+                String::toString);
     }
 
     @Override

@@ -61,7 +61,8 @@ public class ScriptsConfiguration implements IDefaults
     @DefaultFile("js/isAsyncRequestsCompleted.js")
     private String isAsyncRequestsCompletedScript;
 
-    private String urlReplacementScript = "";
+    @DefaultFile("urlReplace.groovy")
+    private String urlReplacementScript;
 
     public String getUrlReplacementScript()
     {

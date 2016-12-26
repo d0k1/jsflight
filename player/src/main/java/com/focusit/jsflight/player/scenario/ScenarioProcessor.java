@@ -114,12 +114,17 @@ public class ScenarioProcessor
         JSONObject event = scenario.getStepAt(position);
         scenario.getContext().setCurrentScenarioStep(event);
 
+        ScriptsConfiguration scriptsConfiguration = scenario.getConfiguration().getScriptsConfiguration();
+        String eventUrl = new PlayerScriptProcessor(scenario)
+                .executeUrlReplacementScript(scriptsConfiguration.getUrlReplacementScript(), event);
+
+        event.put(EventConstants.URL, eventUrl);
         LOG.info("Current step URL: {}", event.getString(EventConstants.URL));
 
         new PlayerScriptProcessor(scenario).runStepPrePostScript(event, position, true);
         event = new PlayerScriptProcessor(scenario).runStepTemplating(scenario, event);
 
-        String eventUrl = event.getString(EventConstants.URL);
+        eventUrl = event.getString(EventConstants.URL);
         //if template processing fails for URL we cannot process this step, so we skip
         if (eventUrl.matches(".*(\\$\\{.*\\}).*"))
         {
@@ -133,7 +138,6 @@ public class ScenarioProcessor
         CommonConfiguration commonConfiguration = scenario.getConfiguration().getCommonConfiguration();
         try
         {
-            ScriptsConfiguration scriptsConfiguration = scenario.getConfiguration().getScriptsConfiguration();
             if (scenario.isStepDuplicates(scriptsConfiguration.getDuplicationHandlerScript(), event))
             {
                 LOG.warn("Event duplicates previous");
@@ -146,10 +150,6 @@ public class ScenarioProcessor
                 return;
             }
 
-            eventUrl = new PlayerScriptProcessor(scenario)
-                    .executeUrlReplacementScript(scriptsConfiguration.getUrlReplacementScript(), event);
-
-            event.put(EventConstants.URL, eventUrl);
             String type = event.getString(EventConstants.TYPE);
             LOG.info("Event type: {}", type);
 
