@@ -608,6 +608,10 @@ public class SeleniumDriver
             return;
         }
 
+        String tabUuid = event.getString(EventConstants.TAB_UUID);
+        String empoyeeeUuid = event.getString(EventConstants.EMPLOYEE_UUID);
+        LOG.info("Releasing browser for " + tabUuid + " tab, user " + empoyeeeUuid);
+
         String display = driverDisplay.get(driver.toString());
         if (display != null)
         {
@@ -618,7 +622,6 @@ public class SeleniumDriver
         String firefoxPid = getFirefoxPid(driver);
         processor.executeProcessSignalScript(sendSignalToProcessScript, PROCESS_SIGNAL_CONT, firefoxPid);
 
-        String tabUuid = event.getString(EventConstants.TAB_UUID);
         tabUuidDrivers.remove(tabUuid);
         driver.quit();
         try

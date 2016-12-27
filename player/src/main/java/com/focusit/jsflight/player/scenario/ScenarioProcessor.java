@@ -146,7 +146,7 @@ public class ScenarioProcessor
 
             if (scenario.isEventIgnored(event) || scenario.isEventBad(event))
             {
-                LOG.warn("Event is ignored or bad");
+                LOG.warn("Event is ignored or bad. Type: "+event.get(EventConstants.TYPE)+" Target "+event.get(EventConstants.TARGET));
                 return;
             }
 
