@@ -25,18 +25,6 @@ import com.focusit.jsflight.player.input.EventsParser;
 import com.focusit.jsflight.player.input.FileInput;
 import com.focusit.jsflight.player.script.PlayerScriptProcessor;
 import com.focusit.jsflight.script.player.PlayerContext;
-import org.apache.commons.lang3.StringUtils;
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.annotation.Nullable;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.*;
 
 /**
  * Recorded scenario encapsulation: parses file, plays the scenario by step, modifies the scenario, saves to a disk.
@@ -47,9 +35,9 @@ public class UserScenario
 {
     private static final Logger LOG = LoggerFactory.getLogger(UserScenario.class.getSimpleName());
 
-    private static final Set<String> ALLOWED_EVENT_TYPES = new HashSet<>(Arrays.asList(EventType.CLICK,
-            EventType.KEY_PRESS, EventType.KEY_UP, EventType.KEY_DOWN, EventType.SCROLL_EMULATION,
-            EventType.MOUSE_WHEEL, EventType.MOUSE_DOWN, EventType.SCRIPT));
+    private static final Set<String> ALLOWED_EVENT_TYPES = new HashSet<>(
+            Arrays.asList(EventType.CLICK, EventType.KEY_PRESS, EventType.KEY_UP, EventType.KEY_DOWN,
+                    EventType.SCROLL_EMULATION, EventType.MOUSE_WHEEL, EventType.MOUSE_DOWN, EventType.SCRIPT));
     private static final ConcurrentHashMap<String, JSONObject> lastEvents = new ConcurrentHashMap<>();
     private volatile int position = 0;
     private List<JSONObject> events = new ArrayList<>();
@@ -86,8 +74,8 @@ public class UserScenario
         CommonConfiguration commonConfiguration = getConfiguration().getCommonConfiguration();
         commonConfiguration.setPathToBrowserExecutable(config.getPathToBrowserExecutable());
         commonConfiguration.setMakeShots(config.shouldMakeScreenshots());
-        commonConfiguration.setAsyncRequestsCompletedTimeoutInSeconds(config
-                .getAsyncRequestsCompletedTimeoutInSeconds());
+        commonConfiguration
+                .setAsyncRequestsCompletedTimeoutInSeconds(config.getAsyncRequestsCompletedTimeoutInSeconds());
         commonConfiguration.setProxyHost(config.getProxyHost());
         commonConfiguration.setScreenshotsDirectory(config.getScreenshotsDirectory());
         commonConfiguration.setBrowserType(config.getBrowserType());
@@ -107,8 +95,8 @@ public class UserScenario
         scriptsConfiguration.setStepProcessorScript(readFile(config.getPathToJmeterStepProcessorScript()));
         scriptsConfiguration.setScriptEventHandlerScript(readFile(config.getPathToScriptEventHandlerScript()));
         scriptsConfiguration.setShouldSkipKeyboardScript(readFile(config.getPathToShouldSkipKeyboardScript()));
-        scriptsConfiguration.setIsAsyncRequestsCompletedScript(readFile(config
-                .getPathToIsAsyncRequestsCompletedScript()));
+        scriptsConfiguration
+                .setIsAsyncRequestsCompletedScript(readFile(config.getPathToIsAsyncRequestsCompletedScript()));
 
         getConfiguration().getWebConfiguration().setSelectXpath(config.getSelectXpath());
 
