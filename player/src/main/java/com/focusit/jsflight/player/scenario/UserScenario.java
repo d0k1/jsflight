@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.Nullable;
 
@@ -37,7 +38,7 @@ public class UserScenario
     private static final Set<String> ALLOWED_EVENT_TYPES = new HashSet<>(
             Arrays.asList(EventType.CLICK, EventType.KEY_PRESS, EventType.KEY_UP, EventType.KEY_DOWN,
                     EventType.SCROLL_EMULATION, EventType.MOUSE_WHEEL, EventType.MOUSE_DOWN, EventType.SCRIPT));
-    private static HashMap<String, JSONObject> lastEvents = new HashMap<>();
+    private static final ConcurrentHashMap<String, JSONObject> lastEvents = new ConcurrentHashMap<>();
     private volatile int position = 0;
     private List<JSONObject> events = new ArrayList<>();
     private String preProcessScenarioScript;
@@ -167,6 +168,11 @@ public class UserScenario
     public JSONObject getPrevEvent(JSONObject event)
     {
         return lastEvents.get(getTagForEvent(event));
+    }
+
+    public void resetPrevEvent(JSONObject event)
+    {
+        lastEvents.remove(getTagForEvent(event));
     }
 
     public String getScenarioFilename()

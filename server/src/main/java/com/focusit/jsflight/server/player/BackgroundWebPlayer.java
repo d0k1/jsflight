@@ -12,6 +12,7 @@ import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 import org.bson.types.ObjectId;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -275,11 +276,16 @@ public class BackgroundWebPlayer
         return storageService.getErrorScreenShot(experiment.getRecordingName(), experimentId, step);
     }
 
-    public void move(String experimentId, int step)
+    public void move(String experimentId, int step, boolean resetLastEvent)
     {
         Experiment experiment = experimentRepository.findOne(new ObjectId(experimentId));
         experiment.setPosition(step);
         experimentRepository.save(experiment);
+        if (resetLastEvent)
+        {
+            new MongoDbScenario(experiment, eventRepository, experimentRepository).resetPrevEvent(
+                    new JSONObject(eventRepository.getEventToReplay(new ObjectId(experiment.getRecordingId()), step)));
+        }
     }
 
     public void terminable()

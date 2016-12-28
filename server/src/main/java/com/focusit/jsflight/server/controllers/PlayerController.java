@@ -194,10 +194,8 @@ public class PlayerController
         }
 
         response.setContentType("image/png");
-        response.setHeader(
-                "Content-Disposition",
-                String.format("attachment; filename=\"%s\"",
-                        experimentId + "_error_" + String.format("_%05d.png", step)));
+        response.setHeader("Content-Disposition", String.format("attachment; filename=\"%s\"",
+                experimentId + "_error_" + String.format("_%05d.png", step)));
         IOUtils.copy(stream, response.getOutputStream());
         response.flushBuffer();
     }
@@ -238,9 +236,16 @@ public class PlayerController
      * @param step
      */
     @RequestMapping(value = "/move", method = RequestMethod.GET)
-    public void move(@RequestParam("experimentId") String experimentId, @RequestParam("step") Integer step)
+    public void move(@RequestParam("experimentId") String experimentId, @RequestParam("step") Integer step,
+            @RequestParam(value = "reset", required = false) Boolean reset)
     {
-        player.move(experimentId, step);
+        if (Boolean.TRUE.equals(reset))
+        {
+            player.move(experimentId, step, true);
+        }
+        else
+            player.move(experimentId, step, false);
+
     }
 
     /**
