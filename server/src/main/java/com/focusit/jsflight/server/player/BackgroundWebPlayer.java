@@ -143,7 +143,10 @@ public class BackgroundWebPlayer
         MongoDbScenarioProcessor processor = new MongoDbScenarioProcessor(storageService);
 
         ScriptEngine.init(scenario.getConfiguration().getCommonConfiguration().getScriptClassloader());
-        startJMeter(scenario);
+        if (config.shouldEnableRecording())
+        {
+            startJMeter(scenario);
+        }
         experimentRepository.save(experiment);
 
         Map<String, String> lastUrls = experimentLastUrls.getOrDefault(experimentId, new ConcurrentHashMap<>());
@@ -203,7 +206,11 @@ public class BackgroundWebPlayer
                             }
                             try
                             {
-                                stopJMeter(scenario);
+                                if (config.shouldEnableRecording())
+                                {
+
+                                    stopJMeter(scenario);
+                                }
                             }
                             catch (Exception e)
                             {
