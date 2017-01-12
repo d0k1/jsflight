@@ -4,18 +4,18 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.validators.PositiveInteger;
 import com.focusit.jsflight.player.constants.BrowserType;
 
-@SuppressWarnings({ "FieldCanBeLocal", "unused" })
 public class CliConfig implements IConfig
 {
     @Parameter(names = { "-h", "--headless" }, description = "Launching in headless mode")
     private Boolean headless = DefaultValues.HEADLESS;
 
-    @Parameter(names = { "-s", "--startStep" }, description = "Skip steps before start", validateWith = PositiveInteger.class)
+    @Parameter(names = { "-s",
+            "--startStep" }, description = "Skip steps before start", validateWith = PositiveInteger.class)
     private Integer startStep = DefaultValues.START_STEP;
 
-    @Parameter(names = { "-f", "--finishStep" }, description = "Events to process", validateWith = PositiveInteger.class)
+    @Parameter(names = { "-f",
+            "--finishStep" }, description = "Events to process", validateWith = PositiveInteger.class)
     private Integer finishStep = DefaultValues.FINISH_STEP;
-
 
     @Parameter(names = { "--elementLookupScript" }, description = "Path to web lookup script")
     private String pathToElementLookupScript;
@@ -29,19 +29,23 @@ public class CliConfig implements IConfig
     @Parameter(names = { "--jmeterStepProcessorScript" }, description = "Script to process jmeter's sample")
     private String pathToJmeterStepProcessorScript;
 
-    @Parameter(names = { "--jmeterScenarioProcessorScript" }, description = "Script to process whole jmeter's scenario just before saving to disk")
+    @Parameter(names = {
+            "--jmeterScenarioProcessorScript" }, description = "Script to process whole jmeter's scenario just before saving to disk")
     private String pathToJmeterScenarioProcessorScript;
 
-    @Parameter(names = { "--shouldSkipKeyboardScript" }, description = "Script to determine whether keyboard event should be skipped")
+    @Parameter(names = {
+            "--shouldSkipKeyboardScript" }, description = "Script to determine whether keyboard event should be skipped")
     private String pathToShouldSkipKeyboardScript;
 
     @Parameter(names = { "--isUiShownScript" }, description = "Script to check, that page is ready")
     private String pathToIsUiShownScript;
 
-    @Parameter(names = { "--isSelectElementScript" }, description = "Script to determine whether WebElement is element of type 'select'")
+    @Parameter(names = {
+            "--isSelectElementScript" }, description = "Script to determine whether WebElement is element of type 'select'")
     private String pathToIsSelectElementScript;
 
-    @Parameter(names = { "--isBrowserHaveErrorScript" }, description = "Script to determine whether page is in error state")
+    @Parameter(names = {
+            "--isBrowserHaveErrorScript" }, description = "Script to determine whether page is in error state")
     private String pathToIsBrowserHaveErrorScript;
 
     @Parameter(names = { "--preProcessorScript" }, description = "Script to pre process all events")
@@ -49,7 +53,6 @@ public class CliConfig implements IConfig
 
     @Parameter(names = { "--isAsyncCompletedScript" }, description = "Script to determine whether async requests done")
     private String pathToIsAsyncRequestsCompletedScript;
-
 
     @Parameter(names = { "-rf", "--recordingFile" }, description = "Path to recording json", required = true)
     private String pathToRecordingFile;
@@ -60,7 +63,8 @@ public class CliConfig implements IConfig
     @Parameter(names = { "-be", "--browserExecutable" }, description = "Path to used browser binary")
     private String pathToBrowserExecutable;
 
-    @Parameter(names = { "-bt", "--browserType" }, description = "Which browser to use. See BrowserType enum", converter = BrowserTypeConverter.class)
+    @Parameter(names = { "-bt",
+            "--browserType" }, description = "Which browser to use. See BrowserType enum", converter = BrowserTypeConverter.class)
     private BrowserType browserType = DefaultValues.BROWSER_TYPE;
 
     @Parameter(names = { "-ph", "--proxyHost" }, description = "Selenium proxy host")
@@ -90,19 +94,20 @@ public class CliConfig implements IConfig
     @Parameter(names = { "--intervalBetweenUiChecksInMs" }, description = "Timeout for waiting of the UI appearance")
     private Integer intervalBetweenUiChecksInMs = DefaultValues.INTERVAL_BETWEEN_UI_CHECKS_IN_MS;
 
-    @Parameter(names = { "--useRandomChars" }, description = "Use random chars for keypress events instead of recorded ones")
+    @Parameter(names = {
+            "--useRandomChars" }, description = "Use random chars for keypress events instead of recorded ones")
     private Boolean useRandomChars = DefaultValues.USE_RANDOM_CHARS;
 
     @Parameter(names = { "-h", "--help" }, description = "Show this help", help = true)
     private Boolean help = false;
 
-
-    @Parameter(names = { "--keepBrowserXpath" }, description = "If during browser closing xpath matches any element, browser will not be closed.")
+    @Parameter(names = {
+            "--keepBrowserXpath" }, description = "If during browser closing xpath matches any element, browser will not be closed.")
     private String keepBrowserXpath;
 
-    @Parameter(names = { "--selectXpath" }, description = "If target element is select element, player will wait until element located by this xpath will not be shown")
+    @Parameter(names = {
+            "--selectXpath" }, description = "If target element is select element, player will wait until element located by this xpath will not be shown")
     private String selectXpath;
-
 
     @Parameter(names = { "--lowerXvfb" }, description = "Lower bound of the Xvfb displays pool")
     private Integer xvfbDisplayLowerBound = DefaultValues.XVFB_ZERO_DISPLAY;
@@ -110,10 +115,9 @@ public class CliConfig implements IConfig
     @Parameter(names = { "--upperXvfb" }, description = "Upper bound of the Xvfb displays pool")
     private Integer xvfbDisplayUpperBound = DefaultValues.XVFB_ZERO_DISPLAY;
 
-
-    @Parameter(names = { "--targetBaseUrl" }, description = "Base url of the target server. Will be used for filling templates in event url", required = true)
+    @Parameter(names = {
+            "--targetBaseUrl" }, description = "Base url of the target server. Will be used for filling templates in event url", required = true)
     private String targetBaseUrl;
-
 
     public Boolean shouldShowUsage()
     {
@@ -127,28 +131,39 @@ public class CliConfig implements IConfig
     }
 
     @Override
-    public String getPathToShouldSkipKeyboardScript() {
+    public String getPathToShouldSkipKeyboardScript()
+    {
         return pathToShouldSkipKeyboardScript;
     }
 
     @Override
-    public String getPathToIsUiShownScript() {
+    public String getPathToIsUiShownScript()
+    {
         return pathToIsUiShownScript;
     }
 
     @Override
-    public String getPathToIsSelectElementScript() {
+    public String getPathToIsSelectElementScript()
+    {
         return pathToIsSelectElementScript;
     }
 
     @Override
-    public String getPathToIsBrowserHaveErrorScript() {
+    public String getPathToIsBrowserHaveErrorScript()
+    {
         return pathToIsBrowserHaveErrorScript;
     }
 
     @Override
-    public String getPathToIsAsyncRequestsCompletedScript() {
+    public String getPathToIsAsyncRequestsCompletedScript()
+    {
         return pathToIsAsyncRequestsCompletedScript;
+    }
+
+    @Override
+    public String getPathToUrlReplacementScript()
+    {
+        return null;
     }
 
     @Override
@@ -170,7 +185,8 @@ public class CliConfig implements IConfig
     }
 
     @Override
-    public String getSelectXpath() {
+    public String getSelectXpath()
+    {
         return selectXpath;
     }
 
@@ -211,7 +227,8 @@ public class CliConfig implements IConfig
     }
 
     @Override
-    public String getTargetBaseUrl() {
+    public String getTargetBaseUrl()
+    {
         return targetBaseUrl;
     }
 
@@ -222,11 +239,13 @@ public class CliConfig implements IConfig
     }
 
     @Override
-    public Integer getUiShownTimeoutInSeconds() {
+    public Integer getUiShownTimeoutInSeconds()
+    {
         return uiShownTimeoutInSeconds;
     }
 
-    public Integer getIntervalBetweenUiChecksInMs() {
+    public Integer getIntervalBetweenUiChecksInMs()
+    {
         return intervalBetweenUiChecksInMs;
     }
 
@@ -248,11 +267,13 @@ public class CliConfig implements IConfig
         return proxyPort;
     }
 
-    public Integer getXvfbDisplayLowerBound() {
+    public Integer getXvfbDisplayLowerBound()
+    {
         return xvfbDisplayLowerBound;
     }
 
-    public Integer getXvfbDisplayUpperBound() {
+    public Integer getXvfbDisplayUpperBound()
+    {
         return xvfbDisplayUpperBound;
     }
 

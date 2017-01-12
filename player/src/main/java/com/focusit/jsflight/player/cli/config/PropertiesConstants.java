@@ -49,4 +49,5 @@ public class PropertiesConstants
     public static final String XVFB_UPPER_BOUND = "xvfb.upper";
 
     public static final String TARGET_BASE_URL = "target.baseUrl";
+    public static final String URL_REPLACEMENT_SCRIPT_PATH = "scripts.urlReplacement.path";
 }

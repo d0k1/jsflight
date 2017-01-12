@@ -30,16 +30,15 @@ public interface IConfig
 
     String getPathToIsAsyncRequestsCompletedScript();
 
+    String getPathToUrlReplacementScript();
 
     Integer getStartStep();
 
     Integer getFinishStep();
 
-
     String getKeepBrowserXpath();
 
     String getSelectXpath();
-
 
     String getGeneratedJmeterScenarioName();
 
@@ -53,16 +52,13 @@ public interface IConfig
 
     Integer getProxyPort();
 
-
     Integer getXvfbDisplayLowerBound();
 
     Integer getXvfbDisplayUpperBound();
 
-
     String getScreenshotsDirectory();
 
     BrowserType getBrowserType();
-
 
     Boolean shouldEnableRecording();
 

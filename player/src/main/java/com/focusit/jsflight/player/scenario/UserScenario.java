@@ -86,6 +86,7 @@ public class UserScenario
         commonConfiguration.setTargetBaseUrl(config.getTargetBaseUrl());
 
         ScriptsConfiguration scriptsConfiguration = getConfiguration().getScriptsConfiguration();
+        scriptsConfiguration.setUrlReplacementScript(readFile(config.getPathToUrlReplacementScript()));
         scriptsConfiguration.setDuplicationHandlerScript(readFile(config.getPathToDuplicateHandlerScript()));
         scriptsConfiguration.setElementLookupScript(readFile(config.getPathToElementLookupScript()));
         scriptsConfiguration.setIsBrowserHaveErrorScript(readFile(config.getPathToIsBrowserHaveErrorScript()));
