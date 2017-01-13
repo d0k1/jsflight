@@ -1,12 +1,14 @@
 package com.focusit.jsflight.player.script;
 
-import com.focusit.jsflight.player.constants.EventConstants;
-import com.focusit.jsflight.player.scenario.UserScenario;
-import com.focusit.jsflight.script.ScriptEngine;
-import com.focusit.jsflight.script.constants.ScriptBindingConstants;
-import groovy.lang.Binding;
-import groovy.lang.Script;
-import groovy.text.SimpleTemplateEngine;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
+
+import javax.annotation.Nullable;
+
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.openqa.selenium.WebDriver;
@@ -14,13 +16,14 @@ import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.regex.Matcher;
+import com.focusit.jsflight.player.constants.EventConstants;
+import com.focusit.jsflight.player.scenario.UserScenario;
+import com.focusit.jsflight.script.ScriptEngine;
+import com.focusit.jsflight.script.constants.ScriptBindingConstants;
+
+import groovy.lang.Binding;
+import groovy.lang.Script;
+import groovy.text.GStringTemplateEngine;
 
 /**
  * PlayerScriptProcessor that runs groovy scripts or GString templates
@@ -29,6 +32,8 @@ import java.util.regex.Matcher;
  */
 public class PlayerScriptProcessor
 {
+    private static final GStringTemplateEngine templateEngine = new GStringTemplateEngine(
+            ScriptEngine.getClassLoader());
     private static final Logger LOG = LoggerFactory.getLogger(PlayerScriptProcessor.class);
     private UserScenario scenario;
 
@@ -61,8 +66,8 @@ public class PlayerScriptProcessor
     {
         Map<String, Object> binding = getEmptyBindingsMap();
         binding.put(ScriptBindingConstants.EVENT, event);
-        binding.put(ScriptBindingConstants.APP_BASE_URL, scenario.getConfiguration().getCommonConfiguration()
-                .getTargetBaseUrl());
+        binding.put(ScriptBindingConstants.APP_BASE_URL,
+                scenario.getConfiguration().getCommonConfiguration().getTargetBaseUrl());
 
         try
         {
@@ -154,7 +159,7 @@ public class PlayerScriptProcessor
 
     public JSONObject runStepTemplating(UserScenario scenario, JSONObject step)
     {
-        SimpleTemplateEngine templateEngine = new SimpleTemplateEngine();
+        //        SimpleTemplateEngine templateEngine = new SimpleTemplateEngine();
         Binding binding = scenario.getContext().asBindings();
         JSONObject result = new JSONObject(step.toString());
         result.keySet().forEach(key -> {
