@@ -61,8 +61,11 @@ public class MongoDbScenario extends UserScenario
         {
             throw new IllegalArgumentException("No event found at position " + position);
         }
-        event.setUrl(event.getUrl()
-                .replace("0.0.0.0:0", getConfiguration().getCommonConfiguration().getTargetBaseUrl()));
+        if (event.getUrl() != null)
+        {
+            event.setUrl(event.getUrl().replace("0.0.0.0:0",
+                    getConfiguration().getCommonConfiguration().getTargetBaseUrl()));
+        }
         return new JSONObject(event);
     }
 
