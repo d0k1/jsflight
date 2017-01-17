@@ -1,8 +1,8 @@
 package com.focusit.jsflight.script.jmeter;
 
-import org.json.JSONObject;
-
 import java.util.concurrent.ConcurrentHashMap;
+
+import org.json.JSONObject;
 
 /**
  * Class holds references to user scenario step and associated http samples.
