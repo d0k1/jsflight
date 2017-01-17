@@ -45,14 +45,10 @@ class SeleniumDriverSpec extends Specification {
     def "browser without form quits"() {
         JSONObject testEvent = new JSONObject();
         testEvent.put("tabuuid", "2")
-
+        testEvent.put("uuid", "123");
         WebDriverWrapper wd = getWd(testEvent)
-
-
-
         when:
         sd.releaseBrowser(wd.getWrappedDriver(), testEvent)
-
         then:
         sd.tabUuidDrivers.isEmpty()
     }

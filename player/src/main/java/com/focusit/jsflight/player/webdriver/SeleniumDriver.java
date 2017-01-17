@@ -608,8 +608,12 @@ public class SeleniumDriver
         }
 
         String tabUuid = event.getString(EventConstants.TAB_UUID);
-        String empoyeeUuid = event.getString(EventConstants.TAG);
-        LOG.info("Releasing browser for " + tabUuid + " tab, user " + empoyeeUuid);
+        String empoyeeUuid = null;
+        if (event.has(EventConstants.TAG))
+        {
+            empoyeeUuid = event.getString(EventConstants.TAG);
+        }
+        LOG.info("Releasing browser for " + tabUuid + " tab" + empoyeeUuid == null ? "" : ", uuid " + empoyeeUuid);
 
         String display = driverDisplay.get(driver.toString());
         if (display != null)
