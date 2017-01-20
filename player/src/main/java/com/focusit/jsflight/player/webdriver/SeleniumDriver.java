@@ -279,8 +279,8 @@ public class SeleniumDriver
                 //which are not subject to change, so we can use it as key;
                 driverDisplay.put(driver.toString(), display);
             }
-            resizeForEvent(driver, event);
             prioritize(driver);
+            resizeForEvent(driver, event);
             return driver;
         }
         catch (Throwable ex)
