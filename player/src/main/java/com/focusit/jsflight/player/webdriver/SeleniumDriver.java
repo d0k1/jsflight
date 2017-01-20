@@ -1,15 +1,12 @@
 package com.focusit.jsflight.player.webdriver;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
+import com.focusit.jsflight.player.constants.BrowserType;
+import com.focusit.jsflight.player.constants.EventConstants;
+import com.focusit.jsflight.player.constants.EventType;
+import com.focusit.jsflight.player.scenario.UserScenario;
+import com.focusit.jsflight.player.script.PlayerScriptProcessor;
+import com.focusit.jsflight.script.constants.ScriptBindingConstants;
+import com.google.common.base.Predicate;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
@@ -26,13 +23,15 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.focusit.jsflight.player.constants.BrowserType;
-import com.focusit.jsflight.player.constants.EventConstants;
-import com.focusit.jsflight.player.constants.EventType;
-import com.focusit.jsflight.player.scenario.UserScenario;
-import com.focusit.jsflight.player.script.PlayerScriptProcessor;
-import com.focusit.jsflight.script.constants.ScriptBindingConstants;
-import com.google.common.base.Predicate;
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Selenium webdriver proxy: runs a browser, sends events, make screenshots
@@ -231,56 +230,55 @@ public class SeleniumDriver
         try
         {
             WebDriver driver = tabUuidDrivers.get(tabUuid);
-            if (driver != null)
-            {
-                return driver;
-            }
 
-            DesiredCapabilities cap = new DesiredCapabilities();
-            if (!StringUtils.isBlank(proxyHost))
+            if (driver == null)
             {
-                String host = proxyHost;
-                if (proxyPort != 0)
+                DesiredCapabilities cap = new DesiredCapabilities();
+                if (!StringUtils.isBlank(proxyHost))
                 {
-                    host += ":" + proxyPort;
+                    String host = proxyHost;
+                    if (proxyPort != 0)
+                    {
+                        host += ":" + proxyPort;
+                    }
+                    Proxy proxy = new Proxy();
+                    proxy.setHttpProxy(host).setFtpProxy(host).setSslProxy(host);
+                    cap.setCapability(CapabilityType.PROXY, proxy);
                 }
-                Proxy proxy = new Proxy();
-                proxy.setHttpProxy(host).setFtpProxy(host).setSslProxy(host);
-                cap.setCapability(CapabilityType.PROXY, proxy);
-            }
 
-            String display = null;
-            if (availableDisplays.size() > 0)
-            {
-                display = availableDisplays.keySet().stream()
-                        .min((one, other) -> availableDisplays.get(one) - availableDisplays.get(other)).get();
-            }
-            switch (browserType)
-            {
-            case FIREFOX:
-                FirefoxProfile profile = createDefaultFirefoxProfile();
-                FirefoxBinary binary = !StringUtils.isBlank(path) ? new FirefoxBinary(new File(path))
-                        : new FirefoxBinary();
-                if (display != null)
+                String display = null;
+                if (availableDisplays.size() > 0)
                 {
-                    LOG.info("Binding to {} display", display);
-                    availableDisplays.compute(display, (d, value) -> value == null ? 0 : value + 1);
-                    binary.setEnvironmentProperty("DISPLAY", display);
+                    display = availableDisplays.keySet().stream()
+                            .min((one, other) -> availableDisplays.get(one) - availableDisplays.get(other)).get();
                 }
-                LOG.info("Firefox path is: {}", path);
+                switch (browserType)
+                {
+                case FIREFOX:
+                    FirefoxProfile profile = createDefaultFirefoxProfile();
+                    FirefoxBinary binary = !StringUtils.isBlank(path) ? new FirefoxBinary(new File(path))
+                            : new FirefoxBinary();
+                    if (display != null)
+                    {
+                        LOG.info("Binding to {} display", display);
+                        availableDisplays.compute(display, (d, value) -> value == null ? 0 : value + 1);
+                        binary.setEnvironmentProperty("DISPLAY", display);
+                    }
+                    LOG.info("Firefox path is: {}", path);
 
-                driver = createFirefoxDriver(cap, profile, binary);
-                break;
-            case CHROME:
-                throw new RuntimeException("Chrome web driver can't be used now");
+                    driver = createFirefoxDriver(cap, profile, binary);
+                    break;
+                case CHROME:
+                    throw new RuntimeException("Chrome web driver can't be used now");
+                }
+                driver = WebDriverWrapper.wrap(driver);
+
+                tabUuidDrivers.put(tabUuid, driver);
+
+                //as actual webdriver is RemoteWebdriver, calling to string return browser name, platform and sessionid
+                //which are not subject to change, so we can use it as key;
+                driverDisplay.put(driver.toString(), display);
             }
-            driver = WebDriverWrapper.wrap(driver);
-
-            tabUuidDrivers.put(tabUuid, driver);
-
-            //as actual webdriver is RemoteWebdriver, calling to string return browser name, platform and sessionid
-            //which are not subject to change, so we can use it as key;
-            driverDisplay.put(driver.toString(), display);
             resizeForEvent(driver, event);
             prioritize(driver);
             return driver;
