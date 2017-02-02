@@ -13,7 +13,10 @@ public final class EventConstants
     public static final String TIMESTAMP = "timestamp";
     public static final String CHAR_CODE = "charCode";
     public static final String KEY_CODE = "keyCode";
+    public static final String ALT_KEY = "altKey";
     public static final String CTRL_KEY = "ctrlKey";
+    public static final String SHIFT_KEY = "shiftKey";
+    public static final String META_KEY = "metaKey";
     public static final String BUTTON = "button";
     public static final String DELTA_Y = "deltaY";
     public static final String FLIGHT_CP = "flight-cp";

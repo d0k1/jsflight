@@ -67,28 +67,53 @@
         }
     }
 
-    // event.type должен быть keypress
+    // event.type must be a keypress
     function getChar(event) {
         if (event.which == null) { // IE
             if (event.keyCode < 32) {
-                return null; // спец. символ
+                return null; // special symbol
             }
             return String.fromCharCode(event.keyCode)
         }
 
-        if (event.which != 0 && event.charCode != 0) { // все кроме IE
-            if (event.which < 32) return null; // спец. символ
-            return String.fromCharCode(event.which); // остальные
+        if (event.which != 0 && event.charCode != 0) { // except IE
+            if (event.which < 32) return null; // special symbol
+            return String.fromCharCode(event.which); // other
         }
 
-        return null; // спец. символ
+        return null; // special symbol
+    }
+
+    /**
+     * Get input data:current caret position(stored in selectionStart property),
+     * selectionEnd(if no selection equals to selectionStart) and presence of a selection in input
+     */
+    function getInputData(node) {
+        var start = node && 'selectionStart' in node ? node.selectionStart :0 ;
+        var end = node && 'selectionEnd' in node ? node.selectionEnd : 0;
+        return {selectionStart: start, selectionEnd:end, isSelection: start != end}
+    }
+
+    function getCaretPositionWithin(element) {
+        var doc = element.ownerDocument || element.document;
+        var win = doc.defaultView || doc.parentWindow;
+        var range, preCaretRange, caretOffset = 0;
+        var sel = win.getSelection();
+        if (sel.rangeCount) {
+            range = sel.getRangeAt(0);
+            preCaretRange = range.cloneRange();
+            preCaretRange.selectNodeContents(element);
+            preCaretRange.setEnd(range.endContainer, range.endOffset);
+            caretOffset = preCaretRange.toString().length;
+        }
+        return caretOffset;
     }
 
     function getFrameProperties(event) {
         var result = {};
 
-        var frameDocument = event.target.ownerDocument;
-        var frameWindow = frameDocument ? (frameDocument.defaultView || frameDocument.parentWindow) : event.target;
+        var frameDocument = event.target.ownerDocument || event.target.document || document;
+        var frameWindow = frameDocument.defaultView || frameDocument.parentWindow || window;
 
         result.iframeXpath = frameWindow.xpath;
         result.iframeIndices = frameWindow.iframeIndices;
@@ -158,17 +183,21 @@
         objectAssign(result, getKeyboardData(event));
         objectAssign(result, getMouseData(event));
 
-        var inputData = getInputData(event.target);
+        try {
+            var inputData = getInputData(event.target);
 
-        result.caretPosition = inputData.selectionStart;
-        result.selectionEnd = inputData.selectionEnd;
-        result.isSelection = inputData.isSelection;
+            result.selectionStartWithinInput = inputData.selectionStart;
+            result.selectionEndWithinInput = inputData.selectionEnd;
+            result.isSelectionWithinInput = inputData.isSelection;
+
+            result.caretPosition = getCaretPositionWithin(event.target);
+        } catch(ex) {}
 
         // ClipboardEvent
         if(!isIE()){
             try {
                 result.clipboardData = (event.clipboardData || window.clipboardData).getData('Text');
-            } catch(e) {}
+            } catch(ex) {}
         }
         result.tabuuid = jsflight.tabUuid;
         result.type = event.type;
@@ -207,16 +236,6 @@
 
         return result;
     };
-
-    /**
-     * Get input data:current caret position(stored in selectionStart property),
-     * selectionEnd(if no selection equals to selectionStart) and presence of a selection in input
-     */
-    function getInputData(node) {
-        var start = node && 'selectionStart' in node ? node.selectionStart :0 ;
-        var end = node && 'selectionEnd' in node ? node.selectionEnd : 0;
-        return {selectionStart: start, selectionEnd:end, isSelection: start != end}
-     }
 
     /**
      * Store event to session storage
