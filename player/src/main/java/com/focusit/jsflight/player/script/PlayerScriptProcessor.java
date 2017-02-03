@@ -22,6 +22,7 @@ import com.focusit.jsflight.script.ScriptEngine;
 import com.focusit.jsflight.script.constants.ScriptBindingConstants;
 
 import groovy.lang.Binding;
+import groovy.lang.GroovyClassLoader;
 import groovy.lang.Script;
 import groovy.text.GStringTemplateEngine;
 
@@ -33,7 +34,7 @@ import groovy.text.GStringTemplateEngine;
 public class PlayerScriptProcessor
 {
     private static final GStringTemplateEngine templateEngine = new GStringTemplateEngine(
-            ScriptEngine.getClassLoader());
+            new GroovyClassLoader(ScriptEngine.getClassLoader()));
     private static final Logger LOG = LoggerFactory.getLogger(PlayerScriptProcessor.class);
     private UserScenario scenario;
 
@@ -45,6 +46,11 @@ public class PlayerScriptProcessor
     public static Map<String, Object> getEmptyBindingsMap()
     {
         return new HashMap<>();
+    }
+
+    static
+    {
+        System.setProperty("groovy.GStringTemplateEngine.reuseClassLoader", "true");
     }
 
     public boolean executeSelectDeterminerScript(String script, WebDriver wd, WebElement element)
