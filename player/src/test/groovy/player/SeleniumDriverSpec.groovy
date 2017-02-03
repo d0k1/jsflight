@@ -10,10 +10,8 @@ import spock.lang.Shared
 import spock.lang.Specification
 
 class SeleniumDriverSpec extends Specification {
-
     @Shared
             formXp = "//*[@id='errorPageContainer']";
-
 
     SeleniumDriver sd;
 
@@ -23,17 +21,18 @@ class SeleniumDriverSpec extends Specification {
         sd.setKeepBrowserXpath(formXp)
         sd.setGetWebDriverPidScript('"echo 1".execute().text');
         sd.setSendSignalToProcessScript("println()");
+        sd.setIsAsyncRequestsCompletedScript("return true");
+        sd.setSkipKeyboardScript("return false");
+        sd.setUseRandomStringGenerator(false);
+        sd.setPlaceholders("test");
+        sd.setElementLookupScript('return webdriver.findElement(org.openqa.selenium.By.tagName("body"));');
     }
 
     def "browser containing form is not closed"() {
-
-        JSONObject testEvent = new JSONObject();
+        given:
+        JSONObject testEvent = getSimpleEvent();
         testEvent.put("tabuuid", "1")
-        testEvent.put("window.width", 1500);
-        testEvent.put("window.height", 1500);
-
         WebDriverWrapper wd = getWd(testEvent)
-
         wd.get('http://localhost')
 
         when:
@@ -45,11 +44,9 @@ class SeleniumDriverSpec extends Specification {
 
 
     def "browser without form quits"() {
-        JSONObject testEvent = new JSONObject();
-        testEvent.put("tabuuid", "2");
+        given:
+        JSONObject testEvent = getSimpleEvent();
         testEvent.put("uuid", "123");
-        testEvent.put("window.width", 1500);
-        testEvent.put("window.height", 1500);
         WebDriverWrapper wd = getWd(testEvent)
         when:
         sd.releaseBrowser(wd.getWrappedDriver(), testEvent)
@@ -57,6 +54,40 @@ class SeleniumDriverSpec extends Specification {
         sd.tabUuidDrivers.isEmpty()
     }
 
+    def "processKeyPress must work with CHAR_CODE field of an event"() {
+        given:
+        JSONObject event = getSimpleEvent();
+        event.put("type", "keypress");
+        event.put("charCode", 48.0);
+        when:
+        WebDriverWrapper wd = getWd(event);
+        sd.processKeyPressEvent(wd, event);
+        then:
+        !sd.tabUuidDrivers.isEmpty()
+    }
+
+    def "processKeyPress must work with CHAR field of an event"() {
+        given:
+        JSONObject event = getSimpleEvent();
+        event.put("type", "keypress");
+        event.put("char", "0");
+        when:
+        WebDriverWrapper wd = getWd(event);
+        sd.processKeyPressEvent(wd, event);
+        then:
+        !sd.tabUuidDrivers.isEmpty()
+    }
+
+    def "processKeyPress throws exception if event has neither CHAR nor CHAR_COD"() {
+        given:
+        JSONObject event = getSimpleEvent();
+        event.put("type", "keypress");
+        when:
+        WebDriverWrapper wd = getWd(event);
+        sd.processKeyPressEvent(wd, event);
+        then:
+        IllegalStateException ex = thrown()
+    }
 
     def cleanup() {
         sd.tabUuidDrivers.values().each { it ->
@@ -65,7 +96,19 @@ class SeleniumDriverSpec extends Specification {
         sd.tabUuidDrivers.clear()
     }
 
+    JSONObject getSimpleEvent() {
+        JSONObject event = new JSONObject();
+        event.put("tabuuid", "2");
+        event.put("window.width", 1500);
+        event.put("window.height", 1500);
+        return event;
+    }
+
     WebDriverWrapper getWd(JSONObject event) {
-        return sd.getDriverForEvent(event, BrowserType.FIREFOX, '', '', 0)
+        String ffPath = System.getProperty("test.ff.path");
+        if (ffPath == null) {
+            ffPath = '';
+        }
+        return sd.getDriverForEvent(event, BrowserType.FIREFOX, ffPath, '', 0)
     }
 }

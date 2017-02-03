@@ -1,5 +1,6 @@
 package com.focusit.jsflight.player.script;
 
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -10,6 +11,8 @@ import java.util.regex.Matcher;
 import javax.annotation.Nullable;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.velocity.VelocityContext;
+import org.apache.velocity.app.Velocity;
 import org.json.JSONObject;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -36,6 +39,13 @@ public class PlayerScriptProcessor
     private static final GStringTemplateEngine templateEngine = new GStringTemplateEngine(
             new GroovyClassLoader(ScriptEngine.getClassLoader()));
     private static final Logger LOG = LoggerFactory.getLogger(PlayerScriptProcessor.class);
+
+    static
+    {
+        System.setProperty("groovy.GStringTemplateEngine.reuseClassLoader", "true");
+        Velocity.init();
+    }
+
     private UserScenario scenario;
 
     public PlayerScriptProcessor(UserScenario scenario)
@@ -46,11 +56,6 @@ public class PlayerScriptProcessor
     public static Map<String, Object> getEmptyBindingsMap()
     {
         return new HashMap<>();
-    }
-
-    static
-    {
-        System.setProperty("groovy.GStringTemplateEngine.reuseClassLoader", "true");
     }
 
     public boolean executeSelectDeterminerScript(String script, WebDriver wd, WebElement element)
@@ -165,8 +170,8 @@ public class PlayerScriptProcessor
 
     public JSONObject runStepTemplating(UserScenario scenario, JSONObject step)
     {
-        //        SimpleTemplateEngine templateEngine = new SimpleTemplateEngine();
-        Binding binding = scenario.getContext().asBindings();
+        VelocityContext ctx = new VelocityContext(scenario.getContext().asMap());
+
         JSONObject result = new JSONObject(step.toString());
         result.keySet().forEach(key -> {
             if (result.get(key) instanceof String)
@@ -177,7 +182,10 @@ public class PlayerScriptProcessor
 
                     source = source.replaceAll("(\\$)(?!\\{)", Matcher.quoteReplacement("\\$"));
 
-                    String parsed = templateEngine.createTemplate(source).make(binding.getVariables()).toString();
+                    StringWriter writer = new StringWriter();
+                    Velocity.evaluate(ctx, writer, step.get("id").toString(), source);
+
+                    String parsed = writer.toString();
                     result.put(key, parsed);
                 }
                 catch (Exception e)

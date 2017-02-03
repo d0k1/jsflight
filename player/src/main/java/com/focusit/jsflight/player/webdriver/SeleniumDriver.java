@@ -455,7 +455,7 @@ public class SeleniumDriver
         }
         else
         {
-            char ch = event.getString(EventConstants.CHAR_CODE).charAt(0);
+            char ch = (char)event.getBigDecimal(EventConstants.CHAR_CODE).intValue();
             keys = stringGenerator.getAsString(ch);
         }
 
@@ -470,6 +470,8 @@ public class SeleniumDriver
             LOG.info("Input is ordinary input");
             String prevText = element.getAttribute("value");
             //If current value indicates a placeholder it must be discarded
+
+            // TODO WTF is placeholders??
             if (placeholders.contains(prevText))
             {
                 element.clear();

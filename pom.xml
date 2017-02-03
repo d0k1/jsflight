@@ -60,6 +60,7 @@
         <spock-spring.version>1.0-groovy-2.4</spock-spring.version>
         <velocity.version>1.7</velocity.version>
         <maven-release-plugin.version>2.3.2</maven-release-plugin.version>
+        <velocity.version>1.7</velocity.version>
     </properties>
 
     <parent>
@@ -347,6 +348,13 @@
                 <artifactId>commons-lang3</artifactId>
                 <version>${commons-lang3.version}</version>
             </dependency>
+            <!-- https://mvnrepository.com/artifact/org.apache.velocity/velocity -->
+            <dependency>
+                <groupId>org.apache.velocity</groupId>
+                <artifactId>velocity</artifactId>
+                <version>${velocity.version}</version>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 

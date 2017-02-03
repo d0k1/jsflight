@@ -17,6 +17,7 @@ import org.springframework.test.context.TestPropertySource
 import spock.lang.Specification
 
 import javax.inject.Inject
+
 /**
  * Created by dkirpichenkov on 23.05.16.
  */
@@ -35,31 +36,40 @@ public class MongoDbScenarioSpec extends Specification {
         String recordingId1 = new ObjectId();
         String recordingId4 = new ObjectId();
 
-        Event e1 = new Event();
-        e1.uuid = UUID.randomUUID().toString();
-        e1.timestamp = System.currentTimeMillis();
-        e1.recordingId = recordingId1;
+        def ts1 = System.currentTimeMillis();
+        Thread.sleep(10);
 
+        def ts2 = System.currentTimeMillis();
+        Thread.sleep(10);
+
+        def ts3 = System.currentTimeMillis();
+        Thread.sleep(10);
+
+        def ts4 = System.currentTimeMillis();
         Thread.sleep(10);
 
         Event e2 = new Event();
         e2.uuid = UUID.randomUUID().toString();
-        e2.timestamp = System.currentTimeMillis();
+        e2.timestamp = ts4;
         e2.recordingId = recordingId1;
 
         Thread.sleep(10);
+        Event e1 = new Event();
+        e1.uuid = UUID.randomUUID().toString();
+        e1.timestamp = ts3;
+        e1.recordingId = recordingId1;
 
         Event e3 = new Event();
         e3.uuid = UUID.randomUUID().toString();
-        e3.timestamp = System.currentTimeMillis();
+        e3.timestamp = ts1;
         e3.recordingId = recordingId1;
 
         Thread.sleep(10);
 
         Event e4 = new Event();
         e4.uuid = UUID.randomUUID().toString();
+        e4.timestamp = ts2;
         e4.recordingId = recordingId4;
-        e4.timestamp = System.currentTimeMillis();
 
         Experiment experiment = new Experiment();
         experiment.recordingId = recordingId1;
@@ -76,11 +86,11 @@ public class MongoDbScenarioSpec extends Specification {
         long time2 = event2.getLong("timestamp");
 
         then:
-        event0.get("uuid").toString().equals(e1.uuid.toString());
-        event2.get("uuid").toString().equals(e3.uuid.toString());
+        event0.get("uuid").toString().equals(e3.uuid.toString());
+        event2.get("uuid").toString().equals(e2.uuid.toString());
 
-        time0 == e1.timestamp;
-        time2 == e3.timestamp;
+        time0 == ts1;
+        time2 == ts4;
 
         time0 < time2
 
