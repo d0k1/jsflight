@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.regex.Matcher;
 
 import javax.annotation.Nullable;
 
@@ -179,8 +178,6 @@ public class PlayerScriptProcessor
                 try
                 {
                     String source = result.getString(key);
-
-                    source = source.replaceAll("(\\$)(?!\\{)", Matcher.quoteReplacement("\\$"));
 
                     StringWriter writer = new StringWriter();
                     Velocity.evaluate(ctx, writer, step.get("id").toString(), source);
