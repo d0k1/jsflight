@@ -17,10 +17,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * Class that really replays an event in given scenario and given selenium driver
@@ -122,6 +119,9 @@ public class ScenarioProcessor
         event.put(EventConstants.URL, eventUrl);
         LOG.info("Current step URL: {}", eventUrl);
 
+        String type = event.getString(EventConstants.TYPE);
+        LOG.info("Event type: {}", type);
+
         new PlayerScriptProcessor(scenario).runStepPrePostScript(event, position, true);
         event = new PlayerScriptProcessor(scenario).runStepTemplating(scenario, event);
 
@@ -144,7 +144,7 @@ public class ScenarioProcessor
                 return;
             }
 
-            if (scenario.isEventIgnored(event) || scenario.isEventBad(event))
+            if (UserScenario.isEventIgnored(event) || UserScenario.isEventBad(event))
             {
                 StringBuilder builder = new StringBuilder();
                 if (event.has(EventConstants.TARGET))
@@ -171,9 +171,6 @@ public class ScenarioProcessor
                 LOG.warn("Event is ignored or bad. Type: " + event.get(EventConstants.TYPE) + builder.toString());
                 return;
             }
-
-            String type = event.getString(EventConstants.TYPE);
-            LOG.info("Event type: {}", type);
 
             if (type.equalsIgnoreCase(EventType.SCRIPT))
             {
@@ -213,20 +210,7 @@ public class ScenarioProcessor
 
             seleniumDriver.waitWhileAsyncRequestsWillCompletedWithRefresh(theWebDriver, event);
 
-            theWebDriver.switchTo().window(theWebDriver.getWindowHandle());
-            if (!event.has(EventConstants.IFRAME_XPATHS) && !event.has(EventConstants.IFRAME_INDICES))
-            {
-                LOG.warn("Event {} hasn't frame xpath and frame index. Switching to main window", position);
-                theWebDriver.switchTo().defaultContent();
-            }
-            else
-            {
-                String frameXpath = event.getString(EventConstants.IFRAME_XPATHS);
-                List<Integer> frameIndices = Arrays.stream(event.getString(EventConstants.IFRAME_INDICES).split("\\."))
-                        .map(Integer::parseInt).collect(Collectors.toList());
-                LOG.info("Switching to frame {}({})", frameIndices, frameXpath);
-                seleniumDriver.switchToFrame(theWebDriver, frameIndices, frameXpath);
-            }
+            SeleniumDriver.switchToWorkingFrame(theWebDriver, event);
 
             try
             {
@@ -247,8 +231,11 @@ public class ScenarioProcessor
                     break;
                 case EventType.KEY_UP:
                 case EventType.KEY_DOWN:
+                    seleniumDriver.processKeyDownKeyUpEvents(theWebDriver, event);
+                    seleniumDriver.waitWhileAsyncRequestsWillCompletedWithRefresh(theWebDriver, event);
+                    break;
                 case EventType.KEY_PRESS:
-                    seleniumDriver.processKeyboardEvent(theWebDriver, event);
+                    seleniumDriver.processKeyPressEvent(theWebDriver, event);
                     seleniumDriver.waitWhileAsyncRequestsWillCompletedWithRefresh(theWebDriver, event);
                     break;
                 default:

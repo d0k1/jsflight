@@ -1,8 +1,6 @@
 package com.focusit.jsflight.player.webdriver;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import com.google.common.base.Function;
 import org.openqa.selenium.*;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.interactions.internal.Coordinates;
@@ -12,7 +10,8 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Created by dkolmogortsev on 15.06.16.
@@ -164,12 +163,8 @@ public class LocatedElement implements WebElement, WrapsElement, Locatable
     {
         try
         {
-            List<WebElement> result = new ArrayList<>();
-            for (WebElement element : delegate.findElements(by))
-            {
-                result.add(new LocatedElement(element, driver, by));
-            }
-            return result;
+            return delegate.findElements(by).stream().map(element -> new LocatedElement(element, driver, by))
+                    .collect(Collectors.toList());
         }
         catch (StaleElementReferenceException e)
         {
@@ -279,7 +274,7 @@ public class LocatedElement implements WebElement, WrapsElement, Locatable
     private void reLocateElement()
     {
         LOG.warn("Stale element. Relocating");
-        WebDriverWait wait = new WebDriverWait(driver, 20, 50l);
+        WebDriverWait wait = new WebDriverWait(driver, 20, 50L);
         try
         {
             delegate = wait.until(new Function<WebDriver, WebElement>()

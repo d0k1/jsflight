@@ -27,11 +27,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Selenium webdriver proxy: runs a browser, sends events, make screenshots
@@ -54,10 +54,19 @@ public class SeleniumDriver
     private static final int PROCESS_SIGNAL_CONT = -18;
     private static final int PROCESS_SIGNAL_FORCE_KILL = -9;
 
+    private static final Map<String, Keys> SPECIAL_KEYS_MAPPING = new HashMap<>();
+    private static final String DISPLAY = "DISPLAY";
+
     static
     {
         //This must be set due to equals of WebElement
         NO_OP_ELEMENT.setId("NO_OP");
+
+        SPECIAL_KEYS_MAPPING.put(EventConstants.CTRL_KEY, Keys.CONTROL);
+        SPECIAL_KEYS_MAPPING.put(EventConstants.ALT_KEY, Keys.ALT);
+        SPECIAL_KEYS_MAPPING.put(EventConstants.SHIFT_KEY, Keys.SHIFT);
+        SPECIAL_KEYS_MAPPING.put(EventConstants.META_KEY, Keys.META);
+
     }
 
     private Map<String, Integer> availableDisplays;
@@ -65,7 +74,6 @@ public class SeleniumDriver
     private HashMap<String, WebDriver> tabUuidDrivers = new HashMap<>();
     private Map<String, String> lastUrls = new HashMap<>();
 
-    private boolean useRandomStringGenerator;
     private StringGenerator stringGenerator;
 
     private UserScenario scenario;
@@ -103,6 +111,58 @@ public class SeleniumDriver
         for (int i = xvfbDisplayLowerBound; i <= xvfbDisplayUpperBound; i++)
         {
             availableDisplays.put(":" + i, 0);
+        }
+    }
+
+    public static void switchToWorkingFrame(WebDriver theWebDriver, JSONObject event)
+    {
+
+        if (!event.has(EventConstants.IFRAME_XPATHS) && !event.has(EventConstants.IFRAME_INDICES))
+        {
+            LOG.warn("Event with id {} hasn't frame xpath and frame index. Switching to main window",
+                    event.getInt(EventConstants.EVENT_ID));
+            switchToTopWindow(theWebDriver);
+        }
+        else
+        {
+            String frameXpath = event.getString(EventConstants.IFRAME_XPATHS);
+            List<Integer> frameIndices = Arrays.stream(event.getString(EventConstants.IFRAME_INDICES).split("\\."))
+                    .map(Integer::parseInt).collect(Collectors.toList());
+            LOG.info("Switching to frame {}({})", frameIndices, frameXpath);
+            switchToFrame(theWebDriver, frameIndices, frameXpath);
+        }
+
+    }
+
+    public static void switchToTopWindow(WebDriver webDriver)
+    {
+        webDriver.switchTo().window(webDriver.getWindowHandle());
+    }
+
+    public static void switchToFrame(WebDriver theWebDriver, List<Integer> frameIndices, String compositeFrameXpath)
+    {
+        switchToTopWindow(theWebDriver);
+        if (!frameIndices.isEmpty())
+        {
+            LOG.info("Switching to frame by indices");
+            try
+            {
+                for (int i : frameIndices)
+                {
+                    theWebDriver.switchTo().frame(i);
+                }
+                return;
+            }
+            catch (Exception ignored)
+            {
+                LOG.warn("Switching to frame by index was failed");
+            }
+        }
+        LOG.info("Switching to frame by xpaths");
+        for (String frameXpath : Arrays.asList(compositeFrameXpath.split("\\|\\|")))
+        {
+            WebElement frame = theWebDriver.findElement(By.xpath(frameXpath));
+            theWebDriver.switchTo().frame(frame);
         }
     }
 
@@ -155,7 +215,7 @@ public class SeleniumDriver
 
     public SeleniumDriver setUseRandomStringGenerator(boolean useRandomStringGenerator)
     {
-        this.useRandomStringGenerator = useRandomStringGenerator;
+        initializeStringGenerator(useRandomStringGenerator);
         return this;
     }
 
@@ -222,85 +282,81 @@ public class SeleniumDriver
         return webElement;
     }
 
-    public WebDriver getDriverForEvent(JSONObject event, BrowserType browserType, String path, String proxyHost,
+    public WebDriver getDriverForEvent(JSONObject event, BrowserType browserType, String binaryPath, String proxyHost,
             Integer proxyPort)
     {
         String tabUuid = event.getString(EventConstants.TAB_UUID);
+        WebDriver driver = tabUuidDrivers.get(tabUuid);
 
-        try
+        if (driver == null)
         {
-            WebDriver driver = tabUuidDrivers.get(tabUuid);
-
-            if (driver == null)
+            DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
+            if (!StringUtils.isBlank(proxyHost) && proxyPort != null && proxyPort != 0)
             {
-                DesiredCapabilities cap = new DesiredCapabilities();
-                if (!StringUtils.isBlank(proxyHost))
-                {
-                    String host = proxyHost;
-                    if (proxyPort != 0)
-                    {
-                        host += ":" + proxyPort;
-                    }
-                    Proxy proxy = new Proxy();
-                    proxy.setHttpProxy(host).setFtpProxy(host).setSslProxy(host);
-                    cap.setCapability(CapabilityType.PROXY, proxy);
-                }
-
-                String display = null;
-                if (availableDisplays.size() > 0)
-                {
-                    display = availableDisplays.keySet().stream()
-                            .min((one, other) -> availableDisplays.get(one) - availableDisplays.get(other)).get();
-                }
-                switch (browserType)
-                {
-                case FIREFOX:
-                    FirefoxProfile profile = createDefaultFirefoxProfile();
-                    FirefoxBinary binary = !StringUtils.isBlank(path) ? new FirefoxBinary(new File(path))
-                            : new FirefoxBinary();
-                    if (display != null)
-                    {
-                        LOG.info("Binding to {} display", display);
-                        availableDisplays.compute(display, (d, value) -> value == null ? 0 : value + 1);
-                        binary.setEnvironmentProperty("DISPLAY", display);
-                    }
-                    LOG.info("Firefox path is: {}", path);
-
-                    driver = createFirefoxDriver(cap, profile, binary);
-                    break;
-                case CHROME:
-                    throw new RuntimeException("Chrome web driver can't be used now");
-                }
-                driver = WebDriverWrapper.wrap(driver);
-
-                tabUuidDrivers.put(tabUuid, driver);
-
-                //as actual webdriver is RemoteWebdriver, calling to string return browser name, platform and sessionid
-                //which are not subject to change, so we can use it as key;
-                driverDisplay.put(driver.toString(), display);
+                String host = String.format("%s:%d", proxyHost, proxyPort);
+                Proxy proxy = new Proxy();
+                proxy.setHttpProxy(host).setFtpProxy(host).setSslProxy(host);
+                desiredCapabilities.setCapability(CapabilityType.PROXY, proxy);
             }
-            prioritize(driver);
-            resizeForEvent(driver, event);
-            return driver;
+
+            String display = System.getProperty(DISPLAY);
+            if (!availableDisplays.isEmpty())
+            {
+                display = availableDisplays.keySet().stream()
+                        .min((one, other) -> availableDisplays.get(one) - availableDisplays.get(other)).get();
+            }
+            if (display == null)
+            {
+                throw new IllegalStateException("Display wasn't set neither in environment nor in properties");
+            }
+
+            switch (browserType)
+            {
+            case FIREFOX:
+                driver = createFirefoxDriver(display, binaryPath, desiredCapabilities);
+                break;
+            case CHROME:
+                throw new RuntimeException("Chrome web driver can't be used now");
+            }
+            driver = WebDriverWrapper.wrap(driver);
+
+            tabUuidDrivers.put(tabUuid, driver);
+
+            //as actual webdriver is RemoteWebdriver, calling to string return browser name, platform and sessionid
+            //which are not subject to change, so we can use it as key;
+            driverDisplay.put(driver.toString(), display);
         }
-        catch (Throwable ex)
-        {
-            LOG.error(ex.toString(), ex);
-            throw ex;
-        }
+        prioritize(driver);
+        resizeForEvent(driver, event);
+        return driver;
     }
 
-    private FirefoxDriver createFirefoxDriver(DesiredCapabilities cap, FirefoxProfile profile, FirefoxBinary binary)
+    private FirefoxDriver createFirefoxDriver(String display, String binaryPath, DesiredCapabilities desiredCapabilities)
+    {
+        FirefoxProfile profile = createDefaultFirefoxProfile();
+        FirefoxBinary binary = !StringUtils.isBlank(binaryPath) ? new FirefoxBinary(new File(binaryPath))
+                : new FirefoxBinary();
+
+        LOG.info("Binding to {} display", display);
+        availableDisplays.compute(display, (d, value) -> value == null ? 1 : value + 1);
+        binary.setEnvironmentProperty(DISPLAY, display);
+        LOG.info("Firefox path is: {}", binaryPath);
+
+        return openFirefoxDriver(desiredCapabilities, profile, binary);
+    }
+
+    private FirefoxDriver openFirefoxDriver(DesiredCapabilities desiredCapabilities, FirefoxProfile profile,
+            FirefoxBinary binary)
     {
         try
         {
-            return new FirefoxDriver(binary, profile, cap);
+            return new FirefoxDriver(binary, profile, desiredCapabilities);
         }
         catch (WebDriverException ex)
         {
             LOG.warn(ex.getMessage());
             awakenAllDrivers();
-            return createFirefoxDriver(cap, profile, binary);
+            return openFirefoxDriver(desiredCapabilities, profile, binary);
         }
     }
 
@@ -369,14 +425,54 @@ public class SeleniumDriver
         }
     }
 
-    public void processKeyboardEvent(WebDriver wd, JSONObject event) throws UnsupportedEncodingException
+    public void processKeyPressEvent(WebDriver driver, JSONObject event) throws UnsupportedEncodingException
     {
-        WebElement element = findTargetWebElement(wd, event, UserScenario.getTargetForEvent(event));
+        WebElement element = findTargetWebElement(driver, event, UserScenario.getTargetForEvent(event));
+
         if (isNoOp(event, element))
         {
             return;
         }
-        initializeStringGenerator(useRandomStringGenerator);
+        //TODO remove this when recording of cursor in text box is implemented
+        if (skipKeyboardForElement(element))
+        {
+            LOG.warn("Keyboard processing for non empty Date is disabled");
+            return;
+        }
+
+        if (!event.has(EventConstants.CHAR))
+        {
+            throw new IllegalStateException("Keypress event don't have a char");
+        }
+
+        String keys = event.getString(EventConstants.CHAR);
+        LOG.info("Trying to fill input with: {}", keys);
+        if (event.has(EventConstants.IFRAME_XPATHS) || event.has(EventConstants.IFRAME_INDICES))
+        {
+            LOG.info("Input is iframe");
+            element.sendKeys(keys);
+        }
+        else
+        {
+            LOG.info("Input is ordinary input");
+            String prevText = element.getAttribute("value");
+            //If current value indicates a placeholder it must be discarded
+            if (placeholders.contains(prevText))
+            {
+                element.clear();
+            }
+            element.sendKeys(keys);
+        }
+    }
+
+    public void processKeyDownKeyUpEvents(WebDriver wd, JSONObject event) throws UnsupportedEncodingException
+    {
+        WebElement element = findTargetWebElement(wd, event, UserScenario.getTargetForEvent(event));
+
+        if (isNoOp(event, element))
+        {
+            return;
+        }
 
         //TODO remove this when recording of cursor in text box is implemented
         if (skipKeyboardForElement(element))
@@ -385,82 +481,56 @@ public class SeleniumDriver
             return;
         }
 
-        if (EventType.KEY_PRESS.equalsIgnoreCase(event.getString(EventConstants.TYPE)))
+        if (!event.has(EventConstants.KEY_CODE))
         {
-            if (event.has(EventConstants.CHAR))
-            {
-                char ch = event.getString(EventConstants.CHAR).charAt(0);
-                String keys = stringGenerator.getAsString(ch);
-                LOG.info("Trying to fill input with: {}", keys);
-                if (event.has(EventConstants.IFRAME_XPATHS) || event.has(EventConstants.IFRAME_INDICES))
-                {
-                    LOG.info("Input is iframe");
-                    element.sendKeys(keys);
-                }
-                else
-                {
-                    LOG.info("Input is ordinary input");
-                    String prevText = element.getAttribute("value");
-                    //If current value indicates a placeholder it must be discarded
-                    if (placeholders.contains(prevText))
-                    {
-                        prevText = "";
-                    }
-                    element.clear();
-                    element.sendKeys(prevText + keys);
-                }
-            }
+            throw new IllegalStateException("Keydown/Keyup event don't have keyCode property");
         }
 
-        if (EventType.KEY_UP.equalsIgnoreCase(event.getString(EventConstants.TYPE))
-                || EventType.KEY_DOWN.equalsIgnoreCase(event.getString(EventConstants.TYPE)))
-        {
-            if (event.has(EventConstants.CHAR_CODE))
+        Actions actions = new Actions(wd);
+
+        SPECIAL_KEYS_MAPPING.keySet().forEach(property -> {
+            if (event.getBoolean(property))
             {
-                int code = event.getBigInteger(EventConstants.CHAR_CODE).intValue();
-                if (code == 0)
-                {
-                    code = event.getInt(EventConstants.KEY_CODE);
-                }
-                if (event.getBoolean(EventConstants.CTRL_KEY))
-                {
-                    element.sendKeys(Keys.chord(Keys.CONTROL, new String(new byte[] { (byte)code },
-                            StandardCharsets.UTF_8)));
-                }
-                else
-                {
-                    switch (code)
-                    {
-                    case 8:
-                        element.sendKeys(Keys.BACK_SPACE);
-                        break;
-                    case 27:
-                        element.sendKeys(Keys.ESCAPE);
-                        break;
-                    case 46:
-                        element.sendKeys(Keys.DELETE);
-                        break;
-                    case 13:
-                        element.sendKeys(Keys.ENTER);
-                        break;
-                    case 37:
-                        element.sendKeys(Keys.ARROW_LEFT);
-                        break;
-                    case 38:
-                        element.sendKeys(Keys.ARROW_UP);
-                        break;
-                    case 39:
-                        element.sendKeys(Keys.ARROW_RIGHT);
-                        break;
-                    case 40:
-                        element.sendKeys(Keys.ARROW_DOWN);
-                        break;
-                    default:
-                        break;
-                    }
-                }
+                actions.keyDown(element, SPECIAL_KEYS_MAPPING.get(property));
             }
+        });
+
+        switch (event.getBigInteger(EventConstants.KEY_CODE).intValue())
+        {
+        case 8:
+            actions.sendKeys(element, Keys.BACK_SPACE);
+            break;
+        case 27:
+            actions.sendKeys(element, Keys.ESCAPE);
+            break;
+        case 46:
+            actions.sendKeys(element, Keys.DELETE);
+            break;
+        case 13:
+            actions.sendKeys(element, Keys.ENTER);
+            break;
+        case 37:
+            actions.sendKeys(element, Keys.ARROW_LEFT);
+            break;
+        case 38:
+            actions.sendKeys(element, Keys.ARROW_UP);
+            break;
+        case 39:
+            actions.sendKeys(element, Keys.ARROW_RIGHT);
+            break;
+        case 40:
+            actions.sendKeys(element, Keys.ARROW_DOWN);
+            break;
         }
+
+        SPECIAL_KEYS_MAPPING.keySet().forEach(property -> {
+            if (event.getBoolean(property))
+            {
+                actions.keyUp(element, SPECIAL_KEYS_MAPPING.get(property));
+            }
+        });
+
+        actions.perform();
     }
 
     private boolean isNoOp(JSONObject event, WebElement element)
@@ -600,7 +670,7 @@ public class SeleniumDriver
         {
             empoyeeUuid = event.getString(EventConstants.TAG);
         }
-        LOG.info("Releasing browser for " + tabUuid + " tab" + empoyeeUuid == null ? "" : ", uuid " + empoyeeUuid);
+        LOG.info("Releasing browser for " + tabUuid + " tab" + (empoyeeUuid == null ? "" : ", uuid " + empoyeeUuid));
 
         String display = driverDisplay.get(driver.toString());
         if (display != null)
@@ -765,8 +835,13 @@ public class SeleniumDriver
         width = width > 0 ? width : 1000;
         height = height > 0 ? height : 1000;
 
-        LOG.info("Resizing to {}x{}", width, height);
-        wd.manage().window().setSize(new Dimension(width, height));
+        Dimension targetSize = new Dimension(width, height);
+        if (!wd.manage().window().getSize().equals(targetSize))
+        {
+            LOG.info("Resizing to {}x{}", width, height);
+            wd.manage().window().setSize(targetSize);
+        }
+
     }
 
     private void scroll(JavascriptExecutor js, WebElement element)
@@ -864,33 +939,6 @@ public class SeleniumDriver
     {
         this.skipKeyboardScript = skipKeyboardScript;
         return this;
-    }
-
-    public void switchToFrame(WebDriver theWebDriver, List<Integer> frameIndices, String compositeFrameXpath)
-    {
-        theWebDriver.switchTo().defaultContent();
-        if (!frameIndices.isEmpty())
-        {
-            LOG.info("Switching to frame by indices");
-            try
-            {
-                for (int i : frameIndices)
-                {
-                    theWebDriver.switchTo().frame(i);
-                }
-                return;
-            }
-            catch (Exception ignored)
-            {
-                LOG.warn("Switching to frame by index was failed");
-            }
-        }
-        LOG.info("Switching to frame by xpaths");
-        for (String frameXpath : Arrays.asList(compositeFrameXpath.split("\\|\\|")))
-        {
-            WebElement frame = theWebDriver.findElement(By.xpath(frameXpath));
-            theWebDriver.switchTo().frame(frame);
-        }
     }
 
     private static abstract class StringGenerator

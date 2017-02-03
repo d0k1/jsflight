@@ -29,7 +29,7 @@
         <commons-math3.version>3.4.1</commons-math3.version>
         <de.flapdoodle.embed.mongo.version>1.50.3</de.flapdoodle.embed.mongo.version>
         <gmavenplus-plugin.version>1.5</gmavenplus-plugin.version>
-        <groovy-all.version>2.4.8-SNAPSHOT</groovy-all.version>
+        <groovy-all.version>2.4.8</groovy-all.version>
         <http-builder.version>0.7.1</http-builder.version>
         <httpclient.version>4.5.2</httpclient.version>
         <ivy.version>2.1.0</ivy.version>
@@ -342,28 +342,18 @@
                 <artifactId>jstl</artifactId>
                 <version>${jstl.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-lang3</artifactId>
+                <version>${commons-lang3.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
     <dependencies>
         <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
-            <version>${commons-lang3.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.springframework.boot</groupId>
-                    <artifactId>spring-boot-starter-logging</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
     </dependencies>
 
@@ -497,14 +487,6 @@
         <repository>
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
-        </repository>
-        <repository>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-            <id>snapshots</id>
-            <name>oss-jfrog-artifactory-snapshots</name>
-            <url>https://oss.jfrog.org/artifactory/oss-snapshot-local</url>
         </repository>
     </repositories>
 </project>
