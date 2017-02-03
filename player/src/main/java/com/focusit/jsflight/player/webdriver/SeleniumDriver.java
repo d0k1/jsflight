@@ -299,7 +299,7 @@ public class SeleniumDriver
                 desiredCapabilities.setCapability(CapabilityType.PROXY, proxy);
             }
 
-            String display = System.getProperty(DISPLAY);
+            String display = System.getenv(DISPLAY);
             if (!availableDisplays.isEmpty())
             {
                 display = availableDisplays.keySet().stream()
