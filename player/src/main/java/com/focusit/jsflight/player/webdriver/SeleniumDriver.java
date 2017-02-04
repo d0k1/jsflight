@@ -545,7 +545,15 @@ public class SeleniumDriver
             }
         });
 
-        actions.perform();
+        if (element.isDisplayed())
+        {
+            actions.perform();
+        }
+        else
+        {
+            // TODO Fix correctly
+            LOG.error("Sending keys to and invisible element. must have JS workaround");
+        }
     }
 
     private boolean isNoOp(JSONObject event, WebElement element)
