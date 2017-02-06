@@ -33,6 +33,26 @@ class PlayerScriptProcessorSpec extends Specification {
         result.get("url") == "http://ya.ru"
     }
 
+    def "every step must have id/eventId to be processable by template engine"() {
+        given:
+        scenario.getContext().put("variable", "ya.ru");
+
+        JSONObject eventWithId = getSimpleEvent();
+        eventWithId.put("url", 'http://${variable}');
+
+        JSONObject eventWithEventId = getSimpleEvent();
+        eventWithEventId.remove("id");
+        eventWithEventId.put("eventId", "123");
+        eventWithEventId.put("url", 'http://${variable}');
+
+        when:
+        JSONObject resultId = proc.runStepTemplating(scenario, eventWithId);
+        JSONObject resultEventId = proc.runStepTemplating(scenario, eventWithEventId);
+        then:
+        resultId.get("url") == "http://ya.ru"
+        resultEventId.get("url") == "http://ya.ru"
+    }
+
     def "step templates can contains \$"() {
         given:
         JSONObject event = getSimpleEvent();

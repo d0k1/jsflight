@@ -180,7 +180,8 @@ public class PlayerScriptProcessor
                     String source = result.getString(key);
 
                     StringWriter writer = new StringWriter();
-                    Velocity.evaluate(ctx, writer, step.get("id").toString(), source);
+                    String id = step.has("id") ? step.get("id").toString() : step.get("eventId").toString();
+                    Velocity.evaluate(ctx, writer, id, source);
 
                     String parsed = writer.toString();
                     result.put(key, parsed);
