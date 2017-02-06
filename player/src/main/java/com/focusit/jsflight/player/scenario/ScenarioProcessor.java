@@ -118,7 +118,7 @@ public class ScenarioProcessor
         String eventUrl = new PlayerScriptProcessor(scenario)
                 .executeUrlReplacementScript(scriptsConfiguration.getUrlReplacementScript(), event);
         event.put(EventConstants.URL, eventUrl);
-        LOG.info("Current step URL: {}", eventUrl);
+        LOG.info("Current step eventId " + event.getString("eventId") + " URL: {}", eventUrl);
 
         String type = event.getString(EventConstants.TYPE);
         LOG.info("Event type: {}", type);
