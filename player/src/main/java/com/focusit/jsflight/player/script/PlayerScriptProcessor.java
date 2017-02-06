@@ -171,9 +171,9 @@ public class PlayerScriptProcessor
     {
         VelocityContext ctx = new VelocityContext(scenario.getContext().asMap());
 
-        JSONObject result = new JSONObject(step.toString());
+        JSONObject result = step;
         result.keySet().forEach(key -> {
-            if (result.get(key) instanceof String)
+            if (result.get(key) instanceof String && result.getString(key).contains("$"))
             {
                 try
                 {

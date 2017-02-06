@@ -63,7 +63,23 @@ class PlayerScriptProcessorSpec extends Specification {
         result.get("url") == "http://test.com/#strange\$id!123";
     }
 
-    def JSONObject getSimpleEvent() {
+    def "event's fields without \$ must not be processed by template engine"() {
+        given:
+        scenario.getContext().put("variable", "ya.ru");
+
+        JSONObject eventWithId = getSimpleEvent();
+        String field = new String("http://#variable");
+        eventWithId.put("url", field);
+        eventWithId.put("url2", "http://\$variable")
+
+        when:
+        JSONObject resultId = proc.runStepTemplating(scenario, eventWithId);
+        then:
+        resultId.get("url").is(field)
+        resultId.get("url2") == "http://ya.ru"
+    }
+
+    JSONObject getSimpleEvent() {
         JSONObject event = new JSONObject();
         event.put("id", new ObjectId());
         return event;
