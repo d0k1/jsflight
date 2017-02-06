@@ -545,14 +545,14 @@ public class SeleniumDriver
             }
         });
 
-        if (element.isDisplayed())
+        try
         {
             actions.perform();
         }
-        else
+        catch (Exception ex)
         {
             // TODO Fix correctly
-            LOG.error("Sending keys to and invisible element. must have JS workaround");
+            LOG.error("Sending keys to and invisible element. must have JS workaround: " + ex.toString(), ex);
         }
     }
 
