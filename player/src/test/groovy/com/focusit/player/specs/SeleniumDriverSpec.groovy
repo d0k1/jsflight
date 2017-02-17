@@ -33,18 +33,18 @@ class SeleniumDriverSpec extends BaseSpec {
         given:
         JSONObject testEvent = getSimpleEvent()
         testEvent.put(EventConstants.TAB_UUID, "1")
-        WebDriver wd = getWd(testEvent)
+        WebDriver webDriver = getWd(testEvent)
         def locator = Mock(WebDriver.TargetLocator)
 
         when:
-        sd.releaseBrowser(wd, testEvent)
+        sd.releaseBrowser(webDriver, testEvent)
 
         then:
-        1 * wd.findElements(_) >> [Mock(WebElement)]
-        1 * wd.switchTo() >> locator
-        1 * wd.getWindowHandle() >> "handle"
+        1 * webDriver.findElements(_) >> [Mock(WebElement)]
+        1 * webDriver.switchTo() >> locator
+        1 * webDriver.getWindowHandle() >> "handle"
         1 * locator.window(_)
-        0 * wd.quit()
+        0 * webDriver.quit()
     }
 
     def "should close browser without element matched by keepBrowserXpath"() {
@@ -52,18 +52,18 @@ class SeleniumDriverSpec extends BaseSpec {
         JSONObject testEvent = getSimpleEvent()
         testEvent.put(EventConstants.TAB_UUID, "2")
         testEvent.put(EventConstants.TAG, "123")
-        WebDriver wd = getWd(testEvent)
+        WebDriver webDriver = getWd(testEvent)
         def locator = Mock(WebDriver.TargetLocator)
 
         when:
-        sd.releaseBrowser(wd, testEvent)
+        sd.releaseBrowser(webDriver, testEvent)
 
         then:
-        1 * wd.findElements(_) >> []
-        1 * wd.switchTo() >> locator
-        1 * wd.getWindowHandle() >> "handle"
+        1 * webDriver.findElements(_) >> []
+        1 * webDriver.switchTo() >> locator
+        1 * webDriver.getWindowHandle() >> "handle"
         1 * locator.window(_)
-        1 * wd.quit()
+        1 * webDriver.quit()
     }
 
     def "processKeyPress must work with CHAR_CODE field of an event"() {
