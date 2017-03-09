@@ -5,6 +5,7 @@ import com.focusit.jsflight.player.script.PlayerScriptProcessor
 import com.focusit.jsflight.script.ScriptEngine
 import org.bson.types.ObjectId
 import org.json.JSONObject
+
 /**
  * Created by doki on 03.02.17.
  */
@@ -47,6 +48,26 @@ class PlayerScriptProcessorSpec extends BaseSpec {
         JSONObject resultEventId = proc.runStepTemplating(scenario, eventWithEventId);
         then:
         resultId.get("url") == "http://ya.ru"
+        resultEventId.get("url") == "http://ya.ru"
+    }
+
+    def "step templates can contain \$ and \${} at the same time"() {
+        given:
+        scenario.getContext().put("variable", "ya.ru");
+
+        JSONObject eventWithId = getSimpleEvent();
+        eventWithId.put("url", 'http://${variable}test$passed');
+
+        JSONObject eventWithEventId = getSimpleEvent();
+        eventWithEventId.remove("id");
+        eventWithEventId.put("eventId", "123");
+        eventWithEventId.put("url", 'http://${variable}');
+
+        when:
+        JSONObject resultId = proc.runStepTemplating(scenario, eventWithId);
+        JSONObject resultEventId = proc.runStepTemplating(scenario, eventWithEventId);
+        then:
+        resultId.get("url") == "http://ya.rutest\$passed"
         resultEventId.get("url") == "http://ya.ru"
     }
 
