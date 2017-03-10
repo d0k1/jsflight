@@ -51,6 +51,18 @@ class PlayerScriptProcessorSpec extends BaseSpec {
         resultEventId.get("url") == "http://ya.ru"
     }
 
+    def "step templates can contain #"() {
+        given:
+        scenario.getContext().put("variable", "ya.ru");
+
+        JSONObject event = getSimpleEvent();
+        event.put("url", 'http://${variable}/212#');
+        when:
+        JSONObject result = proc.runStepTemplating(scenario, event);
+        then:
+        result.get("url") == "http://ya.ru/212#"
+    }
+
     def "step templates can contain \$ and \${} at the same time"() {
         given:
         scenario.getContext().put("variable", "ya.ru");

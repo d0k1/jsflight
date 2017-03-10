@@ -178,6 +178,7 @@ public class PlayerScriptProcessor
                 try
                 {
                     String source = result.getString(key);
+                    source = source.replace("#", "#[[#]]#");
 
                     StringWriter writer = new StringWriter();
                     String id = step.has("id") ? step.get("id").toString() : step.get("eventId").toString();
