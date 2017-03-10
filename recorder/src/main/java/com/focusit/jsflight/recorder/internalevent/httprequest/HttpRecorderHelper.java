@@ -1,7 +1,6 @@
 package com.focusit.jsflight.recorder.internalevent.httprequest;
 
 import java.io.ByteArrayOutputStream;
-import java.io.UnsupportedEncodingException;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -12,9 +11,8 @@ import javax.servlet.http.HttpServletRequest;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.FastOutput;
 import com.esotericsoftware.kryo.serializers.MapSerializer;
-import com.focusit.jsflight.recorder.internalevent.InternalEventRecorder;
 
-public class HttpRecorder
+public class HttpRecorderHelper
 {
     public static final String HTTP_RECORDER_TAG = "HTTPREQUEST";
     private static ThreadLocal<Kryo> threadKryo = new ThreadLocal<>();
@@ -84,12 +82,5 @@ public class HttpRecorder
 
         info.params = stream.toByteArray();
         return new RecordableHttpServletRequest(original);
-    }
-
-    public static void recordRequest(RecordableHttpServletRequest requestForRecord, HttpRecordInformation info)
-            throws UnsupportedEncodingException, InterruptedException
-    {
-        info.payload = requestForRecord.getPayloadBytes();
-        InternalEventRecorder.getInstance().push(HTTP_RECORDER_TAG, info);
     }
 }
