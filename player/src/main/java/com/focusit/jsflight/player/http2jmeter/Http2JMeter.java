@@ -33,16 +33,17 @@ import com.esotericsoftware.kryo.serializers.MapSerializer;
 import com.focusit.jsflight.recorder.internalevent.IdRecordInfo;
 import com.focusit.jsflight.recorder.internalevent.InternalEventRecorder;
 import com.focusit.jsflight.recorder.internalevent.httprequest.HttpRecordInformation;
-import com.focusit.jsflight.recorder.internalevent.httprequest.HttpRecorder;
+import com.focusit.jsflight.recorder.internalevent.httprequest.HttpRecorderHelper;
 
 /**
- * This example shows how to convert raw traffic recorded by HttpRecorder to JMeter scenario to reproduce a load
+ * This example shows how to convert raw traffic recorded by HttpRecorderHelper to JMeter scenario to reproduce a load
  * Created by dkirpichenkov on 17.08.16.
  */
 public class Http2JMeter
 {
     private static final String GUEST_USER = "GUEST";
     private static Pattern pattern = Pattern.compile("(ru\\.naumen\\..*?)[/|\\s]");
+    private FileUpload uploadAnalyzer = new FileUpload();
 
     public static void main(String[] args) throws Exception
     {
@@ -181,7 +182,7 @@ public class Http2JMeter
 
             String tag = new String(record.tag).trim();
 
-            if (tag.equalsIgnoreCase(HttpRecorder.HTTP_RECORDER_TAG))
+            if (tag.equalsIgnoreCase(HttpRecorderHelper.HTTP_RECORDER_TAG))
             {
                 HttpRecordInformation information = (HttpRecordInformation)record.data;
                 RestoredRequest request = new RestoredRequest();
@@ -321,8 +322,6 @@ public class Http2JMeter
         }
         return name;
     }
-
-    private FileUpload uploadAnalyzer = new FileUpload();
 
     private RequestContext getRequestContext(RestoredRequest request)
     {

@@ -6,6 +6,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.zip.GZIPOutputStream;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.FastOutput;
 
@@ -18,44 +21,29 @@ import com.esotericsoftware.kryo.io.FastOutput;
  */
 public class InternalEventRecorder
 {
-    private static final InternalEventRecorder instance = new InternalEventRecorder();
+    private static final Logger LOG = LoggerFactory.getLogger(InternalEventRecorder.class);
     private final int maxElementsBeforeFlush;
     private final boolean storeInGzip;
+    private final InternalEventRecorderBuilder.FileStrategy newFileStrategy;
     private ArrayBlockingQueue<InternalEventRecord> records;
     private AtomicLong lastId = new AtomicLong(-1);
     private AtomicLong timestampNs = new AtomicLong(0);
     private AtomicBoolean recording = new AtomicBoolean(false);
-    private volatile String eventsFilename = "internal.data";
     private StorageThread storageThread;
     private AtomicBoolean shuttingDown = new AtomicBoolean(false);
-    private AtomicBoolean newFile = new AtomicBoolean(false);
+    private AtomicBoolean openNewFile = new AtomicBoolean(false);
     private WallClock wallClock = new WallClock();
 
-    private InternalEventRecorder()
-    {
-        this(-1, 4096, "internal-event-storage", false);
-    }
-
-    private InternalEventRecorder(int maxElementsBeforeFlush, int maxQueueSize, String storagePrefix,
-            boolean storeInGzip)
+    InternalEventRecorder(int maxElementsBeforeFlush, int maxQueueSize, String storagePrefix, boolean storeInGzip,
+            InternalEventRecorderBuilder.FileStrategy newFileStrategy)
     {
         this.maxElementsBeforeFlush = maxElementsBeforeFlush;
         this.records = new ArrayBlockingQueue<>(maxQueueSize);
         this.storeInGzip = storeInGzip;
         this.storageThread = new StorageThread(storagePrefix);
+        this.newFileStrategy = newFileStrategy;
         wallClock.start();
         storageThread.start();
-    }
-
-    public static InternalEventRecorder getInstance()
-    {
-        return instance;
-    }
-
-    public static InternalEventRecorder build(int maxElementsBeforeFlush, int maxQueueSize, String storagePrefix,
-            boolean storeInGzip)
-    {
-        return new InternalEventRecorder(maxElementsBeforeFlush, maxQueueSize, storagePrefix, storeInGzip);
     }
 
     public long getWallTime()
@@ -63,9 +51,8 @@ public class InternalEventRecorder
         return timestampNs.get();
     }
 
-    public void openFileForWriting(String filename)
+    public void openFileForWriting()
     {
-        this.eventsFilename = filename;
         storageThread.openFileForWriting();
     }
 
@@ -94,15 +81,16 @@ public class InternalEventRecorder
 
     public void shutdown() throws InterruptedException
     {
+        stopRecording();
+        storageThread.flush();
         shuttingDown.set(true);
         storageThread.join(2000);
         wallClock.join(2000);
-        storageThread.flush();
     }
 
     public void recordToNewFile()
     {
-        storageThread.toNewFile();
+        storageThread.openNewFile();
     }
 
     public void startRecording()
@@ -136,8 +124,6 @@ public class InternalEventRecorder
         private Kryo kryo;
         private FastOutput output;
 
-        private int filesCounter = 1;
-
         public StorageThread(String storagePrefix)
         {
             super(storagePrefix);
@@ -152,17 +138,12 @@ public class InternalEventRecorder
 
         public void openFileForWriting()
         {
-            openFile(eventsFilename);
-        }
-
-        private void openFile(String fileName)
-        {
             try
             {
-                File destinationFile = new File(fileName);
-                System.out.println("Storing internal events to " + destinationFile.getAbsolutePath());
-                FileOutputStream fos = new FileOutputStream(fileName);
-                OutputStream out = storeInGzip ? new GZIPOutputStream(fos) : fos;
+                File destinationFile = newFileStrategy.getNewFile();
+                LOG.info("{} storing events to: {}", newFileStrategy.toString(), destinationFile.getAbsolutePath());
+                FileOutputStream fos = new FileOutputStream(destinationFile);
+                OutputStream out = storeInGzip ? new GZIPOutputStream(fos, true) : fos;
                 output = new FastOutput(out);
             }
             catch (IOException e)
@@ -171,9 +152,9 @@ public class InternalEventRecorder
             }
         }
 
-        public void toNewFile()
+        public void openNewFile()
         {
-            newFile.set(true);
+            openNewFile.set(true);
         }
 
         private void reOpenFile()
@@ -181,11 +162,11 @@ public class InternalEventRecorder
             try
             {
                 output.close();
-                openFile(eventsFilename + filesCounter++);
+                openFileForWriting();
             }
             finally
             {
-                newFile.set(false);
+                openNewFile.set(false);
             }
         }
 
@@ -203,6 +184,10 @@ public class InternalEventRecorder
                         InternalEventRecord record;
                         if (flushedObjects != maxElementsBeforeFlush && (record = records.poll()) != null)
                         {
+                            if (shouldOpenNewFile() || newFileStrategy.isRecordToNewFile(record))
+                            {
+                                reOpenFile();
+                            }
                             kryo.writeObject(output, record);
                             needFlush = true;
                             flushedObjects++;
@@ -215,10 +200,6 @@ public class InternalEventRecorder
                                 output.flush();
                                 flushedObjects = 0;
                                 needFlush = false;
-                            }
-                            if (newFile.get())
-                            {
-                                reOpenFile();
                             }
                             sleep(100);
                         }
@@ -233,6 +214,11 @@ public class InternalEventRecorder
                     // no Exception could break this thread. only Error
                 }
             }
+        }
+
+        private boolean shouldOpenNewFile()
+        {
+            return openNewFile.get();
         }
     }
 

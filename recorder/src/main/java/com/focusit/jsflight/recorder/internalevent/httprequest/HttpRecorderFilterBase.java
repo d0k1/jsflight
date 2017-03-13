@@ -1,30 +1,33 @@
 package com.focusit.jsflight.recorder.internalevent.httprequest;
 
-import com.focusit.jsflight.recorder.internalevent.InternalEventRecorder;
+import java.io.IOException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.concurrent.atomic.AtomicBoolean;
+
+import com.focusit.jsflight.recorder.internalevent.InternalEventRecorder;
+import com.focusit.jsflight.recorder.internalevent.InternalEventRecorderBuilder;
 
 public abstract class HttpRecorderFilterBase implements Filter
 {
     public static final String ALREADY_FILTERED_SUFFIX = ".FILTERED";
-    private static final AtomicBoolean enabled = new AtomicBoolean(false);
+    private static final AtomicBoolean ENABLED = new AtomicBoolean(false);
+
+    private InternalEventRecorder internalEventRecorder;
 
     public static void setEnabled(boolean enabled)
     {
-        HttpRecorderFilterBase.enabled.set(enabled);
+        HttpRecorderFilterBase.ENABLED.set(enabled);
     }
 
     @Override
     public final void destroy()
     {
-        InternalEventRecorder.getInstance().stopRecording();
         try
         {
-            InternalEventRecorder.getInstance().shutdown();
+            internalEventRecorder.shutdown();
         }
         catch (InterruptedException e)
         {
@@ -72,7 +75,7 @@ public abstract class HttpRecorderFilterBase implements Filter
     public final void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws IOException, ServletException
     {
-        if (!HttpRecorderFilterBase.enabled.get())
+        if (!HttpRecorderFilterBase.ENABLED.get())
         {
             chain.doFilter(request, response);
             return;
@@ -91,7 +94,7 @@ public abstract class HttpRecorderFilterBase implements Filter
             try
             {
                 prepareHttpRecordInfo(info, request, response);
-                requestForRecord = HttpRecorder.prepareRequestToRecord(request, info);
+                requestForRecord = HttpRecorderHelper.prepareRequestToRecord(request, info);
             }
             catch (Exception e)
             {
@@ -105,7 +108,8 @@ public abstract class HttpRecorderFilterBase implements Filter
             try
             {
                 updateHttpRecordInfo(info, requestForRecord, response);
-                HttpRecorder.recordRequest(requestForRecord, info);
+                info.payload = requestForRecord.getPayloadBytes();
+                internalEventRecorder.push(HttpRecorderHelper.HTTP_RECORDER_TAG, info);
             }
             catch (InterruptedException e)
             {
@@ -117,7 +121,7 @@ public abstract class HttpRecorderFilterBase implements Filter
     @Override
     public final void init(FilterConfig filterConfig) throws ServletException
     {
-        InternalEventRecorder.getInstance().startRecording();
+        internalEventRecorder.startRecording();
     }
 
     public abstract void prepareHttpRecordInfo(HttpRecordInformation info, ServletRequest request,
@@ -130,15 +134,16 @@ public abstract class HttpRecorderFilterBase implements Filter
 
     protected String getAlreadyFilteredAttributeName()
     {
-        String name = "HttpRecorder";
+        String name = "HttpRecorderHelper";
         return name + ALREADY_FILTERED_SUFFIX;
     }
 
     protected abstract void logException(Exception e);
 
-    protected final void openFileForWriting(String filename)
+    protected final void initInternal(String fileName)
     {
-        InternalEventRecorder.getInstance().openFileForWriting(filename);
+        internalEventRecorder = InternalEventRecorderBuilder.builderFor(fileName).build();
+        internalEventRecorder.openFileForWriting();
     }
 
     protected boolean shouldNotFilterAsyncDispatch()
