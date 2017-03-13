@@ -535,7 +535,7 @@ public class SeleniumDriver
             }
             catch (NoSuchElementException ex)
             {
-                LOG.warn("Element supposed to be a select didn't load provide a " + selectXpath + "element", ex);
+                LOG.warn("Element supposed to be a select didn't provide a " + selectXpath + "element", ex);
             }
         }
     }
