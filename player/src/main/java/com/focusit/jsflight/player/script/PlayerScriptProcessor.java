@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 
 import com.focusit.jsflight.player.constants.EventConstants;
 import com.focusit.jsflight.player.scenario.UserScenario;
+import com.focusit.jsflight.player.webdriver.SeleniumDriver;
 import com.focusit.jsflight.script.ScriptEngine;
 import com.focusit.jsflight.script.constants.ScriptBindingConstants;
 
@@ -257,5 +258,16 @@ public class PlayerScriptProcessor
         binding.setVariable(ScriptBindingConstants.LOGGER, LOG);
         binding.setVariable(ScriptBindingConstants.CLASSLOADER, ScriptEngine.getClassLoader());
         binding.setVariable(ScriptBindingConstants.PLAYER_CONTEXT, scenario.getContext());
+    }
+
+    public void doWaitAfterEvent(SeleniumDriver seleniumDriver, WebDriver theWebDriver, JSONObject event)
+    {
+        Map<String, Object> binding = PlayerScriptProcessor.getEmptyBindingsMap();
+        binding.put("seleniumDriver", seleniumDriver);
+        binding.put(ScriptBindingConstants.WEB_DRIVER, theWebDriver);
+        binding.put(ScriptBindingConstants.TARGET, UserScenario.getTargetForEvent(event));
+        binding.put(ScriptBindingConstants.EVENT, event);
+
+        executeGroovyScript(scenario.getConfiguration().getScriptsConfiguration().getConditionalWaitScript(), binding);
     }
 }

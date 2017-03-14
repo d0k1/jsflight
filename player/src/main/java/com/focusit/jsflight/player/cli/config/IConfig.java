@@ -32,6 +32,8 @@ public interface IConfig
 
     String getPathToUrlReplacementScript();
 
+    String getPathToConditionalWaitScript();
+
     Integer getStartStep();
 
     Integer getFinishStep();
@@ -47,7 +49,6 @@ public interface IConfig
     Integer getUiShownTimeoutInSeconds();
 
     Integer getIntervalBetweenUiChecksInMs();
-
 
     String getProxyHost();
 

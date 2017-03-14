@@ -21,6 +21,7 @@ public class PropertiesConstants
     public static final String SHOULD_SKIP_KEYBOARD_SCRIPT_PATH = "scripts.shouldSkipKeyboard.path";
     public static final String IS_ASYNC_REQUESTS_COMPLETED_SCRIPT_PATH = "scripts.isAsyncCompleted.path";
     public static final String URL_REPLACEMENT_SCRIPT_PATH = "scripts.urlReplacement.path";
+    public static final String CONDITIONAL_WAIT_SCRIPT_PATH = "scripts.conditionalWait.path";
 
     public static final String START_STEP = "start.step";
     public static final String FINISH_STEP = "finish.step";

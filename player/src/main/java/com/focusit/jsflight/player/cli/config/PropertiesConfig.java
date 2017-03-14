@@ -1,20 +1,22 @@
 package com.focusit.jsflight.player.cli.config;
 
-import com.beust.jcommander.IParameterValidator;
-import com.beust.jcommander.IStringConverter;
-import com.beust.jcommander.ParameterException;
-import com.focusit.jsflight.player.constants.BrowserType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.beust.jcommander.IParameterValidator;
+import com.beust.jcommander.IStringConverter;
+import com.beust.jcommander.ParameterException;
+import com.focusit.jsflight.player.constants.BrowserType;
 
 public class PropertiesConfig implements IConfig
 {
@@ -219,6 +221,12 @@ public class PropertiesConfig implements IConfig
     }
 
     @Override
+    public String getPathToConditionalWaitScript()
+    {
+        return getProperty(PropertiesConstants.CONDITIONAL_WAIT_SCRIPT_PATH);
+    }
+
+    @Override
     public String getPathToPreProcessorScript()
     {
         return getProperty(PropertiesConstants.PRE_PROCESS_SCRIPT_PATH);
@@ -288,8 +296,8 @@ public class PropertiesConfig implements IConfig
     @Override
     public Integer getIntervalBetweenUiChecksInMs()
     {
-        return getProperty(PropertiesConstants.UI_CHECKS_INTERVAL_IN_MS,
-                DefaultValues.INTERVAL_BETWEEN_UI_CHECKS_IN_MS, POSITIVE_INTEGER, Integer::new);
+        return getProperty(PropertiesConstants.UI_CHECKS_INTERVAL_IN_MS, DefaultValues.INTERVAL_BETWEEN_UI_CHECKS_IN_MS,
+                POSITIVE_INTEGER, Integer::new);
     }
 
     @Override

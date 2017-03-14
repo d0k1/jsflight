@@ -64,6 +64,9 @@ public class ScriptsConfiguration implements IDefaults
     @DefaultFile("urlReplace.groovy")
     private String urlReplacementScript;
 
+    @DefaultFile("conditionalWait.groovy")
+    private String conditionalWaitScript;
+
     private static Method getGetterForField(Field field) throws NoSuchMethodException
     {
         return getMethodWithPrefixForField(field, "get");
@@ -316,4 +319,13 @@ public class ScriptsConfiguration implements IDefaults
         recorder.getScriptProcessor().setStepProcessorScript(getStepProcessorScript());
     }
 
+    public String getConditionalWaitScript()
+    {
+        return conditionalWaitScript;
+    }
+
+    public void setConditionalWaitScript(String conditionalWaitScript)
+    {
+        this.conditionalWaitScript = conditionalWaitScript;
+    }
 }
