@@ -118,7 +118,6 @@ public class ScenarioProcessor
         String eventUrl = new PlayerScriptProcessor(scenario)
                 .executeUrlReplacementScript(scriptsConfiguration.getUrlReplacementScript(), event);
         event.put(EventConstants.URL, eventUrl);
-        LOG.info("Current step eventId " + event.get("eventId").toString() + " URL: {}", eventUrl);
 
         String type = event.getString(EventConstants.TYPE);
         LOG.info("Event type: {}", type);
@@ -136,6 +135,9 @@ public class ScenarioProcessor
                     + "EventId: {}\n" + "URL: {}", position, event.get(EventConstants.EVENT_ID), eventUrl);
             return;
         }
+
+        LOG.info("Current step eventId " + event.get(EventConstants.EVENT_ID).toString() + " URL: {}",
+                event.get(EventConstants.URL));
 
         WebDriver theWebDriver = null;
         boolean error = false;
