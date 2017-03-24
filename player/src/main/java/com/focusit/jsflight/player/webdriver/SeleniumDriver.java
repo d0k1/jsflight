@@ -349,7 +349,7 @@ public class SeleniumDriver
     {
         try
         {
-            return new WebDriverWait(wd, 20L, 500).until((ExpectedCondition<WebElement>)input -> {
+            return new WebDriverWait(wd, 200L, 500).until((ExpectedCondition<WebElement>)input -> {
                 try
                 {
                     return wd.findElement(By.xpath(xpath));

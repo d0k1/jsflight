@@ -326,6 +326,9 @@ public class ScriptsConfiguration implements IDefaults
 
     public void setConditionalWaitScript(String conditionalWaitScript)
     {
-        this.conditionalWaitScript = conditionalWaitScript;
+        if (conditionalWaitScript != null)
+        {
+            this.conditionalWaitScript = conditionalWaitScript;
+        }
     }
 }

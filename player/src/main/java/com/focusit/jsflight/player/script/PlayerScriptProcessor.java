@@ -86,7 +86,7 @@ public class PlayerScriptProcessor
         }
         catch (Exception ex)
         {
-            LOG.warn("Url replacement filed. Default value is the same event url");
+            LOG.warn("Url replacement failed. Default value is the same event url", ex);
             return event.getString(EventConstants.URL);
         }
     }
