@@ -3,15 +3,15 @@ Tools to record user's activity and replay it later.
 The project's main goal is to store major user events in a browser (mouse clicks, key presses) and them reproduce them using Selenium WebDriver.
 Besides it can store HttpRequests on server-side and convert them to a JMeter Scenario to replay it later.
 
-##Recording concepts
-###Browser recording
+## Recording concepts
+### Browser recording
 * You should add some JS to a host page to record browsers events 
-* Injected code will add event some handlers (you can easily configure what events should be recorder and what not)
-* Event handlers stores it's data in browser's session store
+* Injected code will add some event handlers (you can easily configure what events should be recorded and what are not)
+* Event handlers store their data in browser's session store
 * Data from browser's session store is to be sent to the server with some period of time (Default period is 5 seconds)
 * `javax.servlet.http.HttpServlet` on server side decided what to do with data it received
 
-###Server-Side recording
+### Server-Side recording
 * There is base class to be used to build a custom `javax.servlet.Filter`
 * The filter will record any http request to urls it has been mapped to
 * Of course you can add some special app's internal events to the recording. For example to monitor a production environment (or to get more data to replay user load more accurate)
