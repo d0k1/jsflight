@@ -13,13 +13,21 @@ import com.focusit.jsflight.recorder.internalevent.InternalEventRecorderBuilder;
 public abstract class HttpRecorderFilterBase implements Filter
 {
     public static final String ALREADY_FILTERED_SUFFIX = ".FILTERED";
-    private static final AtomicBoolean ENABLED = new AtomicBoolean(false);
+    private final AtomicBoolean ENABLED = new AtomicBoolean(false);
 
     private InternalEventRecorder internalEventRecorder;
 
-    public static void setEnabled(boolean enabled)
+    protected InternalEventRecorder getRecorder()
     {
-        HttpRecorderFilterBase.ENABLED.set(enabled);
+        return internalEventRecorder;
+    }
+
+    public void setEnabled(boolean enabled)
+    {
+        if (!ENABLED.getAndSet(enabled) && enabled)
+        {
+            internalEventRecorder.openFileForWriting();
+        }
     }
 
     @Override
@@ -75,7 +83,7 @@ public abstract class HttpRecorderFilterBase implements Filter
     public final void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws IOException, ServletException
     {
-        if (!HttpRecorderFilterBase.ENABLED.get())
+        if (!ENABLED.get())
         {
             chain.doFilter(request, response);
             return;
@@ -142,8 +150,21 @@ public abstract class HttpRecorderFilterBase implements Filter
 
     protected final void initInternal(String fileName)
     {
-        internalEventRecorder = InternalEventRecorderBuilder.builderFor(fileName).build();
-        internalEventRecorder.openFileForWriting();
+        initInternal(fileName, null);
+    }
+
+    protected final void initInternal(String fileName, String storageThreadName)
+    {
+        InternalEventRecorderBuilder builder = InternalEventRecorderBuilder.builderFor(fileName);
+        if (storageThreadName != null)
+        {
+            builder.storageThreadName(storageThreadName);
+        }
+        internalEventRecorder = builder.build();
+        if (ENABLED.get())
+        {
+            internalEventRecorder.openFileForWriting();
+        }
     }
 
     protected boolean shouldNotFilterAsyncDispatch()
@@ -160,5 +181,4 @@ public abstract class HttpRecorderFilterBase implements Filter
     {
         return shouldNotFilterErrorDispatch();
     }
-
 }
