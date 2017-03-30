@@ -44,7 +44,7 @@
         </dependency>
         <dependency>
             <groupId>org.awaitility</groupId>
-            <artifactId>awaitility</artifactId>
+            <artifactId>awaitility-groovy</artifactId>
         </dependency>
     </dependencies>
 

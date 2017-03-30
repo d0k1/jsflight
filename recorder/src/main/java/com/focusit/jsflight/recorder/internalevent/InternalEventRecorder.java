@@ -46,6 +46,11 @@ public class InternalEventRecorder
         storageThread.start();
     }
 
+    public boolean hasPendingStores()
+    {
+        return !records.isEmpty();
+    }
+
     public long getWallTime()
     {
         return timestampNs.get();
@@ -76,6 +81,7 @@ public class InternalEventRecorder
             record.data = data;
         }
         record.timestampNs = timestampNs.get();
+        record.timestampEpoch = System.currentTimeMillis();
         records.put(record);
     }
 
@@ -115,6 +121,7 @@ public class InternalEventRecorder
     {
         public long id;
         public long timestampNs;
+        public long timestampEpoch;
         public char tag[] = new char[64];
         public Object data;
     }

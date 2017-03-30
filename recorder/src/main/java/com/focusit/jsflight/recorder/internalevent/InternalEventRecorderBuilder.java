@@ -142,7 +142,8 @@ public class InternalEventRecorderBuilder
             {
                 previous.delete();
             }
-            return (previous = new File(outputPath + "_" + FORMAT.format(new Date())));
+            File file = previous = new File(outputPath + "_" + FORMAT.format(new Date()));
+            return file;
         }
 
         @Override
@@ -154,7 +155,7 @@ public class InternalEventRecorderBuilder
         @Override
         public boolean isRecordToNewFile(InternalEventRecorder.InternalEventRecord record)
         {
-            return record.timestampNs > rolloverDate;
+            return record.timestampEpoch > rolloverDate;
         }
 
         private void updateRolloverDate()
