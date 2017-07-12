@@ -13,7 +13,7 @@
     <parent>
         <artifactId>jsflight</artifactId>
         <groupId>com.github.d0k1.jsflight</groupId>
-        <version>4.17-SNAPSHOT</version>
+        <version>4.18-SNAPSHOT</version>
     </parent>
 
     <dependencies>

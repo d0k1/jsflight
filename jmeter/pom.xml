@@ -8,7 +8,7 @@
     <parent>
         <groupId>com.github.d0k1.jsflight</groupId>
         <artifactId>jsflight</artifactId>
-        <version>4.17-SNAPSHOT</version>
+        <version>4.18-SNAPSHOT</version>
         <!-- <relativePath>../sample-multi-module-parent</relativePath> -->
     </parent>
 
