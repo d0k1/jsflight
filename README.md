@@ -9,7 +9,7 @@ Besides it can store HttpRequests on server-side and convert them to a JMeter Sc
 * Injected code will add some event handlers (you can easily configure what events should be recorded and what are not)
 * Event handlers store their data in browser's session store
 * Data from browser's session store is to be sent to the server with some period of time (Default period is 5 seconds)
-* `javax.servlet.http.HttpServlet` on server side decided what to do with data it received
+* `javax.servlet.http.HttpServlet` on server side decides what to do with data it received
 
 ### Server-Side recording
 * There is base class to be used to build a custom `javax.servlet.Filter`
